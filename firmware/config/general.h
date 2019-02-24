@@ -27,10 +27,6 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // SYSTEM MODULE
 // =============================================================================
 
-#define SYSTEM_MAX_PONG_DELAY               10000
-#define SYSTEM_PING_PONG_INTERVAL           30000               // Interval between ping messages (in ms)
-
-#define SYSTEM_HEARTBEAT_INTERVAL           300000              // Interval between heartbeat messages (in ms)
 #define SYSTEM_UPTIME_OVERFLOW              4294967295          // Uptime overflow value
 
 // =============================================================================
@@ -38,35 +34,43 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // =============================================================================
 
 #ifndef COMMUNICATION_BUS_EN_PIN
-#define COMMUNICATION_BUS_EN_PIN            9
+#define COMMUNICATION_BUS_EN_PIN            GPIO_NONE
 #endif
 
 #ifndef COMMUNICATION_BUS_TX_PIN
-#define COMMUNICATION_BUS_TX_PIN            3
+#define COMMUNICATION_BUS_TX_PIN            GPIO_NONE
 #endif
 
 #ifndef COMMUNICATION_BUS_RX_PIN
-#define COMMUNICATION_BUS_RX_PIN            2
+#define COMMUNICATION_BUS_RX_PIN            GPIO_NONE
 #endif
 
-#ifndef COMMUNICATION_BUS_NODE_ADDR
-#define COMMUNICATION_BUS_NODE_ADDR         4
+#ifndef COMMUNICATION_BUS_GATEWAY_ADDR
+#define COMMUNICATION_BUS_GATEWAY_ADDR      254                 // Gatewa network address definition
 #endif
 
-#ifndef COMMUNICATION_BUS_UNKNOWN_ADDR
-#define COMMUNICATION_BUS_UNKNOWN_ADDR      0
+#ifndef COMMUNICATION_GATEWAY_SEARCH_DELAY
+#define COMMUNICATION_GATEWAY_SEARCH_DELAY  10000               // In case node is without address, node will try periodically search for gateway
 #endif
 
-#ifndef COMMUNICATION_MASTER_SEARCH_DELAY
-#define COMMUNICATION_MASTER_SEARCH_DELAY   2500
+#ifndef COMMUNICATION_ADDRESSING_TIMEOUT
+#define COMMUNICATION_ADDRESSING_TIMEOUT    4000                // Master COMMUNICATION_ACQUIRE_ADDRESS_REQUEST and COMMUNICATION_ACQUIRE_ADDRESS_NEGATE timeout
 #endif
 
-// =============================================================================
-// NODE MODULE
-// =============================================================================
+#ifndef COMMUNICATION_MAX_DI_REGISTER_SIZE
+#define COMMUNICATION_MAX_DI_REGISTER_SIZE  0                   // Define maximum size of DI registers
+#endif
 
-#ifndef NODE_INIT_DELAY
-#define NODE_INIT_DELAY                     5000
+#ifndef COMMUNICATION_MAX_DO_REGISTER_SIZE
+#define COMMUNICATION_MAX_DO_REGISTER_SIZE  0                   // Define maximum size of DO registers
+#endif
+
+#ifndef COMMUNICATION_MAX_AI_REGISTER_SIZE
+#define COMMUNICATION_MAX_AI_REGISTER_SIZE  0                   // Define maximum size of AI registers
+#endif
+
+#ifndef COMMUNICATION_MAX_AO_REGISTER_SIZE
+#define COMMUNICATION_MAX_AO_REGISTER_SIZE  0                   // Define maximum size of AO registers
 #endif
 
 // =============================================================================
@@ -96,10 +100,6 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // =============================================================================
 // RELAY MODULE
 // =============================================================================
-
-#ifndef RELAY_SUPPORT
-#define RELAY_SUPPORT                       0
-#endif
 
 // Default boot mode: 0 means OFF, 1 ON and 2 whatever was before
 #ifndef RELAY_BOOT_MODE

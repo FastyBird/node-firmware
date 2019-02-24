@@ -1,6 +1,13 @@
+/*
+
+MODULES PROTOTYPES
+
+Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
+
+*/
 
 // =============================================================================
-// GATEWAY CONNECTION
+// COMMUNICATION MODULE
 // =============================================================================
 
 #define PJON_INCLUDE_TS
@@ -9,13 +16,13 @@
     #define PJON_PACKET_MAX_LENGTH 80
 #endif
 
-#ifndef TS_TIME_IN
-    #define TS_TIME_IN 0
-#endif
+//#ifndef TS_TIME_IN
+//    #define TS_TIME_IN 0
+//#endif
 
-#ifndef PJON_INCLUDE_PACKET_ID
-    #define PJON_INCLUDE_PACKET_ID true
-#endif
+//#ifndef PJON_INCLUDE_PACKET_ID
+//    #define PJON_INCLUDE_PACKET_ID true
+//#endif
 
 // Include async ack defining PJON_INCLUDE_ASYNC_ACK before including PJON.h
 //#define PJON_INCLUDE_ASYNC_ACK  true

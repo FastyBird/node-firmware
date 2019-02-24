@@ -13,6 +13,7 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 
 typedef struct {
     DebounceEvent * button;
+    byte            register_address;      // Address in communication register to store state
 } button_t;
 
 Vector<button_t> _buttons;
@@ -64,30 +65,15 @@ void _buttonEvent(
         return;
     }
 
-    DPRINT(F("[BUTTON] Button #"));
-    DPRINT(id);
-    DPRINT(F(" event "));
-    DPRINTLN(event);
+    #if DEBUG_SUPPORT
+        DPRINT(F("[BUTTON] Button #"));
+        DPRINT(id);
+        DPRINT(F(" event "));
+        DPRINTLN(event);
+    #endif
 
-    if (communicationConnected()) {
-        char _output_buffer[PJON_PACKET_MAX_LENGTH];
-
-        // Send node channel value
-        // P    = Packet id                 => COMMUNICATION_PACKET_DATA
-        // T    = Channel type              => BUTTON
-        // I    = Channel index             => id
-        // V    = Channel value             => button event (press|click|dblclick|lngclick|lnglngclick|tripleclick)
-        sprintf(
-            _output_buffer,
-            "{\"P\":%d,\"T\":%d,\"I\":%d,\"V\":%d}",
-            COMMUNICATION_PACKET_DATA,
-            NODE_CHANNEL_TYPE_BUTTON,
-            id,
-            event
-        );
-
-        communicationSendPacket(COMMUNICATION_PACKET_DATA, _output_buffer);
-    }
+    // Store state into communication register
+    communicationWriteAnalogInput(_buttons[id].register_address, (word) event);
 }
 
 // -----------------------------------------------------------------------------
@@ -107,47 +93,57 @@ void buttonSetup() {
 
     #if BUTTON1_PIN != GPIO_NONE
     {
-        _buttons.push_back({new DebounceEvent(BUTTON1_PIN, BUTTON1_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay)});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON1_PIN, BUTTON1_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), BUTTON1_AI_REGISTRY});
+        communicationRegisterAnalogInput(BUTTON1_AI_REGISTRY);
     }
     #endif
     #if BUTTON2_PIN != GPIO_NONE
     {
-        _buttons.push_back({new DebounceEvent(BUTTON2_PIN, BUTTON2_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay)});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON2_PIN, BUTTON2_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), BUTTON2_AI_REGISTRY});
+        communicationRegisterAnalogInput(BUTTON2_AI_REGISTRY);
     }
     #endif
     #if BUTTON3_PIN != GPIO_NONE
     {
-        _buttons.push_back({new DebounceEvent(BUTTON3_PIN, BUTTON3_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay)});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON3_PIN, BUTTON3_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), BUTTON3_AI_REGISTRY});
+        communicationRegisterAnalogInput(BUTTON3_AI_REGISTRY);
     }
     #endif
     #if BUTTON4_PIN != GPIO_NONE
     {
-        _buttons.push_back({new DebounceEvent(BUTTON4_PIN, BUTTON4_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay)});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON4_PIN, BUTTON4_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), BUTTON4_AI_REGISTRY});
+        communicationRegisterAnalogInput(BUTTON4_AI_REGISTRY);
     }
     #endif
     #if BUTTON5_PIN != GPIO_NONE
     {
-        _buttons.push_back({new DebounceEvent(BUTTON5_PIN, BUTTON5_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay)});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON5_PIN, BUTTON5_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), BUTTON5_AI_REGISTRY});
+        communicationRegisterAnalogInput(BUTTON5_AI_REGISTRY);
     }
     #endif
     #if BUTTON6_PIN != GPIO_NONE
     {
-        _buttons.push_back({new DebounceEvent(BUTTON6_PIN, BUTTON6_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay)});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON6_PIN, BUTTON6_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), BUTTON6_AI_REGISTRY});
+        communicationRegisterAnalogInput(BUTTON6_AI_REGISTRY);
     }
     #endif
     #if BUTTON7_PIN != GPIO_NONE
     {
-        _buttons.push_back({new DebounceEvent(BUTTON7_PIN, BUTTON7_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay)});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON7_PIN, BUTTON7_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), BUTTON7_AI_REGISTRY});
+        communicationRegisterAnalogInput(BUTTON7_AI_REGISTRY);
     }
     #endif
     #if BUTTON8_PIN != GPIO_NONE
     {
-        _buttons.push_back({new DebounceEvent(BUTTON8_PIN, BUTTON8_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay)});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON8_PIN, BUTTON8_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), BUTTON8_AI_REGISTRY});
+        communicationRegisterAnalogInput(BUTTON8_AI_REGISTRY);
     }
     #endif
 
-    DPRINT(F("[BUTTON] Number of buttons: "));
-    DPRINTLN(buttonCount());
+    #if DEBUG_SUPPORT
+        DPRINT(F("[BUTTON] Number of buttons: "));
+        DPRINTLN(buttonCount());
+    #endif
 }
 
 // -----------------------------------------------------------------------------

@@ -6,15 +6,18 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 
 */
 
-#if RELAY_SUPPORT && RELAY_PROVIDER != RELAY_PROVIDER_NONE
+#if RELAY_PROVIDER != RELAY_PROVIDER_NONE
 
 #include <Vector.h>
+#include <EEPROM.h>
 
 typedef struct {
     // Configuration variables
     byte pin;                   // GPIO pin for the relay
     byte type;                  // RELAY_TYPE_NORMAL, RELAY_TYPE_INVERSE, RELAY_TYPE_LATCHED or RELAY_TYPE_LATCHED_INVERSE
     byte reset_pin;             // GPIO to reset the relay if RELAY_TYPE_LATCHED
+
+    byte register_address;      // Address in communication register to store state
 
     unsigned long delay_on;     // Delay to turn relay ON
     unsigned long delay_off;    // Delay to turn relay OFF
@@ -64,12 +67,14 @@ void _relayBoot() {
     bool status;
 
     for (byte i = 0; i < relayCount(); i++) {
-        byte boot_mode = RELAY_BOOT_MODE;
+        byte boot_mode = (bool) EEPROM.read(_relays[i].register_address);
 
-        DPRINT(F("[RELAY] Relay #"));
-        DPRINT(i);
-        DPRINT(F(" boot mode "));
-        DPRINTLN(boot_mode);
+        #if DEBUG_SUPPORT
+            DPRINT(F("[RELAY] Relay #"));
+            DPRINT(i);
+            DPRINT(F(" boot mode "));
+            DPRINTLN(boot_mode);
+        #endif
 
         status = false;
 
@@ -87,6 +92,9 @@ void _relayBoot() {
         _relays[i].target_status = status;
 
         _relays[i].change_time = millis();
+
+        // Store state into communication register
+        communicationWriteDigitalOutput(_relays[i].register_address, status);
     }
 
     _relayRecursive = false;
@@ -172,34 +180,18 @@ void _relayProcess(
             continue;
         }
 
-        DPRINT(F("[RELAY] #"));
-        DPRINT(id);
-        DPRINT(F(" set to "));
-        DPRINTLN(_relays[id].target_status ? F("ON") : F("OFF"));
+        #if DEBUG_SUPPORT
+            DPRINT(F("[RELAY] #"));
+            DPRINT(id);
+            DPRINT(F(" set to "));
+            DPRINTLN(_relays[id].target_status ? F("ON") : F("OFF"));
+        #endif
 
         // Call the provider to perform the action
         _relayProviderStatus(id, _relays[id].target_status);
-/*
-        if (communicationConnected()) {
-            char _output_buffer[PJON_PACKET_MAX_LENGTH];
 
-            // Send node channel value
-            // P    = Packet id                 => COMMUNICATION_PACKET_DATA
-            // T    = Channel type              => SWITCH
-            // I    = Channel index             => number
-            // V    = Channel value             => 1|0              // Relay status value
-            sprintf(
-                _output_buffer,
-                "{\"P\":%d,\"T\":%d,\"I\":%d,\"V\":%d}",
-                COMMUNICATION_PACKET_DATA,
-                NODE_CHANNEL_TYPE_SWITCH,
-                id,
-                _relays[id].target_status ? 1 : 0
-            );
-
-            communicationSendPacket(COMMUNICATION_PACKET_DATA, _output_buffer);
-        }
-*/
+        // Store state into communication register
+        communicationWriteDigitalOutput(_relays[id].register_address, _relays[id].target_status);
     }
 }
 
@@ -239,9 +231,11 @@ bool relayStatus(
 
     if (_relays[id].current_status == status) {
         if (_relays[id].target_status != status) {
-            DPRINT(F("[RELAY] #"));
-            DPRINT(id);
-            DPRINT(F(" scheduled change cancelled\n"));
+            #if DEBUG_SUPPORT
+                DPRINT(F("[RELAY] #"));
+                DPRINT(id);
+                DPRINT(F(" scheduled change cancelled\n"));
+            #endif
 
             _relays[id].target_status = status;
 
@@ -275,15 +269,19 @@ bool relayStatus(
 
         relaySync(id);
 
-        DPRINT(F("[RELAY] #"));
-        DPRINT(id);
-        DPRINT(F(" scheduled "));
-        DPRINT(status ? F("ON") : F("OFF"));
-        DPRINT(F(" in "));
-        DPRINT(_relays[id].change_time - current_time);
-        DPRINT(F(" ms\n"));
+        #if DEBUG_SUPPORT
+            DPRINT(F("[RELAY] #"));
+            DPRINT(id);
+            DPRINT(F(" scheduled "));
+            DPRINT(status ? F("ON") : F("OFF"));
+            DPRINT(F(" in "));
+            DPRINT(_relays[id].change_time - current_time);
+            DPRINT(F(" ms\n"));
+        #endif
 
         changed = true;
+
+        EEPROM.update(_relays[id].register_address, status);
     }
 
     return changed;
@@ -359,36 +357,36 @@ void relaySync(
 void relaySetup() {
     // Ad-hoc relays
     #if RELAY1_PIN != GPIO_NONE
-        _relays.push_back((relay_t) { RELAY1_PIN, RELAY1_TYPE, RELAY1_RESET_PIN, RELAY1_DELAY_ON, RELAY1_DELAY_OFF });
-        communicationRegisterBinaryOutput(RELAY1_DO_REGISTRY);
+        _relays.push_back((relay_t) { RELAY1_PIN, RELAY1_TYPE, RELAY1_RESET_PIN, RELAY1_DO_REGISTRY, RELAY1_DELAY_ON, RELAY1_DELAY_OFF });
+        communicationRegisterDigitalOutput(RELAY1_DO_REGISTRY);
     #endif
     #if RELAY2_PIN != GPIO_NONE
-        _relays.push_back((relay_t) { RELAY2_PIN, RELAY2_TYPE, RELAY2_RESET_PIN, RELAY2_DELAY_ON, RELAY2_DELAY_OFF });
-        communicationRegisterBinaryOutput(RELAY2_DO_REGISTRY);
+        _relays.push_back((relay_t) { RELAY2_PIN, RELAY2_TYPE, RELAY2_RESET_PIN, RELAY2_DO_REGISTRY, RELAY2_DELAY_ON, RELAY2_DELAY_OFF });
+        communicationRegisterDigitalOutput(RELAY2_DO_REGISTRY);
     #endif
     #if RELAY3_PIN != GPIO_NONE
-        _relays.push_back((relay_t) { RELAY3_PIN, RELAY3_TYPE, RELAY3_RESET_PIN, RELAY3_DELAY_ON, RELAY3_DELAY_OFF });
-        communicationRegisterBinaryOutput(RELAY3_DO_REGISTRY);
+        _relays.push_back((relay_t) { RELAY3_PIN, RELAY3_TYPE, RELAY3_RESET_PIN, RELAY3_DO_REGISTRY, RELAY3_DELAY_ON, RELAY3_DELAY_OFF });
+        communicationRegisterDigitalOutput(RELAY3_DO_REGISTRY);
     #endif
     #if RELAY4_PIN != GPIO_NONE
-        _relays.push_back((relay_t) { RELAY4_PIN, RELAY4_TYPE, RELAY4_RESET_PIN, RELAY4_DELAY_ON, RELAY4_DELAY_OFF });
-        communicationRegisterBinaryOutput(RELAY4_DO_REGISTRY);
+        _relays.push_back((relay_t) { RELAY4_PIN, RELAY4_TYPE, RELAY4_RESET_PIN, RELAY4_DO_REGISTRY, RELAY4_DELAY_ON, RELAY4_DELAY_OFF });
+        communicationRegisterDigitalOutput(RELAY4_DO_REGISTRY);
     #endif
     #if RELAY5_PIN != GPIO_NONE
-        _relays.push_back((relay_t) { RELAY5_PIN, RELAY5_TYPE, RELAY5_RESET_PIN, RELAY5_DELAY_ON, RELAY5_DELAY_OFF });
-        communicationRegisterBinaryOutput(RELAY5_DO_REGISTRY);
+        _relays.push_back((relay_t) { RELAY5_PIN, RELAY5_TYPE, RELAY5_RESET_PIN, RELAY5_DO_REGISTRY, RELAY5_DELAY_ON, RELAY5_DELAY_OFF });
+        communicationRegisterDigitalOutput(RELAY5_DO_REGISTRY);
     #endif
     #if RELAY6_PIN != GPIO_NONE
-        _relays.push_back((relay_t) { RELAY6_PIN, RELAY6_TYPE, RELAY6_RESET_PIN, RELAY6_DELAY_ON, RELAY6_DELAY_OFF });
-        communicationRegisterBinaryOutput(RELAY6_DO_REGISTRY);
+        _relays.push_back((relay_t) { RELAY6_PIN, RELAY6_TYPE, RELAY6_RESET_PIN, RELAY6_DO_REGISTRY, RELAY6_DELAY_ON, RELAY6_DELAY_OFF });
+        communicationRegisterDigitalOutput(RELAY6_DO_REGISTRY);
     #endif
     #if RELAY7_PIN != GPIO_NONE
-        _relays.push_back((relay_t) { RELAY7_PIN, RELAY7_TYPE, RELAY7_RESET_PIN, RELAY7_DELAY_ON, RELAY7_DELAY_OFF });
-        communicationRegisterBinaryOutput(RELAY7_DO_REGISTRY);
+        _relays.push_back((relay_t) { RELAY7_PIN, RELAY7_TYPE, RELAY7_RESET_PIN, RELAY7_DO_REGISTRY, RELAY7_DELAY_ON, RELAY7_DELAY_OFF });
+        communicationRegisterDigitalOutput(RELAY7_DO_REGISTRY);
     #endif
     #if RELAY8_PIN != GPIO_NONE
-        _relays.push_back((relay_t) { RELAY8_PIN, RELAY8_TYPE, RELAY8_RESET_PIN, RELAY8_DELAY_ON, RELAY8_DELAY_OFF });
-        communicationRegisterBinaryOutput(RELAY8_DO_REGISTRY);
+        _relays.push_back((relay_t) { RELAY8_PIN, RELAY8_TYPE, RELAY8_RESET_PIN, RELAY8_DO_REGISTRY, RELAY8_DELAY_ON, RELAY8_DELAY_OFF });
+        communicationRegisterDigitalOutput(RELAY8_DO_REGISTRY);
     #endif
 
     _relayConfigure();
@@ -396,15 +394,23 @@ void relaySetup() {
 
     relayLoop();
 
-    DPRINT(F("[RELAY] Number of relays: "));
-    DPRINTLN(relayCount());
+    #if DEBUG_SUPPORT
+        DPRINT(F("[RELAY] Number of relays: "));
+        DPRINTLN(relayCount());
+    #endif
 }
 
 //------------------------------------------------------------------------------
 
 void relayLoop() {
+    for (byte i = 0; i < relayCount(); i++) {
+        if (communicationReadDigitalOutput(_relays[i].register_address) != relayStatus(i)) {
+            relayStatus(i, communicationReadDigitalOutput(_relays[i].register_address));
+        }
+    }
+
     _relayProcess(false);
     _relayProcess(true);
 }
 
-#endif
+#endif // RELAY_PROVIDER != RELAY_PROVIDER_NONE

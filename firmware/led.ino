@@ -171,8 +171,10 @@ void ledSetup() {
 
     _ledConfigure();
 
-    DPRINT(F("[LED] Number of leds: "));
-    DPRINTLN(ledCount());
+    #if DEBUG_SUPPORT
+        DPRINT(F("[LED] Number of leds: "));
+        DPRINTLN(ledCount());
+    #endif
 }
 
 // -----------------------------------------------------------------------------

@@ -11,66 +11,59 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // =============================================================================
 
 #define COMMUNICATION_PACKET_NONE               0
-#define COMMUNICATION_PACKET_MASTER_LOOKUP      1   // Master is searching for slaves
-#define COMMUNICATION_PACKET_WHO_ARE_YOU        2   // Master want to know slave details
-#define COMMUNICATION_PACKET_READ_DI            3   // Master requested DI regiter reading
-#define COMMUNICATION_PACKET_READ_DO            4   // Master requested DO regiter reading
-#define COMMUNICATION_PACKET_READ_AI            5   // Master requested AI regiter reading
-#define COMMUNICATION_PACKET_READ_AO            6   // Master requested AO regiter reading
-#define COMMUNICATION_PACKET_WRITE_ONE_DO       7
-#define COMMUNICATION_PACKET_WRITE_ONE_AO       8
-#define COMMUNICATION_PACKET_WRITE_MULTI_DO     9
-#define COMMUNICATION_PACKET_WRITE_MULTI_AO     10
+#define COMMUNICATION_PACKET_ACQUIRE_ADDRESS    1
+#define COMMUNICATION_PACKET_GATEWAY_PING       2   // Master is testing node if is alive
+#define COMMUNICATION_PACKET_WHO_ARE_YOU        3   // Master want to know slave details
+#define COMMUNICATION_PACKET_READ_DI            4   // Master requested DI regiter reading
+#define COMMUNICATION_PACKET_READ_DO            5   // Master requested DO regiter reading
+#define COMMUNICATION_PACKET_READ_AI            6   // Master requested AI regiter reading
+#define COMMUNICATION_PACKET_READ_AO            7   // Master requested AO regiter reading
+#define COMMUNICATION_PACKET_WRITE_ONE_DO       8
+#define COMMUNICATION_PACKET_WRITE_ONE_AO       9
+#define COMMUNICATION_PACKET_WRITE_MULTI_DO     10
+#define COMMUNICATION_PACKET_WRITE_MULTI_AO     11
 
-#define COMMUNICATION_PACKETS_MAX               11
+#define COMMUNICATION_PACKETS_MAX               12
+
+// =============================================================================
+// NODE ADDRESS ACQUISION
+// =============================================================================
+
+#define COMMUNICATION_ACQUIRE_ADDRESS_NONE      0
+#define COMMUNICATION_ACQUIRE_ADDRESS_REQUEST   1
+#define COMMUNICATION_ACQUIRE_ADDRESS_CONFIRM   2
+#define COMMUNICATION_ACQUIRE_ADDRESS_REFRESH   3
+#define COMMUNICATION_ACQUIRE_ADDRESS_NEGATE    4
+#define COMMUNICATION_ACQUIRE_ADDRESS_LIST      5
+
+#define COMMUNICATION_ACQUIRE_ADDRESS_MAX       6
 
 // =============================================================================
 // NODE DESCRIBE ITSELF
 // =============================================================================
 
-#define COMMUNICATION_DESCRIBE_NODE             1   // Send node SN to master
-#define COMMUNICATION_DESCRIBE_HARDWARE         2   // Send hardware info to master
-#define COMMUNICATION_DESCRIBE_FIRMWARE         3   // Send firmware info to master
-#define COMMUNICATION_DESCRIBE_REGISTERS_SIZE   4
-#define COMMUNICATION_DESCRIBE_DI_SIZE          5   // Send DI registers length
-#define COMMUNICATION_DESCRIBE_DO_SIZE          6   // Send DO registers length
-#define COMMUNICATION_DESCRIBE_AI_SIZE          7   // Send AI registers length
-#define COMMUNICATION_DESCRIBE_AO_SIZE          8   // Send AO registers length
+#define COMMUNICATION_DESCRIBE_NONE             0
+#define COMMUNICATION_DESCRIBE_NODE             1   // Send node basic structure to master
+#define COMMUNICATION_DESCRIBE_SN               2   // Send node SN to master
+#define COMMUNICATION_DESCRIBE_HW_MODEL         3   // Send hardware model info to master
+#define COMMUNICATION_DESCRIBE_HW_MANUFACTURER  4   // Send hardware manufacturer info to master
+#define COMMUNICATION_DESCRIBE_HW_VERSION       5   // Send hardware version info to master
+#define COMMUNICATION_DESCRIBE_FW_MODEL         6   // Send firmware model info to master
+#define COMMUNICATION_DESCRIBE_FW_MANUFACTURER  7   // Send firmware manufacturer info to master
+#define COMMUNICATION_DESCRIBE_FW_VERSION       8   // Send firmware version info to master
+#define COMMUNICATION_DESCRIBE_REGISTERS_SIZE   9
 
-#define COMMUNICATION_DESCRIBES_MAX             9
-
-// =============================================================================
-// NODE INITIALIZATION STEPS
-// =============================================================================
-
-#define NODE_INIT_INIT                          0
-#define NODE_INIT_HARDWARE                      1
-#define NODE_INIT_FIRMWARE                      2
-#define NODE_INIT_SETTINGS                      3
-#define NODE_INIT_INPUTS                        4
-#define NODE_INIT_OUTPUTS                       5
-#define NODE_INIT_BUTTONS                       6
-#define NODE_INIT_SWITCHES                      7
-#define NODE_INIT_FINISHED                      8
-#define NODE_INIT_WAIT                          9
+#define COMMUNICATION_DESCRIBES_MAX             10
 
 // =============================================================================
-// NODE CHANNELS TYPES
+// LED
 // =============================================================================
 
-#define NODE_CHANNEL_TYPE_BUTTON                1
-#define NODE_CHANNEL_TYPE_INPUT                 2
-#define NODE_CHANNEL_TYPE_OUTPUT                3
-#define NODE_CHANNEL_TYPE_SWITCH                4
-
-// =============================================================================
-// NODE CHANNELS FORMATS
-// =============================================================================
-
-#define NODE_CHANNEL_FORMAT_ANALOG              1       // Input or Output value is FLOAT
-#define NODE_CHANNEL_FORMAT_DIGITAL             2       // Input or Output value is BOOLEAN
-#define NODE_CHANNEL_FORMAT_NUMERIC             3       // Input or Output value is INTEGER
-#define NODE_CHANNEL_FORMAT_EVENT               4       // Input or Output value is CHAR
+#define LED_MODE_BUS                            0       // LED will blink according to the BUS status
+#define LED_MODE_FINDME                         1       // LED will be ON
+#define LED_MODE_FINDME_BUS                     2       // A mixture between BUS and FINDME
+#define LED_MODE_ON                             3       // LED always ON
+#define LED_MODE_OFF                            4       // LED always OFF
 
 // =============================================================================
 // BUTTONS EVENTS
@@ -83,16 +76,6 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #define BUTTON_EVENT_LNGCLICK                   4
 #define BUTTON_EVENT_LNGLNGCLICK                5
 #define BUTTON_EVENT_TRIPLECLICK                6
-
-// =============================================================================
-// LED
-// =============================================================================
-
-#define LED_MODE_BUS                            0       // LED will blink according to the BUS status
-#define LED_MODE_FINDME                         1       // LED will be ON
-#define LED_MODE_FINDME_BUS                     2       // A mixture between BUS and FINDME
-#define LED_MODE_ON                             3       // LED always ON
-#define LED_MODE_OFF                            4       // LED always OFF
 
 // =============================================================================
 // RELAY
