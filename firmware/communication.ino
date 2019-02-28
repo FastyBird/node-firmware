@@ -991,19 +991,19 @@ bool _communicationReplyToPacket(
         _communicationDebugLogPacket(payload[0]);
     #endif
 
-    _communication_bus.reply(
+    uint16_t result = _communication_bus.reply(
         payload,    // Content
         size        // Content lenght
     );
-/*
-    if (result == false || result == PJON_FAIL) {
+
+    if (result == PJON_FAIL) {
         #if DEBUG_SUPPORT
             DPRINT(F("[COMMUNICATION] Sending replypacket failed\n"));
         #endif
 
         return false;
     }
-*/
+
     return true;
 }
 
