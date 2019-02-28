@@ -46,11 +46,11 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #endif
 
 #ifndef COMMUNICATION_BUS_GATEWAY_ADDR
-#define COMMUNICATION_BUS_GATEWAY_ADDR      254                 // Gatewa network address definition
+#define COMMUNICATION_BUS_GATEWAY_ADDR      254                 // Gateway network address definition
 #endif
 
 #ifndef COMMUNICATION_GATEWAY_SEARCH_DELAY
-#define COMMUNICATION_GATEWAY_SEARCH_DELAY  10000               // In case node is without address, node will try periodically search for gateway
+#define COMMUNICATION_GATEWAY_SEARCH_DELAY  20000               // In case node is without address, node will try periodically search for gateway
 #endif
 
 #ifndef COMMUNICATION_ADDRESSING_TIMEOUT

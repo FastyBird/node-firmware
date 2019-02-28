@@ -10,95 +10,113 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // COMMUNICATION PACKET
 // =============================================================================
 
-#define COMMUNICATION_PACKET_NONE               0
-#define COMMUNICATION_PACKET_ACQUIRE_ADDRESS    1
-#define COMMUNICATION_PACKET_GATEWAY_PING       2   // Master is testing node if is alive
-#define COMMUNICATION_PACKET_WHO_ARE_YOU        3   // Master want to know slave details
-#define COMMUNICATION_PACKET_READ_DI            4   // Master requested DI regiter reading
-#define COMMUNICATION_PACKET_READ_DO            5   // Master requested DO regiter reading
-#define COMMUNICATION_PACKET_READ_AI            6   // Master requested AI regiter reading
-#define COMMUNICATION_PACKET_READ_AO            7   // Master requested AO regiter reading
-#define COMMUNICATION_PACKET_WRITE_ONE_DO       8
-#define COMMUNICATION_PACKET_WRITE_ONE_AO       9
-#define COMMUNICATION_PACKET_WRITE_MULTI_DO     10
-#define COMMUNICATION_PACKET_WRITE_MULTI_AO     11
+// Node addressing
+#define COMMUNICATION_PACKET_SEARCH_NODES               0x01
+#define COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM       0x02
+#define COMMUNICATION_PACKET_ADDRESS_DISCARD            0x03
 
-#define COMMUNICATION_PACKETS_MAX               12
+#define COMMUNICATION_PACKET_ADDRESS_MAX                3
+
+// Node initialization
+#define COMMUNICATION_PACKET_HW_MODEL                   0x11
+#define COMMUNICATION_PACKET_HW_MANUFACTURER            0x12
+#define COMMUNICATION_PACKET_HW_VERSION                 0x13
+#define COMMUNICATION_PACKET_FW_MODEL                   0x14
+#define COMMUNICATION_PACKET_FW_MANUFACTURER            0x15
+#define COMMUNICATION_PACKET_FW_VERSION                 0x16
+
+#define COMMUNICATION_PACKET_NODE_INIT_MAX              6
+
+// Node registers initialization
+#define COMMUNICATION_PACKET_REGISTERS_SIZE             0x21
+#define COMMUNICATION_PACKET_DI_REGISTERS_STRUCTURE     0x22
+#define COMMUNICATION_PACKET_DO_REGISTERS_STRUCTURE     0x23
+#define COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE     0x24
+#define COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE     0x25
+
+#define COMMUNICATION_PACKET_REGISTERS_INIT_MAX         5
+
+// Registers reading
+#define COMMUNICATION_PACKET_READ_SINGLE_DI             0x31   // Master requested DI one regiter reading
+#define COMMUNICATION_PACKET_READ_MULTI_DI              0x32   // Master requested DI multiple regiters reading
+#define COMMUNICATION_PACKET_READ_SINGLE_DO             0x33   // Master requested DO one regiter reading
+#define COMMUNICATION_PACKET_READ_MULTI_DO              0x34   // Master requested DO multiple regiters reading
+#define COMMUNICATION_PACKET_READ_AI                    0x35   // Master requested AI regiter reading
+#define COMMUNICATION_PACKET_READ_AO                    0x36   // Master requested AO regiter reading
+
+#define COMMUNICATION_PACKET_REGISTERS_REDING_MAX       6
+
+// Registers writing
+#define COMMUNICATION_PACKET_WRITE_ONE_DO               0x41
+#define COMMUNICATION_PACKET_WRITE_ONE_AO               0x42
+#define COMMUNICATION_PACKET_WRITE_MULTI_DO             0x43
+
+#define COMMUNICATION_PACKET_REGISTERS_WRITING_MAX      3
+
+// Node misc communication
+#define COMMUNICATION_PACKET_NONE                       0xFF
+#define COMMUNICATION_PACKET_GATEWAY_PING               0x51   // Master is testing node if is alive
+
+#define COMMUNICATION_PACKET_MISC_MAX                   2
 
 // =============================================================================
-// NODE ADDRESS ACQUISION
+// REGISTERS VALUES DATATYPES
 // =============================================================================
 
-#define COMMUNICATION_ACQUIRE_ADDRESS_NONE      0
-#define COMMUNICATION_ACQUIRE_ADDRESS_REQUEST   1
-#define COMMUNICATION_ACQUIRE_ADDRESS_CONFIRM   2
-#define COMMUNICATION_ACQUIRE_ADDRESS_REFRESH   3
-#define COMMUNICATION_ACQUIRE_ADDRESS_NEGATE    4
-#define COMMUNICATION_ACQUIRE_ADDRESS_LIST      5
-
-#define COMMUNICATION_ACQUIRE_ADDRESS_MAX       6
-
-// =============================================================================
-// NODE DESCRIBE ITSELF
-// =============================================================================
-
-#define COMMUNICATION_DESCRIBE_NONE             0
-#define COMMUNICATION_DESCRIBE_NODE             1   // Send node basic structure to master
-#define COMMUNICATION_DESCRIBE_SN               2   // Send node SN to master
-#define COMMUNICATION_DESCRIBE_HW_MODEL         3   // Send hardware model info to master
-#define COMMUNICATION_DESCRIBE_HW_MANUFACTURER  4   // Send hardware manufacturer info to master
-#define COMMUNICATION_DESCRIBE_HW_VERSION       5   // Send hardware version info to master
-#define COMMUNICATION_DESCRIBE_FW_MODEL         6   // Send firmware model info to master
-#define COMMUNICATION_DESCRIBE_FW_MANUFACTURER  7   // Send firmware manufacturer info to master
-#define COMMUNICATION_DESCRIBE_FW_VERSION       8   // Send firmware version info to master
-#define COMMUNICATION_DESCRIBE_REGISTERS_SIZE   9
-
-#define COMMUNICATION_DESCRIBES_MAX             10
+#define COMMUNICATION_DATA_TYPE_UNKNOWN                 0xFF
+#define COMMUNICATION_DATA_TYPE_BOOLEAN                 0x01
+#define COMMUNICATION_DATA_TYPE_UINT8                   0x02
+#define COMMUNICATION_DATA_TYPE_UINT16                  0x03
+#define COMMUNICATION_DATA_TYPE_UINT32                  0x04
+#define COMMUNICATION_DATA_TYPE_INT8                    0x05
+#define COMMUNICATION_DATA_TYPE_INT16                   0x06
+#define COMMUNICATION_DATA_TYPE_INT32                   0x07
+#define COMMUNICATION_DATA_TYPE_FLOAT32                 0x08
 
 // =============================================================================
 // LED
 // =============================================================================
 
-#define LED_MODE_BUS                            0       // LED will blink according to the BUS status
-#define LED_MODE_FINDME                         1       // LED will be ON
-#define LED_MODE_FINDME_BUS                     2       // A mixture between BUS and FINDME
-#define LED_MODE_ON                             3       // LED always ON
-#define LED_MODE_OFF                            4       // LED always OFF
+#define LED_MODE_BUS                                    0       // LED will blink according to the BUS status
+#define LED_MODE_FINDME                                 1       // LED will be ON
+#define LED_MODE_FINDME_BUS                             2       // A mixture between BUS and FINDME
+#define LED_MODE_ON                                     3       // LED always ON
+#define LED_MODE_OFF                                    4       // LED always OFF
 
 // =============================================================================
 // BUTTONS EVENTS
 // =============================================================================
 
-#define BUTTON_EVENT_NONE                       0
-#define BUTTON_EVENT_PRESSED                    1
-#define BUTTON_EVENT_CLICK                      2
-#define BUTTON_EVENT_DBLCLICK                   3
-#define BUTTON_EVENT_LNGCLICK                   4
-#define BUTTON_EVENT_LNGLNGCLICK                5
-#define BUTTON_EVENT_TRIPLECLICK                6
+#define BUTTON_EVENT_NONE                               0
+#define BUTTON_EVENT_PRESSED                            1
+#define BUTTON_EVENT_CLICK                              2
+#define BUTTON_EVENT_DBLCLICK                           3
+#define BUTTON_EVENT_LNGCLICK                           4
+#define BUTTON_EVENT_LNGLNGCLICK                        5
+#define BUTTON_EVENT_TRIPLECLICK                        6
 
 // =============================================================================
 // RELAY
 // =============================================================================
 
-#define RELAY_BOOT_OFF                          0
-#define RELAY_BOOT_ON                           1
-#define RELAY_BOOT_SAME                         2
-#define RELAY_BOOT_TOGGLE                       3
+#define RELAY_BOOT_OFF                                  0
+#define RELAY_BOOT_ON                                   1
+#define RELAY_BOOT_SAME                                 2
+#define RELAY_BOOT_TOGGLE                               3
 
-#define RELAY_TYPE_NORMAL                       0
-#define RELAY_TYPE_INVERSE                      1
-#define RELAY_TYPE_LATCHED                      2
-#define RELAY_TYPE_LATCHED_INVERSE              3
+#define RELAY_TYPE_NORMAL                               0
+#define RELAY_TYPE_INVERSE                              1
+#define RELAY_TYPE_LATCHED                              2
+#define RELAY_TYPE_LATCHED_INVERSE                      3
 
-#define RELAY_SYNC_ANY                          0
-#define RELAY_SYNC_NONE_OR_ONE                  1
-#define RELAY_SYNC_ONE                          2
-#define RELAY_SYNC_SAME                         3
+#define RELAY_SYNC_ANY                                  0
+#define RELAY_SYNC_NONE_OR_ONE                          1
+#define RELAY_SYNC_ONE                                  2
+#define RELAY_SYNC_SAME                                 3
 
-#define RELAY_PULSE_NONE                        0
-#define RELAY_PULSE_OFF                         1
-#define RELAY_PULSE_ON                          2
+#define RELAY_PULSE_NONE                                0
+#define RELAY_PULSE_OFF                                 1
+#define RELAY_PULSE_ON                                  2
 
-#define RELAY_PROVIDER_NONE                     0
-#define RELAY_PROVIDER_RELAY                    1
+#define RELAY_PROVIDER_NONE                             0
+#define RELAY_PROVIDER_RELAY                            1

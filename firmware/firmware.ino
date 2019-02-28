@@ -22,6 +22,8 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // -----------------------------------------------------------------------------
 
 void setup() {
+    Serial.begin(SERIAL_BAUDRATE);
+
     communicationSetup();
 
     #if BUTTON_SUPPORT

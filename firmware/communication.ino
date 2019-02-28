@@ -15,13 +15,15 @@ PJON<ThroughSerial> _communication_bus(PJON_NOT_ASSIGNED);
 
 SoftwareSerial _communication_serial_bus(COMMUNICATION_BUS_TX_PIN, COMMUNICATION_BUS_RX_PIN);
 
-typedef struct {
-    byte address;
+struct communication_binary_register_t {
+    const char * name;
+    uint8_t data_type;
     bool value;
-} communication_binary_register_t;
+};
 
 typedef struct {
-    byte address;
+    const char * name;
+    uint8_t data_type;
     word value;
 } communication_analog_register_t;
 
@@ -35,73 +37,77 @@ struct communication_register_t {
 
 communication_register_t _communication_register;
 
-uint32_t _communication_rid;
-uint32_t _communication_last_rid_request_time;
+uint32_t _communication_last_node_search_request_time;
 uint32_t _communication_master_lost = 0;
 
 // -----------------------------------------------------------------------------
 // MODULE PRIVATE
 // -----------------------------------------------------------------------------
 
+bool _communicationIsPacketInGroup(
+    uint8_t packetId,
+    const int * group,
+    uint8_t length
+) {
+    for (uint8_t i = 0; i < length; i++) {
+        if ((uint8_t) pgm_read_byte(&group[i]) == packetId) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// -----------------------------------------------------------------------------
+
+uint8_t _communicationGetPacketIndexInGroup(
+    uint8_t packetId,
+    const int * group,
+    uint8_t length
+) {
+    for (uint8_t i = 0; i < length; i++) {
+        if ((uint8_t) pgm_read_byte(&group[i]) == packetId) {
+            return i;
+        }
+    }
+
+    return 0;
+}
+
+// -----------------------------------------------------------------------------
+
 #if DEBUG_SUPPORT
     void _communicationDebugLogPacket(
-        byte packetId
+        uint8_t packetId
     ) {
         DPRINT(packetId);
         DPRINT(F(" => ("));
 
-        if (packetId < COMMUNICATION_PACKETS_MAX) {
-            char buffer[50];
+        char buffer[50];
 
-            strcpy_P(buffer, (char *) pgm_read_word(&communication_packet_string[packetId]));
-            DPRINT(buffer);
+        if (_communicationIsPacketInGroup(packetId, communication_packets_addresing, COMMUNICATION_PACKET_ADDRESS_MAX)) {
+            strcpy_P(buffer, (char *) pgm_read_word(&communication_packets_addresing_string[_communicationGetPacketIndexInGroup(packetId, communication_packets_addresing, COMMUNICATION_PACKET_ADDRESS_MAX)]));
 
-        } else {
-            DPRINTLN(F("unknown"));
-        }
+        } else if (_communicationIsPacketInGroup(packetId, communication_packets_node_initialization, COMMUNICATION_PACKET_NODE_INIT_MAX)) {
+            strcpy_P(buffer, (char *) pgm_read_word(&communication_packets_node_initialization_string[_communicationGetPacketIndexInGroup(packetId, communication_packets_node_initialization, COMMUNICATION_PACKET_NODE_INIT_MAX)]));
 
-        DPRINTLN(F(")"));
-    }
+        } else if (_communicationIsPacketInGroup(packetId, communication_packets_registers_initialization, COMMUNICATION_PACKET_REGISTERS_INIT_MAX)) {
+            strcpy_P(buffer, (char *) pgm_read_word(&communication_packets_registers_initialization_string[_communicationGetPacketIndexInGroup(packetId, communication_packets_registers_initialization, COMMUNICATION_PACKET_REGISTERS_INIT_MAX)]));
 
-// -----------------------------------------------------------------------------
+        } else if (_communicationIsPacketInGroup(packetId, communication_packets_registers_reading, COMMUNICATION_PACKET_REGISTERS_REDING_MAX)) {
+            strcpy_P(buffer, (char *) pgm_read_word(&communication_packets_registers_reading_string[_communicationGetPacketIndexInGroup(packetId, communication_packets_registers_reading, COMMUNICATION_PACKET_REGISTERS_REDING_MAX)]));
 
-    void _communicationDebugLogNodeAddressAcquire(
-        byte index
-    ) {
-        DPRINT(index);
-        DPRINT(F(" => ("));
+        } else if (_communicationIsPacketInGroup(packetId, communication_packets_registers_writing, COMMUNICATION_PACKET_REGISTERS_WRITING_MAX)) {
+            strcpy_P(buffer, (char *) pgm_read_word(&communication_packets_registers_writing_string[_communicationGetPacketIndexInGroup(packetId, communication_packets_registers_writing, COMMUNICATION_PACKET_REGISTERS_WRITING_MAX)]));
 
-        if (index < COMMUNICATION_ACQUIRE_ADDRESS_MAX) {
-            char buffer[50];
-
-            strcpy_P(buffer, (char *) pgm_read_word(&communication_address_acquire_string[index]));
-            DPRINT(buffer);
+        } else if (_communicationIsPacketInGroup(packetId, communication_packets_misc, COMMUNICATION_PACKET_MISC_MAX)) {
+            strcpy_P(buffer, (char *) pgm_read_word(&communication_packets_misc_string[_communicationGetPacketIndexInGroup(packetId, communication_packets_misc, COMMUNICATION_PACKET_MISC_MAX)]));
 
         } else {
-            DPRINTLN(F("unknown"));
+            strncpy_P(buffer, "unknown", sizeof(buffer));
         }
 
-        DPRINTLN(F(")"));
-    }
-
-// -----------------------------------------------------------------------------
-
-    void _communicationDebugLogNodeDescription(
-        byte description
-    ) {
-        DPRINT(description);
-        DPRINT(F(" => ("));
-
-        if (description < COMMUNICATION_DESCRIBES_MAX) {
-            char buffer[50];
-
-            strcpy_P(buffer, (char *) pgm_read_word(&communication_describe_string[description]));
-            DPRINT(buffer);
-
-        } else {
-            DPRINTLN(F("unknown"));
-        }
-
+        DPRINT(buffer);
         DPRINTLN(F(")"));
     }
 #endif
@@ -111,7 +117,7 @@ uint32_t _communication_master_lost = 0;
 /**
  * Get DI or DO buffer size
  */
-byte _communicationGetDigitalBufferSize(
+uint8_t _communicationGetDigitalBufferSize(
     bool output
 ) {
     if (output) {
@@ -124,34 +130,9 @@ byte _communicationGetDigitalBufferSize(
 // -----------------------------------------------------------------------------
 
 /**
- * Get value from DI or DO buffer
- */
-bool _communicationGetDigitalBufferValue(
-    bool output,
-    byte index
-) {
-    if (output) {
-        if (index < _communication_register.digital_outputs.size()) {
-            return _communication_register.digital_outputs[index].value;
-
-        } else {
-            return false;
-        }
-    }
-
-    if (index < _communication_register.digital_inputs.size()) {
-        return _communication_register.digital_inputs[index].value;
-    }
-
-    return false;
-}
-
-// -----------------------------------------------------------------------------
-
-/**
  * Get AI or AO buffer size
  */
-byte _communicationGetAnalogBufferSize(
+uint8_t _communicationGetAnalogBufferSize(
     bool output
 ) {
     if (output) {
@@ -168,7 +149,7 @@ byte _communicationGetAnalogBufferSize(
  */
 word _communicationGetAnalogBufferValue(
     bool output,
-    byte index
+    uint8_t index
 ) {
     if (output) {
         if (index < _communication_register.analog_outputs.size()) {
@@ -187,139 +168,11 @@ word _communicationGetAnalogBufferValue(
 }
 
 // -----------------------------------------------------------------------------
-
-void _communicationReportBasicStructure(
-    byte packetId
-) {
-    char output_content[11];
-
-    // 0    => Packet identifier
-    // 1    => Subaction identifier
-    // 2    => Supported SN info
-    // 3    => Supported HW model
-    // 4    => Supported HW manufacturer
-    // 5    => Supported HW version
-    // 6    => Supported FW model
-    // 7    => Supported FW manufacturer
-    // 8    => Supported FW version
-    // 9    => Supported value registers
-    // 10   => Max packet size
-    output_content[0] = (char) COMMUNICATION_PACKET_WHO_ARE_YOU;
-    output_content[1] = (char) COMMUNICATION_DESCRIBE_NODE;
-    output_content[2] = 0xFF;
-    output_content[3] = 0xFF;
-    output_content[4] = 0xFF;
-    output_content[5] = 0xFF;
-    output_content[6] = 0xFF;
-    output_content[7] = 0xFF;
-    output_content[8] = 0xFF;
-    output_content[9] = 0xFF;
-    output_content[10] = PJON_PACKET_MAX_LENGTH;
-
-    #if DEBUG_SUPPORT
-        // Reply to gateway
-        _communicationReplyToPacket(output_content, 11);
-    #else
-        // Reply to gateway
-        if (_communicationReplyToPacket(output_content, 11) == false) {
-            // Node was not able to notify gateway about its address
-            DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive node basic structure\n"));
-
-        } else {
-            DPRINT(F("[COMMUNICATION] Replied to gateway with basic sctructure info\n"));
-        }
-    #endif
-}
-
-// -----------------------------------------------------------------------------
-
-void _communicationReportDescription(
-    byte packetId,
-    byte describeType,
-    char * sendContent
-) {
-    char output_content[PJON_PACKET_MAX_LENGTH];
-
-    // 0    => Packet identifier
-    // 1    => Subaction identifier
-    // 2    => String length
-    // 3-n  => String content
-    output_content[0] = (char) COMMUNICATION_PACKET_WHO_ARE_YOU;
-    output_content[1] = (char) describeType;
-    output_content[2] = (strlen(sendContent) + 1);
-
-    byte bytes_counter = 3;
-
-    for (byte i = 0; i < strlen(sendContent); i++) {
-        output_content[bytes_counter] = sendContent[i];
-
-        bytes_counter++;
-    }
-
-    output_content[bytes_counter] = 0; // Be sure to set the null terminator!!!
-
-    #if DEBUG_SUPPORT
-        // Reply to gateway
-        _communicationReplyToPacket(output_content, (bytes_counter + 1));
-    #else
-        // Reply to gateway
-        if (_communicationReplyToPacket(output_content, (bytes_counter + 1)) == false) {
-            // Node was not able to notify gateway about its address
-            DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive node description: "));
-            DPRINT(describeType);
-            DPRINT(F(" with content: "));
-            DPRINTLN(sendContent);
-
-        } else {
-            DPRINT(F("[COMMUNICATION] Replied to gateway with description: "));
-            DPRINT(describeType);
-            DPRINT(F(" with content: "));
-            DPRINTLN(sendContent);
-        }
-    #endif
-}
-
-// -----------------------------------------------------------------------------
-
-void _communicationReportRegistersSizes(
-    byte packetId
-) {
-    char output_content[6];
-
-    // 0 => Packet identifier
-    // 1 => Subaction identifier
-    // 2 => DI buffer size
-    // 3 => DO buffer size
-    // 4 => AI buffer size
-    // 5 => AO buffer size
-    output_content[0] = (char) packetId;
-    output_content[1] = (char) COMMUNICATION_DESCRIBE_REGISTERS_SIZE;
-    output_content[2] = (char) _communicationGetDigitalBufferSize(false);
-    output_content[3] = (char) _communicationGetDigitalBufferSize(true);
-    output_content[4] = (char) _communicationGetAnalogBufferSize(false);
-    output_content[5] = (char) _communicationGetAnalogBufferSize(true);
-
-    #if DEBUG_SUPPORT
-        // Reply to gateway
-        _communicationReplyToPacket(output_content, 6);
-    #else
-        // Reply to gateway
-        if (_communicationReplyToPacket(output_content, 6) == false) {
-            // Node was not able to notify gateway about its address
-            DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive node registers sizes\n"));
-
-        } else {
-            DPRINT(F("[COMMUNICATION] Replied to gateway with registers sizes\n"));
-        }
-    #endif
-}
-
-// -----------------------------------------------------------------------------
 // DIGITAL REGISTERS
 // -----------------------------------------------------------------------------
 
 void _communicationReportDigitalRegisters(
-    byte packetId,
+    uint8_t packetId,
     uint8_t * payload,
     bool output
 ) {
@@ -350,13 +203,13 @@ void _communicationReportDigitalRegisters(
         bool byte_buffer[8];
 
         // Reset bit buffer
-        for (byte j = 0; j < 8; j++) {
+        for (uint8_t j = 0; j < 8; j++) {
             byte_buffer[j] = 0;
         }
 
-        byte bit_counter = 0;
-        byte byte_counter = 1;
-        byte write_byte = 0;
+        uint8_t bit_counter = 0;
+        uint8_t byte_counter = 1;
+        uint8_t write_byte = 0;
 
         // 0    => Packet identifier
         // 1    => High byte of register address
@@ -368,10 +221,14 @@ void _communicationReportDigitalRegisters(
         output_content[2] = (char) (register_address & 0xFF);
         output_content[3] = (char) 0; // Temporary value, will be updated after collecting all
 
-        byte data_write_index = 4;
+        uint8_t data_write_index = 4;
 
-        for (byte i = register_address; i < (register_address + read_length) && i < _communicationGetDigitalBufferSize(output); i++) {
-            byte_buffer[bit_counter] = _communicationGetDigitalBufferValue(output, i) ? 1 : 0;
+        for (uint8_t i = register_address; i < (register_address + read_length) && i < _communicationGetDigitalBufferSize(output); i++) {
+            if (output) {
+                byte_buffer[bit_counter] = communicationReadDigitalOutput(i) ? 1 : 0;
+            } else {
+                byte_buffer[bit_counter] = communicationReadDigitalInput(i) ? 1 : 0;
+            }
 
             bit_counter++;
 
@@ -382,7 +239,7 @@ void _communicationReportDigitalRegisters(
                 // Converting BIT array to BYTE => decimal number
                 write_byte = 0;
 
-                for (byte wr = 0; wr < 8; wr++) {
+                for (uint8_t wr = 0; wr < 8; wr++) {
                     write_byte |= byte_buffer[wr] << wr;
                 }
 
@@ -393,7 +250,7 @@ void _communicationReportDigitalRegisters(
                 data_write_index++;
 
                 // Reset bit buffer
-                for (byte j = 0; j < 8; j++) {
+                for (uint8_t j = 0; j < 8; j++) {
                     byte_buffer[j] = 0;
                 }
             }
@@ -403,7 +260,7 @@ void _communicationReportDigitalRegisters(
             // Converting BIT array to BYTE => decimal number
             write_byte = 0;
 
-            for (byte wr = 0; wr < 8; wr++) {
+            for (uint8_t wr = 0; wr < 8; wr++) {
                 write_byte |= byte_buffer[wr] << wr;
             }
 
@@ -439,8 +296,8 @@ void _communicationReportDigitalRegisters(
 
 // -----------------------------------------------------------------------------
 
-void _communicationWriteDigitalOutput(
-    byte packetId,
+void _communicationWriteSingleDigitalOutput(
+    uint8_t packetId,
     uint8_t * payload
 ) {
     char output_content[PJON_PACKET_MAX_LENGTH];
@@ -468,8 +325,8 @@ void _communicationWriteDigitalOutput(
         // Write address must be between <0, buffer.size()>
         register_address < _communicationGetDigitalBufferSize(true)
     ) {
-        if (_communication_register.digital_outputs[register_address].value != (bool) write_value) {
-            _communication_register.digital_outputs[register_address].value = (bool) write_value;
+        if (communicationReadDigitalOutput(register_address) != (bool) write_value) {
+            communicationWriteDigitalOutput(register_address, (bool) write_value);
         #if DEBUG_SUPPORT
             DPRINT(F("[COMMUNICATION] Value was written into DO register\n"));
 
@@ -513,15 +370,15 @@ void _communicationWriteDigitalOutput(
 
 // -----------------------------------------------------------------------------
 
-void _communicationWriteMultipleDigitalOutput(
-    byte packetId,
+void _communicationWriteMultipleDigitalOutputs(
+    uint8_t packetId,
     uint8_t * payload
 ) {
     char output_content[PJON_PACKET_MAX_LENGTH];
 
     word register_address = (word) payload[1] << 8 | (word) payload[2];
     word write_length = (word) payload[3] << 8 | (word) payload[4];
-    byte bytes_count = (byte) payload[5];
+    uint8_t bytes_count = (uint8_t) payload[5];
 
     #if DEBUG_SUPPORT
         DPRINT(F("[COMMUNICATION] Requested write to DO register at address: "));
@@ -536,24 +393,24 @@ void _communicationWriteMultipleDigitalOutput(
         // Write end address have to be same or smaller as register size
         && (register_address + write_length) <= _communicationGetDigitalBufferSize(true)
     ) {
-        byte write_byte = 1;
-        byte data_byte;
+        uint8_t write_byte = 1;
+        uint8_t data_byte;
 
-        byte write_address = register_address;
+        uint8_t write_address = register_address;
 
         while (
             write_address < (register_address + write_length)
             && write_address < _communicationGetDigitalBufferSize(true)
             && write_byte <= bytes_count
         ) {
-            data_byte = (byte) payload[5 + write_byte];
+            data_byte = (uint8_t) payload[5 + write_byte];
             bool write_value = false;
 
-            for (byte i = 7; i >= 0; i--) {
-                write_value = (data_byte >> i) & 0x01;
+            for (uint8_t i = 0; i < 8; i++) {
+                write_value = (data_byte >> i) & 0x01 ? true : false;
 
-                if (_communication_register.digital_outputs[write_address].value != write_value) {
-                    _communication_register.digital_outputs[write_address].value = write_value;
+                if (communicationReadDigitalOutput(write_address) != write_value) {
+                    communicationWriteDigitalOutput(write_address, write_value);
                 #if DEBUG_SUPPORT
                     DPRINT(F("[COMMUNICATION] Value was written into DO register at address: "));
                     DPRINTLN(write_address);
@@ -614,7 +471,7 @@ void _communicationWriteMultipleDigitalOutput(
 // -----------------------------------------------------------------------------
 
 void _communicationReportAnalogRegisters(
-    byte packetId,
+    uint8_t packetId,
     uint8_t * payload,
     bool output
 ) {
@@ -642,7 +499,7 @@ void _communicationReportAnalogRegisters(
         // Read length have to be same or smaller as registers size
         && (register_address + read_length) <= _communicationGetAnalogBufferSize(output)
     ) {
-        byte byte_counter = 1;
+        uint8_t byte_counter = 1;
 
         // 0    => Packet identifier
         // 1    => High byte of register address
@@ -654,7 +511,7 @@ void _communicationReportAnalogRegisters(
         output_content[2] = (char) (register_address & 0xFF);
         output_content[3] = (char) 0; // Temporary value, will be updated after collecting all
 
-        for (byte i = register_address; i < (register_address + read_length) && i < _communicationGetAnalogBufferSize(output); i++) {
+        for (uint8_t i = register_address; i < (register_address + read_length) && i < _communicationGetAnalogBufferSize(output); i++) {
             output_content[byte_counter] = (char) (_communicationGetAnalogBufferValue(output, i) >> 8);
             output_content[byte_counter + 1] = (char) (_communicationGetAnalogBufferValue(output, i) & 0xFF);
 
@@ -689,233 +546,296 @@ void _communicationReportAnalogRegisters(
 }
 
 // -----------------------------------------------------------------------------
+// NODE ADDRESSING PROCESS
+// -----------------------------------------------------------------------------
 
 /**
- * Generate a new node RID
+ * PAYLOAD:
+ * 0 => Packet identifier
  */
-void _communicationGenerateRid() {
-    _communication_rid = (
-        (uint32_t) (PJON_RANDOM(2147483646)) ^
-        (uint32_t) (PJON_ANALOG_READ(A0)) ^
-        (uint32_t) (millis())
-    ) ^ _communication_rid ^ _communication_last_rid_request_time;
+void _communicationNodesSearchRequestHandler(
+    uint8_t * payload
+) {
+    if (millis() - _communication_last_node_search_request_time > (COMMUNICATION_ADDRESSING_TIMEOUT * 1.125)) {
+        _communication_last_node_search_request_time = millis();
+
+        char output_content[PJON_PACKET_MAX_LENGTH];
+
+        // 0    => Packet identifier
+        // 1    => Node bus address
+        // 2    => Max packet size
+        // 3    => Node SN length
+        // 4-n  => Node parsed SN
+        output_content[0] = (uint8_t) COMMUNICATION_PACKET_SEARCH_NODES;
+        output_content[1] = (uint8_t) communicationNodeAddress();
+        output_content[2] = (uint8_t) PJON_PACKET_MAX_LENGTH;
+        output_content[3] = (uint8_t) (strlen((char *) NODE_SERIAL_NO) + 1);
+
+        uint8_t byte_pointer = 4;
+
+        for (uint8_t i = 0; i < strlen((char *) NODE_SERIAL_NO); i++) {
+            output_content[byte_pointer] = ((char *) NODE_SERIAL_NO)[i];
+
+            byte_pointer++;
+        }
+
+        output_content[byte_pointer] = 0; // Be sure to set the null terminator!!!
+
+        // Non blocking packet transfer
+        _communication_bus.send(
+            COMMUNICATION_BUS_GATEWAY_ADDR,
+            output_content,
+            (byte_pointer + 1)
+        );
+    }
 }
 
 // -----------------------------------------------------------------------------
 
 /**
- * Send request to gateway for assigning node address
+ * PAYLOAD:
+ * 0    => Packet identifier
+ * 1    => Gateway assigned address
+ * 2    => Node SN length
+ * 3-n  => Node SN
  */
-void _communicationAcquireAddress()
-{
-    _communicationGenerateRid();
+void _communicationAddressConfirmRequestHandler(
+    uint8_t * payload
+) {
+    // Extract address assigned by gateway
+    uint8_t address = (uint8_t) payload[1];
 
-    char output_content[5];
+    char node_sn[(uint8_t) payload[2]];
 
-    output_content[0] = COMMUNICATION_PACKET_ACQUIRE_ADDRESS;
-    output_content[1] = COMMUNICATION_ACQUIRE_ADDRESS_REQUEST;
-    output_content[2] = (uint8_t) ((uint32_t) (_communication_rid) >> 24);
-    output_content[3] = (uint8_t) ((uint32_t) (_communication_rid) >> 16);
-    output_content[4] = (uint8_t) ((uint32_t) (_communication_rid) >>  8);
-    output_content[5] = (uint8_t) ((uint32_t) (_communication_rid));
+    // Extract node serial number from payload
+    for (uint8_t i = 0; i < (uint8_t) payload[2]; i++) {
+        node_sn[i] = (char) payload[i + 3];
+    }
 
-    if (
-        _communication_bus.send_packet_blocking(
-            COMMUNICATION_BUS_GATEWAY_ADDR,
-            output_content,
-            6
-        ) == PJON_ACK
-    ) {
-        #if DEBUG_SUPPORT
-            DPRINT(F("[COMMUNICATION] Sent request to gateway for address\n"));
-        #endif
-
+    // Check if received packet if for this node
+    if (strcmp((char *) NODE_SERIAL_NO, (char *) node_sn) != 0) {
         return;
     }
 
+    // Set node address to received from gateway
+    _communication_bus.set_id(address);
+    
     #if DEBUG_SUPPORT
-        DPRINT(F("[COMMUNICATION][ERR] Acquisition node address fail\n"));
+        DPRINTLN();
+        DPRINT(F("[COMMUNICATION] ===========================\n"));
+        DPRINT(F("[COMMUNICATION] Node address was set to: "));
+        DPRINTLN(address);
+        DPRINT(F("[COMMUNICATION] ===========================\n"));
+        DPRINTLN();
+
+        DPRINT(F("[COMMUNICATION] Confirming node address to master\n"));
+    #endif
+
+    char output_content[PJON_PACKET_MAX_LENGTH];
+
+    // 0    => Packet identifier
+    // 1    => Gateway assigned address
+    // 2    => Node SN length
+    // 3-n  => Node SN
+    output_content[0] = (uint8_t) COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM;
+    output_content[1] = (uint8_t) address;
+    output_content[2] = (uint8_t) (strlen((char *) NODE_SERIAL_NO) + 1);
+
+    uint8_t byte_pointer = 3;
+
+    for (uint8_t i = 0; i < strlen((char *) NODE_SERIAL_NO); i++) {
+        output_content[byte_pointer] = ((char *) NODE_SERIAL_NO)[i];
+
+        byte_pointer++;
+    }
+
+    output_content[byte_pointer] = 0; // Be sure to set the null terminator!!!
+
+    _communicationReplyToPacket(
+        output_content,
+        (byte_pointer + 1)
+    );
+
+    #if DEBUG_SUPPORT
+        DPRINT(F("[COMMUNICATION] Received node address was successfully confirmed to gateway\n"));
     #endif
 }
 
 // -----------------------------------------------------------------------------
 
 void _communicationAddressRequestHandler(
+    uint8_t packetId,
     uint8_t * payload
 ) {
-    #if DEBUG_SUPPORT
-        DPRINT(F("[COMMUNICATION] Gateway replied to address negotiation: "));
-        _communicationDebugLogNodeAddressAcquire((byte) payload[1]);
-    #endif
-
-    uint8_t rid[4] = {
-        (uint8_t) ((uint32_t) (_communication_rid) >> 24),
-        (uint8_t) ((uint32_t) (_communication_rid) >> 16),
-        (uint8_t) ((uint32_t) (_communication_rid) >>  8),
-        (uint8_t) ((uint32_t) (_communication_rid))
-    };
-
-    char output_content[PJON_PACKET_MAX_LENGTH];
-
-    // Basic reply packet structure
-    output_content[0] = (uint8_t) COMMUNICATION_PACKET_ACQUIRE_ADDRESS;
-    output_content[1] = (uint8_t) COMMUNICATION_ACQUIRE_ADDRESS_NONE;
-    output_content[2] = rid[0];
-    output_content[3] = rid[1];
-    output_content[4] = rid[2];
-    output_content[5] = rid[3];
-
-    uint8_t received_rid[4];
-
-    received_rid[0] = (uint8_t) payload[2];
-    received_rid[1] = (uint8_t) payload[3];
-    received_rid[2] = (uint8_t) payload[4];
-    received_rid[3] = (uint8_t) payload[5];
-
-    switch ((byte) payload[1])
+    switch (packetId)
     {
         /**
-         * Gateway confirmed address acquire request
-         * & replied with assigned node address
+         * Gateway is searching for nodes
          */
-        case COMMUNICATION_ACQUIRE_ADDRESS_REQUEST:
-            // This packet is broadcasted to all nodes so node has to check RID if is same
-            if (PJONTools::bus_id_equality(received_rid, rid)) {
-                output_content[1] = (uint8_t) COMMUNICATION_ACQUIRE_ADDRESS_CONFIRM;
-                output_content[6] = (uint8_t) payload[6];
-
-                // Set node address defined by gateway
-                _communication_bus.set_id((uint8_t) payload[6]);
-
-                #if DEBUG_SUPPORT
-                    DPRINTLN();
-                    DPRINT(F("[COMMUNICATION] ===========================\n"));
-                    DPRINT(F("[COMMUNICATION] Node address was set to: "));
-                    DPRINTLN((uint8_t) payload[6]);
-                    DPRINT(F("[COMMUNICATION] ===========================\n"));
-                    DPRINTLN();
-
-                    DPRINT(F("[COMMUNICATION] Confirming node address to master\n"));
-                #endif
-
-                if (
-                    _communication_bus.send_packet_blocking(
-                        COMMUNICATION_BUS_GATEWAY_ADDR,
-                        output_content,
-                        7
-                    ) != PJON_ACK
-                ) {
-                    _communication_bus.set_id(PJON_NOT_ASSIGNED);
-                #if DEBUG_SUPPORT
-                    DPRINT(F("[COMMUNICATION][ERR] Received node address could not be confirmed to gateway\n"));
-
-                } else {
-                    DPRINT(F("[COMMUNICATION] Received node address was successfully confirmed to gateway\n"));
-                #endif
-                }
-            }
+        case COMMUNICATION_PACKET_SEARCH_NODES:
+            _communicationNodesSearchRequestHandler(payload);
             break;
 
         /**
-         * Gateway was not able to finish address negotiation
-         * Node has to re-request for new address
+         * Gateway provided node address
          */
-        case COMMUNICATION_ACQUIRE_ADDRESS_NEGATE:
-            if (PJONTools::bus_id_equality(received_rid, rid)) {
-                _communicationAcquireAddress();
-            }
+        case COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM:
+            _communicationAddressConfirmRequestHandler(payload);
             break;
 
         /**
-         * Gateway is reinitializing its nodes collection
+         * Gateway confirmed node address discarding request
          */
-        case COMMUNICATION_ACQUIRE_ADDRESS_LIST:
-            if (communicationMasterAddress() != PJON_NOT_ASSIGNED) {
-                if (millis() - _communication_last_rid_request_time > (COMMUNICATION_ADDRESSING_TIMEOUT * 1.125)) {
-                    _communication_last_rid_request_time = millis();
-
-                    output_content[1] = (uint8_t) COMMUNICATION_ACQUIRE_ADDRESS_REFRESH;
-                    output_content[6] = (uint8_t) communicationMasterAddress();
-
-                    _communication_bus.send(
-                        COMMUNICATION_BUS_GATEWAY_ADDR,
-                        output_content,
-                        7
-                    );
-                }
-
-            } else if (millis() - _communication_last_rid_request_time > (COMMUNICATION_ADDRESSING_TIMEOUT * 1.125)) {
-                _communication_last_rid_request_time = millis();
-
-                _communicationAcquireAddress();
-            }
+        case COMMUNICATION_PACKET_ADDRESS_DISCARD:
+            // TODO
             break;
-
-        #if DEBUG_SUPPORT
-            case COMMUNICATION_ACQUIRE_ADDRESS_REFRESH:
-                DPRINT(F("[COMMUNICATION][WARN] Refresh action is only for node to gateway direction\n"));
-                break;
-
-            case COMMUNICATION_ACQUIRE_ADDRESS_CONFIRM:
-                DPRINT(F("[COMMUNICATION][WARN] Confirm action is only for node to gateway direction\n"));
-                break;
-        #endif
     }
 }
 
 // -----------------------------------------------------------------------------
+// NODE INITIALIZATION
+// -----------------------------------------------------------------------------
 
-void _communicationDescribeRequestHandler(
-    byte packetId,
+void _communicationReportDescriptionRequestHandler(
+    uint8_t packetId,
+    char * sendContent
+) {
+    char output_content[PJON_PACKET_MAX_LENGTH];
+
+    // 0    => Packet identifier
+    // 1    => String length
+    // 2-n  => String content
+    output_content[0] = packetId;
+    output_content[1] = (strlen(sendContent) + 1);
+
+    uint8_t byte_pointer = 2;
+
+    for (uint8_t i = 0; i < strlen(sendContent); i++) {
+        output_content[byte_pointer] = sendContent[i];
+
+        byte_pointer++;
+    }
+
+    output_content[byte_pointer] = 0; // Be sure to set the null terminator!!!
+
+    #if DEBUG_SUPPORT
+        // Reply to gateway
+        _communicationReplyToPacket(output_content, (byte_pointer + 1));
+    #else
+        // Reply to gateway
+        if (_communicationReplyToPacket(output_content, (byte_pointer + 1)) == false) {
+            // Node was not able to notify gateway about its address
+            DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive node description packet: "));
+            DPRINT(packetId);
+            DPRINT(F(" with content: "));
+            DPRINTLN(sendContent);
+
+        } else {
+            DPRINT(F("[COMMUNICATION] Replied to gateway with description packet: "));
+            DPRINT(packetId);
+            DPRINT(F(" with content: "));
+            DPRINTLN(sendContent);
+        }
+    #endif
+}
+
+// -----------------------------------------------------------------------------
+
+void _communicationNodeInitializationRequestHandler(
+    uint8_t packetId,
     uint8_t * payload
 ) {
-    #if DEBUG_SUPPORT
-        DPRINT(F("[COMMUNICATION] Gateway requested description:"));
-        _communicationDebugLogNodeDescription((byte) payload[1]);
-    #endif
-
-    switch ((byte) payload[1])
+    switch (packetId)
     {
-        case COMMUNICATION_DESCRIBE_NODE:
-            _communicationReportBasicStructure(packetId);
-            break;
-
-        // Send node SN to gateway
-        case COMMUNICATION_DESCRIBE_SN:
-            _communicationReportDescription(packetId, (byte) payload[1], (char *) NODE_SERIAL_NO);
-            break;
-
-        case COMMUNICATION_DESCRIBE_HW_MODEL:
-            _communicationReportDescription(packetId, (byte) payload[1], (char *) NODE_NAME);
+        case COMMUNICATION_PACKET_HW_MODEL:
+            _communicationReportDescriptionRequestHandler(packetId, (char *) NODE_NAME);
             return;
 
-        case COMMUNICATION_DESCRIBE_HW_MANUFACTURER:
-            _communicationReportDescription(packetId, (byte) payload[1], (char *) NODE_MANUFACTURER);
+        case COMMUNICATION_PACKET_HW_MANUFACTURER:
+            _communicationReportDescriptionRequestHandler(packetId, (char *) NODE_MANUFACTURER);
             return;
 
-        case COMMUNICATION_DESCRIBE_HW_VERSION:
-            _communicationReportDescription(packetId, (byte) payload[1], (char *) NODE_VERSION);
+        case COMMUNICATION_PACKET_HW_VERSION:
+            _communicationReportDescriptionRequestHandler(packetId, (char *) NODE_VERSION);
             return;
 
-        case COMMUNICATION_DESCRIBE_FW_MODEL:
-            _communicationReportDescription(packetId, (byte) payload[1], (char *) FIRMWARE_NAME);
+        case COMMUNICATION_PACKET_FW_MODEL:
+            _communicationReportDescriptionRequestHandler(packetId, (char *) FIRMWARE_NAME);
             return;
 
-        case COMMUNICATION_DESCRIBE_FW_MANUFACTURER:
-            _communicationReportDescription(packetId, (byte) payload[1], (char *) FIRMWARE_MANUFACTURER);
+        case COMMUNICATION_PACKET_FW_MANUFACTURER:
+            _communicationReportDescriptionRequestHandler(packetId, (char *) FIRMWARE_MANUFACTURER);
             return;
 
-        case COMMUNICATION_DESCRIBE_FW_VERSION:
-            _communicationReportDescription(packetId, (byte) payload[1], (char *) FIRMWARE_VERSION);
+        case COMMUNICATION_PACKET_FW_VERSION:
+            _communicationReportDescriptionRequestHandler(packetId, (char *) FIRMWARE_VERSION);
             return;
+    }
+}
 
-        // Send register sizes to gateway
-        case COMMUNICATION_DESCRIBE_REGISTERS_SIZE:
+// -----------------------------------------------------------------------------
+// REGISTERS INITIALIZATION
+// -----------------------------------------------------------------------------
+
+void _communicationReportRegistersSizes(
+    uint8_t packetId
+) {
+    char output_content[5];
+
+    // 0 => Packet identifier
+    // 1 => DI buffer size
+    // 2 => DO buffer size
+    // 3 => AI buffer size
+    // 4 => AO buffer size
+    output_content[0] = (char) packetId;
+    output_content[1] = (char) _communicationGetDigitalBufferSize(false);
+    output_content[2] = (char) _communicationGetDigitalBufferSize(true);
+    output_content[3] = (char) _communicationGetAnalogBufferSize(false);
+    output_content[4] = (char) _communicationGetAnalogBufferSize(true);
+
+    #if DEBUG_SUPPORT
+        // Reply to gateway
+        _communicationReplyToPacket(output_content, 5);
+    #else
+        // Reply to gateway
+        if (_communicationReplyToPacket(output_content, 5) == false) {
+            // Node was not able to notify gateway about its address
+            DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive node registers sizes\n"));
+
+        } else {
+            DPRINT(F("[COMMUNICATION] Replied to gateway with registers sizes\n"));
+        }
+    #endif
+}
+
+// -----------------------------------------------------------------------------
+
+void _communicationRegisterInitializationRequestHandler(
+    uint8_t packetId,
+    uint8_t * payload
+) {
+    switch (packetId)
+    {
+        case COMMUNICATION_PACKET_REGISTERS_SIZE:
             _communicationReportRegistersSizes(packetId);
+            break;
+
+        case COMMUNICATION_PACKET_DI_REGISTERS_STRUCTURE:
+            break;
+
+        case COMMUNICATION_PACKET_DO_REGISTERS_STRUCTURE:
+            break;
+
+        case COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE:
+            break;
+
+        case COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE:
             break;
     }
 }
 
+// -----------------------------------------------------------------------------
+// COMMUNICATION HANDLERS
 // -----------------------------------------------------------------------------
 
 void _communicationReceiverHandler(
@@ -939,9 +859,9 @@ void _communicationReceiverHandler(
     }
 
     // Packed ID must be on first byte
-    byte packet_id = (byte) payload[0];
+    uint8_t packet_id = (uint8_t) payload[0];
 
-    if (packet_id == COMMUNICATION_PACKET_NONE || packet_id >= COMMUNICATION_PACKETS_MAX) {
+    if (packet_id == COMMUNICATION_PACKET_NONE) {
         #if DEBUG_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Unknown packet\n"));
         #endif
@@ -954,43 +874,55 @@ void _communicationReceiverHandler(
         _communicationDebugLogPacket(packet_id);
     #endif
 
+    uint8_t sender_address = PJON_NOT_ASSIGNED;
+
+    // Get sender address from header
+    if (packetInfo.header & PJON_TX_INFO_BIT) {
+        sender_address = packetInfo.sender_id;
+    }
+    
+    // Only packets from gateway are accepted
+    if (sender_address != COMMUNICATION_BUS_GATEWAY_ADDR) {
+        #if DEBUG_SUPPORT
+            DPRINT(F("[COMMUNICATION][ERR] Received packet from unknown gateway address: "));
+            DPRINTLN(sender_address);
+        #endif
+
+        return;
+    }
+
+    // Reset master lost detection
+    _communication_master_lost = 0;
+        
     // Trying to get node address from gateway
-    if (packet_id == COMMUNICATION_PACKET_ACQUIRE_ADDRESS) {
-        _communicationAddressRequestHandler(payload);
+    if (_communicationIsPacketInGroup(packet_id, communication_packets_addresing, COMMUNICATION_PACKET_ADDRESS_MAX)) {
+        _communicationAddressRequestHandler(packet_id, payload);
+
+    } else if (_communicationIsPacketInGroup(packet_id, communication_packets_node_initialization, COMMUNICATION_PACKET_NODE_INIT_MAX)) {
+        _communicationNodeInitializationRequestHandler(packet_id, payload);
+
+    } else if (_communicationIsPacketInGroup(packet_id, communication_packets_registers_initialization, COMMUNICATION_PACKET_REGISTERS_INIT_MAX)) {
+        _communicationRegisterInitializationRequestHandler(packet_id, payload);
 
     // Regular gateway messages
     } else {
-        byte sender_address = PJON_NOT_ASSIGNED;
-
-        // Get sender address from header
-        if (packetInfo.header & PJON_TX_INFO_BIT) {
-            sender_address = packetInfo.sender_id;
-        }
-
-        if (sender_address != COMMUNICATION_BUS_GATEWAY_ADDR) {
-            #if DEBUG_SUPPORT
-                DPRINT(F("[COMMUNICATION][ERR] Received packet from unknown gateway address: "));
-                DPRINTLN(sender_address);
-            #endif
-
-            return;
-        }
-
         switch (packet_id)
         {
             case COMMUNICATION_PACKET_GATEWAY_PING:
                 // Nothing to do, gateway is just testing connection
                 break;
         
-            case COMMUNICATION_PACKET_WHO_ARE_YOU:
-                _communicationDescribeRequestHandler(packet_id, payload);
+            case COMMUNICATION_PACKET_READ_SINGLE_DI:
                 break;
-        
-            case COMMUNICATION_PACKET_READ_DI:
+
+            case COMMUNICATION_PACKET_READ_MULTI_DI:
                 _communicationReportDigitalRegisters(packet_id, payload, false);
                 break;
 
-            case COMMUNICATION_PACKET_READ_DO:
+            case COMMUNICATION_PACKET_READ_SINGLE_DO:
+                break;
+
+            case COMMUNICATION_PACKET_READ_MULTI_DO:
                 _communicationReportDigitalRegisters(packet_id, payload, true);
                 break;
         
@@ -1003,17 +935,14 @@ void _communicationReceiverHandler(
                 break;
         
             case COMMUNICATION_PACKET_WRITE_ONE_DO:
-                _communicationWriteDigitalOutput(packet_id, payload);
+                _communicationWriteSingleDigitalOutput(packet_id, payload);
                 break;
         
             case COMMUNICATION_PACKET_WRITE_ONE_AO:
                 break;
         
             case COMMUNICATION_PACKET_WRITE_MULTI_DO:
-                _communicationWriteMultipleDigitalOutput(packet_id, payload);
-                break;
-        
-            case COMMUNICATION_PACKET_WRITE_MULTI_AO:
+                _communicationWriteMultipleDigitalOutputs(packet_id, payload);
                 break;
         }
     }
@@ -1035,6 +964,8 @@ void _communicationErrorHandler(
 ) {
     #if DEBUG_SUPPORT
         if (code == PJON_CONNECTION_LOST) {
+            _communication_master_lost = millis();
+
             DPRINT(F("[COMMUNICATION][ERR] Connection lost with gateway\n"));
 
         } else if (code == PJON_PACKETS_BUFFER_FULL) {
@@ -1053,7 +984,7 @@ void _communicationErrorHandler(
 
 bool _communicationReplyToPacket(
     char * payload,
-    byte size
+    uint8_t size
 ) {
     #if DEBUG_SUPPORT
         DPRINT(F("[COMMUNICATION] Preparing reply packet: "));
@@ -1065,26 +996,13 @@ bool _communicationReplyToPacket(
         size        // Content lenght
     );
 /*
-    TODO: Should be fixed?
-    ======================
+    if (result == false || result == PJON_FAIL) {
+        #if DEBUG_SUPPORT
+            DPRINT(F("[COMMUNICATION] Sending replypacket failed\n"));
+        #endif
 
-    #if DEBUG_SUPPORT
-        if (result != PJON_ACK) {
-            if (result == PJON_BUSY ) {
-                DPRINT(F("[COMMUNICATION] Sending replypacket failed, bus is busy\n"));
-
-            } else if (result == PJON_FAIL) {
-                DPRINT(F("[COMMUNICATION] Sending replypacket failed\n"));
-
-            } else {
-                DPRINT(F("[COMMUNICATION] Sending replypacket failed, unknonw error\n"));
-            }
-
-            return false;
-        }
-
-        DPRINT(F("[COMMUNICATION] Replypacket was successfully sent\n"));
-    #endif
+        return false;
+    }
 */
     return true;
 }
@@ -1095,21 +1013,16 @@ bool _communicationReplyToPacket(
 
 bool communicationDiscardAddress()
 {
-    char output_content[7];
+    char output_content[6];
 
-    output_content[0] = COMMUNICATION_PACKET_ACQUIRE_ADDRESS;
-    output_content[1] = (uint8_t) COMMUNICATION_ACQUIRE_ADDRESS_NEGATE;
-    output_content[2] = (uint8_t) ((uint32_t) (_communication_rid) >> 24);
-    output_content[3] = (uint8_t) ((uint32_t) (_communication_rid) >> 16);
-    output_content[4] = (uint8_t) ((uint32_t) (_communication_rid) >>  8);
-    output_content[5] = (uint8_t) ((uint32_t) (_communication_rid));
-    output_content[6] = communicationMasterAddress();
+    output_content[0] = COMMUNICATION_PACKET_ADDRESS_DISCARD;
+    output_content[1] = communicationNodeAddress();
 
     if (
         _communication_bus.send_packet_blocking(
             COMMUNICATION_BUS_GATEWAY_ADDR,
             output_content,
-            6
+            2
         ) == PJON_ACK
     ) {
         _communication_bus.set_id(PJON_NOT_ASSIGNED);
@@ -1130,227 +1043,191 @@ bool communicationDiscardAddress()
 
 // -----------------------------------------------------------------------------
 
-bool communicationHasMasterAddress() {
+bool communicationHasAssignedAddress() {
     return _communication_bus.device_id() != PJON_NOT_ASSIGNED;
 }
 
 // -----------------------------------------------------------------------------
 
-byte communicationMasterAddress() {
+uint8_t communicationNodeAddress() {
     return _communication_bus.device_id();
 }
 
 // -----------------------------------------------------------------------------
 
-void communicationResetMasterAddress() {
+void communicationResetNodeAddress() {
     _communication_bus.set_id(PJON_NOT_ASSIGNED);
 }
 
 // -----------------------------------------------------------------------------
 
 bool communicationConnected() {
-    return communicationHasMasterAddress();
+    return communicationHasAssignedAddress();
 }
 
 // -----------------------------------------------------------------------------
 // DIGITAL INPUTS
 // -----------------------------------------------------------------------------
 
-bool communicationRegisterDigitalInput(
-    byte address
-) {
-    return communicationRegisterDigitalInput(address, false);
+uint8_t communicationRegisterDigitalInput()
+{
+    return communicationRegisterDigitalInput(false);
 }
 
 // -----------------------------------------------------------------------------
 
-bool communicationRegisterDigitalInput(
-    byte address,
+uint8_t communicationRegisterDigitalInput(
     bool defaultValue
 ) {
-    for (byte i = 0; i < _communication_register.digital_inputs.size(); i++) {
-        // Check if address is free
-        if (_communication_register.digital_inputs[i].address == address) {
-            return false;
-        }
-    }
-
     _communication_register.digital_inputs.push_back((communication_binary_register_t) {
-        address,
+        "",
+        COMMUNICATION_DATA_TYPE_BOOLEAN,
         defaultValue
     });
+
+    return (_communication_register.digital_inputs.size() - 1);
+}
+
+// -----------------------------------------------------------------------------
+
+bool communicationWriteDigitalInput(
+    uint8_t address,
+    bool value
+) {
+    if (address > _communication_register.digital_inputs.size()) {
+        return false;
+    }
+
+    _communication_register.digital_inputs[address].value = value;
 
     return true;
 }
 
 // -----------------------------------------------------------------------------
 
-bool communicationWriteDigitalInput(
-    byte address,
-    bool value
-) {
-    for (byte i = 0; i < _communication_register.digital_inputs.size(); i++) {
-        // Check if address is registered
-        if (_communication_register.digital_inputs[i].address == address) {
-            _communication_register.digital_inputs[i].value = value;
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
-// -----------------------------------------------------------------------------
-
 bool communicationReadDigitalInput(
-    byte address
+    uint8_t address
 ) {
-    for (byte i = 0; i < _communication_register.digital_inputs.size(); i++) {
-        // Check if address is registered
-        if (_communication_register.digital_inputs[i].address == address) {
-            return (bool) _communication_register.digital_inputs[i].value;
-        }
+    if (address > _communication_register.digital_inputs.size()) {
+        return false;
     }
 
-    return false;
+    return _communication_register.digital_inputs[address].value;
 }
 
 // -----------------------------------------------------------------------------
 // DIGITAL OUTPUTS
 // -----------------------------------------------------------------------------
 
-bool communicationRegisterDigitalOutput(
-    byte address
-) {
-    return communicationRegisterDigitalOutput(address, false);
+uint8_t communicationRegisterDigitalOutput()
+{
+    return communicationRegisterDigitalOutput(false);
 }
 
 // -----------------------------------------------------------------------------
 
-bool communicationRegisterDigitalOutput(
-    byte address,
+uint8_t communicationRegisterDigitalOutput(
     bool defaultValue
 ) {
-    for (byte i = 0; i < _communication_register.digital_outputs.size(); i++) {
-        // Check if address is free
-        if (_communication_register.digital_outputs[i].address == address) {
-            return false;
-        }
-    }
-
     _communication_register.digital_outputs.push_back((communication_binary_register_t) {
-        address,
+        "",
+        COMMUNICATION_DATA_TYPE_BOOLEAN,
         defaultValue
     });
+
+    return (_communication_register.digital_outputs.size() - 1);
+}
+
+// -----------------------------------------------------------------------------
+
+bool communicationWriteDigitalOutput(
+    uint8_t address,
+    bool value
+) {
+    if (address > _communication_register.digital_outputs.size()) {
+        return false;
+    }
+
+    _communication_register.digital_outputs[address].value = value;
 
     return true;
 }
 
 // -----------------------------------------------------------------------------
 
-bool communicationWriteDigitalOutput(
-    byte address,
-    bool value
-) {
-    for (byte i = 0; i < _communication_register.digital_outputs.size(); i++) {
-        // Check if address is free
-        if (_communication_register.digital_outputs[i].address == address) {
-            _communication_register.digital_outputs[i].value = value;
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
-// -----------------------------------------------------------------------------
-
 bool communicationReadDigitalOutput(
-    byte address
+    uint8_t address
 ) {
-    for (byte i = 0; i < _communication_register.digital_outputs.size(); i++) {
-        // Check if address is registered
-        if (_communication_register.digital_outputs[i].address == address) {
-            return (bool) _communication_register.digital_outputs[i].value;
-        }
+    if (address > _communication_register.digital_outputs.size()) {
+        return false;
     }
 
-    return false;
+    return _communication_register.digital_outputs[address].value;
 }
 
 // -----------------------------------------------------------------------------
 // ANALOG INPUTS
 // -----------------------------------------------------------------------------
 
-bool communicationRegisterAnalogInput(
-    byte address
+uint8_t communicationRegisterAnalogInput(
+    uint8_t dataType
 ) {
-    return communicationRegisterAnalogInput(address, 0);
+    return communicationRegisterAnalogInput(0, dataType);
 }
 
 // -----------------------------------------------------------------------------
 
-bool communicationRegisterAnalogInput(
-    byte address,
-    word defaultValue
+uint8_t communicationRegisterAnalogInput(
+    word defaultValue,
+    uint8_t dataType
 ) {
-    for (byte i = 0; i < _communication_register.analog_inputs.size(); i++) {
-        // Check if address is free
-        if (_communication_register.analog_inputs[i].address == address) {
-            return false;
-        }
-    }
-
     _communication_register.analog_inputs.push_back((communication_analog_register_t) {
-        address,
+        "",
+        dataType,
         defaultValue
     });
+
+    return (_communication_register.analog_inputs.size() - 1);
+}
+
+// -----------------------------------------------------------------------------
+
+bool communicationWriteAnalogInput(
+    uint8_t address,
+    word value
+) {
+    if (address > _communication_register.analog_inputs.size()) {
+        return false;
+    }
+
+    _communication_register.analog_inputs[address].value = value;
 
     return true;
 }
 
 // -----------------------------------------------------------------------------
 
-bool communicationWriteAnalogInput(
-    byte address,
-    word value
+word communicationReadAnalogInput(
+    uint8_t address
 ) {
-    for (byte i = 0; i < _communication_register.analog_inputs.size(); i++) {
-        // Check if address is registered
-        if (_communication_register.analog_inputs[i].address == address) {
-            _communication_register.analog_inputs[i].value = value;
-
-            return true;
-        }
+    if (address > _communication_register.analog_inputs.size()) {
+        return (word) 0;
     }
 
-    return false;
+    return (word) _communication_register.analog_inputs[address].value;
 }
 
 // -----------------------------------------------------------------------------
+// ANALOG OUTPUTS
+// -----------------------------------------------------------------------------
 
-word communicationReadAnalogInput(
-    byte address
-) {
-    for (byte i = 0; i < _communication_register.analog_inputs.size(); i++) {
-        // Check if address is registered
-        if (_communication_register.analog_inputs[i].address == address) {
-            return (word) _communication_register.analog_inputs[i].value;
-        }
-    }
-
-    return (word) 0;
-}
+// TODO
 
 // -----------------------------------------------------------------------------
 // MODULE CORE
 // -----------------------------------------------------------------------------
 
 void communicationSetup() {
-    Serial.begin(SERIAL_BAUDRATE);
-
     _communication_serial_bus.begin(SERIAL_BAUDRATE);
 
     _communication_bus.strategy.set_serial(&_communication_serial_bus);
@@ -1365,17 +1242,6 @@ void communicationSetup() {
 // -----------------------------------------------------------------------------
 
 void communicationLoop() {
-    static unsigned long _communication_last_address_acquire = 0;
-
-    if (
-        communicationMasterAddress() == PJON_NOT_ASSIGNED
-        && (_communication_last_address_acquire == 0 || millis() - _communication_last_address_acquire > COMMUNICATION_GATEWAY_SEARCH_DELAY)
-    ) {
-        _communication_last_address_acquire = millis();
-
-        _communicationAcquireAddress();
-    }
-
     // -------------------------------------------------------------------------
     // Bus communication
     // -------------------------------------------------------------------------

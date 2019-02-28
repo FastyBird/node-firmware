@@ -26,5 +26,5 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // NODE GLOBAL DESCRIPTION
 // =============================================================================
 
-#define NODE_SERIAL_NO     "1cd42a92-361b-489b-b0d9-4a8e57077ce9"   // Serial number generated during compilation process
-#define NODE_VERSION       "0.0.1"                                  // Hardware version (PCB revision)
+#define NODE_SERIAL_NO     "0124004A"   // Serial number generated during compilation process
+#define NODE_VERSION       "0.0.1"      // Hardware version (PCB revision)
