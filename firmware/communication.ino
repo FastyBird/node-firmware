@@ -9,7 +9,6 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #include <SoftwareSerial.h>
 #include <Arduino.h>
 #include <PJON.h>
-#include <Vector.h>
 
 PJON<ThroughSerial> _communication_bus(PJON_NOT_ASSIGNED);
 
@@ -498,6 +497,9 @@ void _communicationWriteMultipleDigitalOutputs(
 // ANALOG REGISTERS
 // -----------------------------------------------------------------------------
 
+/**
+ * Read value from analog register & transform it to 4 bytes
+ */
 void _communicationReadAnalogForTransfer(
     bool output,
     uint8_t dataType,
@@ -605,6 +607,9 @@ void _communicationReadAnalogForTransfer(
 
 // -----------------------------------------------------------------------------
 
+/**
+ * Transform received 4 bytes value into register value
+ */
 void _communicationWriteAnalogFromTransfer(
     uint8_t dataType,
     uint8_t address,
