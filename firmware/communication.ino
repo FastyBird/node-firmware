@@ -25,9 +25,9 @@ bool _communication_master_lost = false;
 // -----------------------------------------------------------------------------
 
 bool _communicationIsPacketInGroup(
-    uint8_t packetId,
+    const uint8_t packetId,
     const int * group,
-    uint8_t length
+    const uint8_t length
 ) {
     for (uint8_t i = 0; i < length; i++) {
         if ((uint8_t) pgm_read_byte(&group[i]) == packetId) {
@@ -41,9 +41,9 @@ bool _communicationIsPacketInGroup(
 // -----------------------------------------------------------------------------
 
 uint8_t _communicationGetPacketIndexInGroup(
-    uint8_t packetId,
+    const uint8_t packetId,
     const int * group,
-    uint8_t length
+    const uint8_t length
 ) {
     for (uint8_t i = 0; i < length; i++) {
         if ((uint8_t) pgm_read_byte(&group[i]) == packetId) {
@@ -58,7 +58,7 @@ uint8_t _communicationGetPacketIndexInGroup(
 
 #if DEBUG_SUPPORT
     void _communicationDebugLogPacket(
-        uint8_t packetId
+        const uint8_t packetId
     ) {
         DPRINT(packetId);
         DPRINT(F(" => ("));
@@ -98,7 +98,7 @@ uint8_t _communicationGetPacketIndexInGroup(
  * Get DI or DO buffer size
  */
 uint8_t _communicationGetDigitalBufferSize(
-    bool output
+    const bool output
 ) {
     if (output) {
         return _communication_register.digital_outputs.size();
@@ -113,7 +113,7 @@ uint8_t _communicationGetDigitalBufferSize(
  * Get AI or AO buffer size
  */
 uint8_t _communicationGetAnalogBufferSize(
-    bool output
+    const bool output
 ) {
     if (output) {
         return _communication_register.analog_outputs.size();
@@ -127,9 +127,9 @@ uint8_t _communicationGetAnalogBufferSize(
 // -----------------------------------------------------------------------------
 
 void _communicationReportSingleDigitalRegisters(
-    uint8_t packetId,
+    const uint8_t packetId,
     uint8_t * payload,
-    bool output
+    const bool output
 ) {
     char output_content[6];
 
@@ -197,9 +197,9 @@ void _communicationReportSingleDigitalRegisters(
 // -----------------------------------------------------------------------------
 
 void _communicationReportMultiDigitalRegisters(
-    uint8_t packetId,
+    const uint8_t packetId,
     uint8_t * payload,
-    bool output
+    const bool output
 ) {
     char output_content[PJON_PACKET_MAX_LENGTH];
 
@@ -323,7 +323,7 @@ void _communicationReportMultiDigitalRegisters(
 // -----------------------------------------------------------------------------
 
 void _communicationWriteSingleDigitalOutput(
-    uint8_t packetId,
+    const uint8_t packetId,
     uint8_t * payload
 ) {
     char output_content[PJON_PACKET_MAX_LENGTH];
@@ -397,7 +397,7 @@ void _communicationWriteSingleDigitalOutput(
 // -----------------------------------------------------------------------------
 
 void _communicationWriteMultipleDigitalOutputs(
-    uint8_t packetId,
+    const uint8_t packetId,
     uint8_t * payload
 ) {
     char output_content[PJON_PACKET_MAX_LENGTH];
@@ -502,9 +502,9 @@ void _communicationWriteMultipleDigitalOutputs(
  * Read value from analog register & transform it to 4 bytes
  */
 void _communicationReadAnalogForTransfer(
-    bool output,
-    uint8_t dataType,
-    uint8_t address,
+    const bool output,
+    const uint8_t dataType,
+    const uint8_t address,
     char * value
 ) {
     switch (dataType)
@@ -612,8 +612,8 @@ void _communicationReadAnalogForTransfer(
  * Transform received 4 bytes value into register value
  */
 void _communicationWriteAnalogFromTransfer(
-    uint8_t dataType,
-    uint8_t address,
+    const uint8_t dataType,
+    const uint8_t address,
     char * value
 ) {
     switch (dataType)
@@ -789,9 +789,9 @@ void _communicationWriteAnalogFromTransfer(
  * 2 => Low byte of register address
  */
 void _communicationReportSingleAnalogRegisters(
-    uint8_t packetId,
+    const uint8_t packetId,
     uint8_t * payload,
-    bool output
+    const bool output
 ) {
     char output_content[PJON_PACKET_MAX_LENGTH];
 
@@ -865,9 +865,9 @@ void _communicationReportSingleAnalogRegisters(
 // -----------------------------------------------------------------------------
 
 void _communicationReportMultiAnalogRegisters(
-    uint8_t packetId,
+    const uint8_t packetId,
     uint8_t * payload,
-    bool output
+    const bool output
 ) {
     char output_content[PJON_PACKET_MAX_LENGTH];
 
@@ -958,7 +958,7 @@ void _communicationReportMultiAnalogRegisters(
 // -----------------------------------------------------------------------------
 
 void _communicationWriteSingleAnalogOutput(
-    uint8_t packetId,
+    const uint8_t packetId,
     uint8_t * payload
 ) {
     char output_content[PJON_PACKET_MAX_LENGTH];
@@ -1021,7 +1021,7 @@ void _communicationWriteSingleAnalogOutput(
 // -----------------------------------------------------------------------------
 /*
 void _communicationWriteMultipleAnalogOutputs(
-    uint8_t packetId,
+    const uint8_t packetId,
     uint8_t * payload
 ) {
     char output_content[PJON_PACKET_MAX_LENGTH];
@@ -1721,8 +1721,8 @@ void _communicationReceiverHandler(
 // -----------------------------------------------------------------------------
 
 void _communicationErrorHandler(
-    uint8_t code,
-    uint16_t data,
+    const uint8_t code,
+    const uint16_t data,
     void *customPointer
 ) {
     #if DEBUG_SUPPORT
@@ -1747,7 +1747,7 @@ void _communicationErrorHandler(
 
 bool _communicationReplyToPacket(
     char * payload,
-    uint8_t size
+    const uint8_t size
 ) {
     #if DEBUG_SUPPORT
         DPRINT(F("[COMMUNICATION] Preparing reply packet: "));
@@ -1841,8 +1841,8 @@ uint8_t communicationRegisterDigitalInput(
 // -----------------------------------------------------------------------------
 
 bool communicationWriteDigitalInput(
-    uint8_t address,
-    bool value
+    const uint8_t address,
+    const bool value
 ) {
     if (address > _communication_register.digital_inputs.size()) {
         return false;
@@ -1856,7 +1856,7 @@ bool communicationWriteDigitalInput(
 // -----------------------------------------------------------------------------
 
 bool communicationReadDigitalInput(
-    uint8_t address
+    const uint8_t address
 ) {
     if (address > _communication_register.digital_inputs.size()) {
         return false;
@@ -1877,7 +1877,7 @@ uint8_t communicationRegisterDigitalOutput()
 // -----------------------------------------------------------------------------
 
 uint8_t communicationRegisterDigitalOutput(
-    bool defaultValue
+    const bool defaultValue
 ) {
     _communication_register.digital_outputs.push_back((communication_binary_register_t) {
         COMMUNICATION_DATA_TYPE_BOOLEAN,
@@ -1890,8 +1890,8 @@ uint8_t communicationRegisterDigitalOutput(
 // -----------------------------------------------------------------------------
 
 bool communicationWriteDigitalOutput(
-    uint8_t address,
-    bool value
+    const uint8_t address,
+    const bool value
 ) {
     if (address > _communication_register.digital_outputs.size()) {
         return false;
@@ -1905,7 +1905,7 @@ bool communicationWriteDigitalOutput(
 // -----------------------------------------------------------------------------
 
 bool communicationReadDigitalOutput(
-    uint8_t address
+    const uint8_t address
 ) {
     if (address > _communication_register.digital_outputs.size()) {
         return false;
@@ -1919,8 +1919,8 @@ bool communicationReadDigitalOutput(
 // -----------------------------------------------------------------------------
 
 void communicationReadAnalogRegister(
-    bool output,
-    uint8_t address,
+    const bool output,
+    const uint8_t address,
     void * value,
     const uint8_t size
 ) {
@@ -1953,8 +1953,8 @@ void communicationReadAnalogRegister(
 // -----------------------------------------------------------------------------
 
 bool communicationWriteAnalogRegister(
-    bool output,
-    uint8_t address,
+    const bool output,
+    const uint8_t address,
     const void * value,
     const uint8_t size
 ) {
@@ -1985,7 +1985,7 @@ bool communicationWriteAnalogRegister(
 // -----------------------------------------------------------------------------
 
 uint8_t communicationRegisterAnalogInput(
-    uint8_t dataType
+    const uint8_t dataType
 ) {
     _communication_register.analog_inputs.push_back((communication_analog_register_t) {
         dataType
@@ -2011,31 +2011,31 @@ uint8_t communicationRegisterAnalogInput(
 // -----------------------------------------------------------------------------
 
 // Specialized convenience setters (these do not cost memory because of inlining)
-bool communicationWriteAnalogInput(uint8_t address, const uint8_t value) { return communicationWriteAnalogRegister(false, address, &value, 1); }
-bool communicationWriteAnalogInput(uint8_t address, const uint16_t value) { return communicationWriteAnalogRegister(false, address, &value, 2); }
-bool communicationWriteAnalogInput(uint8_t address, const uint32_t value) { return communicationWriteAnalogRegister(false, address, &value, 4); }
-bool communicationWriteAnalogInput(uint8_t address, const int8_t value) { return communicationWriteAnalogRegister(false, address, &value, 1); }
-bool communicationWriteAnalogInput(uint8_t address, const int16_t value) { return communicationWriteAnalogRegister(false, address, &value, 2); }
-bool communicationWriteAnalogInput(uint8_t address, const int32_t value) { return communicationWriteAnalogRegister(false, address, &value, 4); }
-bool communicationWriteAnalogInput(uint8_t address, const float value) { return communicationWriteAnalogRegister(false, address, &value, 4); }
+bool communicationWriteAnalogInput(const uint8_t address, const uint8_t value) { return communicationWriteAnalogRegister(false, address, &value, 1); }
+bool communicationWriteAnalogInput(const uint8_t address, const uint16_t value) { return communicationWriteAnalogRegister(false, address, &value, 2); }
+bool communicationWriteAnalogInput(const uint8_t address, const uint32_t value) { return communicationWriteAnalogRegister(false, address, &value, 4); }
+bool communicationWriteAnalogInput(const uint8_t address, const int8_t value) { return communicationWriteAnalogRegister(false, address, &value, 1); }
+bool communicationWriteAnalogInput(const uint8_t address, const int16_t value) { return communicationWriteAnalogRegister(false, address, &value, 2); }
+bool communicationWriteAnalogInput(const uint8_t address, const int32_t value) { return communicationWriteAnalogRegister(false, address, &value, 4); }
+bool communicationWriteAnalogInput(const uint8_t address, const float value) { return communicationWriteAnalogRegister(false, address, &value, 4); }
 
 // -----------------------------------------------------------------------------
 
 // Specialized convenience setters (these do not cost memory because of inlining)
-void communicationReadAnalogInput(uint8_t address, uint8_t &value) { communicationReadAnalogRegister(false, address, &value, 1); }
-void communicationReadAnalogInput(uint8_t address, uint16_t &value) { communicationReadAnalogRegister(false, address, &value, 2); }
-void communicationReadAnalogInput(uint8_t address, uint32_t &value) { communicationReadAnalogRegister(false, address, &value, 4); }
-void communicationReadAnalogInput(uint8_t address, int8_t &value) { communicationReadAnalogRegister(false, address, &value, 1); }
-void communicationReadAnalogInput(uint8_t address, int16_t &value) { communicationReadAnalogRegister(false, address, &value, 2); }
-void communicationReadAnalogInput(uint8_t address, int32_t &value) { communicationReadAnalogRegister(false, address, &value, 4); }
-void communicationReadAnalogInput(uint8_t address, float &value) { communicationReadAnalogRegister(false, address, &value, 4); }
+void communicationReadAnalogInput(const uint8_t address, uint8_t &value) { communicationReadAnalogRegister(false, address, &value, 1); }
+void communicationReadAnalogInput(const uint8_t address, uint16_t &value) { communicationReadAnalogRegister(false, address, &value, 2); }
+void communicationReadAnalogInput(const uint8_t address, uint32_t &value) { communicationReadAnalogRegister(false, address, &value, 4); }
+void communicationReadAnalogInput(const uint8_t address, int8_t &value) { communicationReadAnalogRegister(false, address, &value, 1); }
+void communicationReadAnalogInput(const uint8_t address, int16_t &value) { communicationReadAnalogRegister(false, address, &value, 2); }
+void communicationReadAnalogInput(const uint8_t address, int32_t &value) { communicationReadAnalogRegister(false, address, &value, 4); }
+void communicationReadAnalogInput(const uint8_t address, float &value) { communicationReadAnalogRegister(false, address, &value, 4); }
 
 // -----------------------------------------------------------------------------
 // ANALOG OUTPUTS
 // -----------------------------------------------------------------------------
 
 uint8_t communicationRegisterAnalogOutput(
-    uint8_t dataType
+    const uint8_t dataType
 ) {
     _communication_register.analog_outputs.push_back((communication_analog_register_t) {
         dataType
@@ -2061,24 +2061,24 @@ uint8_t communicationRegisterAnalogOutput(
 // -----------------------------------------------------------------------------
 
 // Specialized convenience setters (these do not cost memory because of inlining)
-bool communicationWriteAnalogOutput(uint8_t address, const uint8_t value) { return communicationWriteAnalogRegister(true, address, &value, 1); }
-bool communicationWriteAnalogOutput(uint8_t address, const uint16_t value) { return communicationWriteAnalogRegister(true, address, &value, 2); }
-bool communicationWriteAnalogOutput(uint8_t address, const uint32_t value) { return communicationWriteAnalogRegister(true, address, &value, 4); }
-bool communicationWriteAnalogOutput(uint8_t address, const int8_t value) { return communicationWriteAnalogRegister(true, address, &value, 1); }
-bool communicationWriteAnalogOutput(uint8_t address, const int16_t value) { return communicationWriteAnalogRegister(true, address, &value, 2); }
-bool communicationWriteAnalogOutput(uint8_t address, const int32_t value) { return communicationWriteAnalogRegister(true, address, &value, 4); }
-bool communicationWriteAnalogOutput(uint8_t address, const float value) { return communicationWriteAnalogRegister(true, address, &value, 4); }
+bool communicationWriteAnalogOutput(const uint8_t address, const uint8_t value) { return communicationWriteAnalogRegister(true, address, &value, 1); }
+bool communicationWriteAnalogOutput(const uint8_t address, const uint16_t value) { return communicationWriteAnalogRegister(true, address, &value, 2); }
+bool communicationWriteAnalogOutput(const uint8_t address, const uint32_t value) { return communicationWriteAnalogRegister(true, address, &value, 4); }
+bool communicationWriteAnalogOutput(const uint8_t address, const int8_t value) { return communicationWriteAnalogRegister(true, address, &value, 1); }
+bool communicationWriteAnalogOutput(const uint8_t address, const int16_t value) { return communicationWriteAnalogRegister(true, address, &value, 2); }
+bool communicationWriteAnalogOutput(const uint8_t address, const int32_t value) { return communicationWriteAnalogRegister(true, address, &value, 4); }
+bool communicationWriteAnalogOutput(const uint8_t address, const float value) { return communicationWriteAnalogRegister(true, address, &value, 4); }
 
 // -----------------------------------------------------------------------------
 
 // Specialized convenience setters (these do not cost memory because of inlining)
-void communicationReadAnalogOutput(uint8_t address, uint8_t &value) { communicationReadAnalogRegister(true, address, &value, 1); }
-void communicationReadAnalogOutput(uint8_t address, uint16_t &value) { communicationReadAnalogRegister(true, address, &value, 2); }
-void communicationReadAnalogOutput(uint8_t address, uint32_t &value) { communicationReadAnalogRegister(true, address, &value, 4); }
-void communicationReadAnalogOutput(uint8_t address, int8_t &value) { communicationReadAnalogRegister(true, address, &value, 1); }
-void communicationReadAnalogOutput(uint8_t address, int16_t &value) { communicationReadAnalogRegister(true, address, &value, 2); }
-void communicationReadAnalogOutput(uint8_t address, int32_t &value) { communicationReadAnalogRegister(true, address, &value, 4); }
-void communicationReadAnalogOutput(uint8_t address, float &value) { communicationReadAnalogRegister(true, address, &value, 4); }
+void communicationReadAnalogOutput(const uint8_t address, uint8_t &value) { communicationReadAnalogRegister(true, address, &value, 1); }
+void communicationReadAnalogOutput(const uint8_t address, uint16_t &value) { communicationReadAnalogRegister(true, address, &value, 2); }
+void communicationReadAnalogOutput(const uint8_t address, uint32_t &value) { communicationReadAnalogRegister(true, address, &value, 4); }
+void communicationReadAnalogOutput(const uint8_t address, int8_t &value) { communicationReadAnalogRegister(true, address, &value, 1); }
+void communicationReadAnalogOutput(const uint8_t address, int16_t &value) { communicationReadAnalogRegister(true, address, &value, 2); }
+void communicationReadAnalogOutput(const uint8_t address, int32_t &value) { communicationReadAnalogRegister(true, address, &value, 4); }
+void communicationReadAnalogOutput(const uint8_t address, float &value) { communicationReadAnalogRegister(true, address, &value, 4); }
 
 // -----------------------------------------------------------------------------
 // MODULE CORE
