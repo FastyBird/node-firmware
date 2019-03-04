@@ -49,12 +49,12 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #define COMMUNICATION_BUS_GATEWAY_ADDR      254                 // Gateway network address definition
 #endif
 
-#ifndef COMMUNICATION_GATEWAY_SEARCH_DELAY
-#define COMMUNICATION_GATEWAY_SEARCH_DELAY  20000               // In case node is without address, node will try periodically search for gateway
-#endif
-
 #ifndef COMMUNICATION_ADDRESSING_TIMEOUT
 #define COMMUNICATION_ADDRESSING_TIMEOUT    4000                // Master COMMUNICATION_ACQUIRE_ADDRESS_REQUEST and COMMUNICATION_ACQUIRE_ADDRESS_NEGATE timeout
+#endif
+
+#ifndef COMMUNICATION_MASTER_PING_TIMEOUT
+#define COMMUNICATION_MASTER_PING_TIMEOUT   4000                // 
 #endif
 
 #ifndef COMMUNICATION_MAX_DI_REGISTER_SIZE

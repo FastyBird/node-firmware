@@ -182,11 +182,14 @@ void ledSetup() {
 void ledLoop() {
     for (byte i = 0; i < ledCount(); i++) {
         if (_ledMode(i) == LED_MODE_BUS) {
-            if (communicationConnected()) {
-                _ledBlink(i, 4900, 100);
+            if (communicationHasAssignedAddress() == false) {
+                _ledBlink(i, 500, 500);
+
+            } else if (communicationIsMasterLost()) {
+                _ledBlink(i, 1500, 500);
 
             } else {
-                _ledBlink(i, 500, 500);
+                _ledBlink(i, 4900, 100);
             }
 
         } else if (_ledMode(i) == LED_MODE_ON) {

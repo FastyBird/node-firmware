@@ -17,7 +17,8 @@ SoftwareSerial _communication_serial_bus(COMMUNICATION_BUS_TX_PIN, COMMUNICATION
 communication_register_t _communication_register;
 
 uint32_t _communication_last_node_search_request_time;
-uint32_t _communication_master_lost = 0;
+uint32_t _communication_master_last_request = 0;
+bool _communication_master_lost = false;
 
 // -----------------------------------------------------------------------------
 // MODULE PRIVATE
@@ -1098,7 +1099,8 @@ void _communicationWriteMultipleAnalogOutputs(
  * 0 => Packet identifier
  */
 void _communicationNodesSearchRequestHandler(
-    uint8_t * payload
+    uint8_t * payload,
+    const uint16_t length
 ) {
     if (millis() - _communication_last_node_search_request_time > (COMMUNICATION_ADDRESSING_TIMEOUT * 1.125)) {
         _communication_last_node_search_request_time = millis();
@@ -1111,7 +1113,7 @@ void _communicationNodesSearchRequestHandler(
         // 3    => Node SN length
         // 4-n  => Node parsed SN
         output_content[0] = (uint8_t) COMMUNICATION_PACKET_SEARCH_NODES;
-        output_content[1] = (uint8_t) communicationNodeAddress();
+        output_content[1] = (uint8_t) _communication_bus.device_id();
         output_content[2] = (uint8_t) PJON_PACKET_MAX_LENGTH;
         output_content[3] = (uint8_t) (strlen((char *) NODE_SERIAL_NO) + 1);
 
@@ -1144,8 +1146,19 @@ void _communicationNodesSearchRequestHandler(
  * 3-n  => Node SN
  */
 void _communicationAddressConfirmRequestHandler(
-    uint8_t * payload
+    uint8_t * payload,
+    const uint16_t length
 ) {
+    // Check for correct received payload length
+    if (length < (uint8_t) 4 || length != (uint8_t) (3 + (uint8_t) payload[2])) {
+        #if DEBUG_SUPPORT
+            DPRINT(F("[COMMUNICATION][ERR] Packet length is not correct\n"));
+        #endif
+
+        // TODO: reply with exception
+        return;
+    }
+
     // Extract address assigned by gateway
     uint8_t address = (uint8_t) payload[1];
 
@@ -1208,8 +1221,9 @@ void _communicationAddressConfirmRequestHandler(
 // -----------------------------------------------------------------------------
 
 void _communicationAddressRequestHandler(
-    uint8_t packetId,
-    uint8_t * payload
+    const uint8_t packetId,
+    uint8_t * payload,
+    const uint16_t length
 ) {
     switch (packetId)
     {
@@ -1217,14 +1231,14 @@ void _communicationAddressRequestHandler(
          * Gateway is searching for nodes
          */
         case COMMUNICATION_PACKET_SEARCH_NODES:
-            _communicationNodesSearchRequestHandler(payload);
+            _communicationNodesSearchRequestHandler(payload, length);
             break;
 
         /**
          * Gateway provided node address
          */
         case COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM:
-            _communicationAddressConfirmRequestHandler(payload);
+            _communicationAddressConfirmRequestHandler(payload, length);
             break;
 
         /**
@@ -1241,8 +1255,8 @@ void _communicationAddressRequestHandler(
 // -----------------------------------------------------------------------------
 
 void _communicationReportDescriptionRequestHandler(
-    uint8_t packetId,
-    char * sendContent
+    const uint8_t packetId,
+    const char * sendContent
 ) {
     char output_content[PJON_PACKET_MAX_LENGTH];
 
@@ -1286,7 +1300,7 @@ void _communicationReportDescriptionRequestHandler(
 // -----------------------------------------------------------------------------
 
 void _communicationNodeInitializationRequestHandler(
-    uint8_t packetId
+    const uint8_t packetId
 ) {
     switch (packetId)
     {
@@ -1321,7 +1335,7 @@ void _communicationNodeInitializationRequestHandler(
 // -----------------------------------------------------------------------------
 
 void _communicationReportRegistersSizes(
-    uint8_t packetId
+    const uint8_t packetId
 ) {
     char output_content[5];
 
@@ -1362,11 +1376,25 @@ void _communicationReportRegistersSizes(
  * 4 => Low byte of registers length
  */
 void _communicationReportDigitalRegisterStructure(
-    uint8_t packetId,
+    const uint8_t packetId,
     uint8_t * payload,
-    bool output
+    const uint16_t length,
+    const bool output
 ) {
+    // Check for correct received payload length
+    if (length != (uint8_t) 5) {
+        #if DEBUG_SUPPORT
+            DPRINT(F("[COMMUNICATION][ERR] Packet length is not correct\n"));
+        #endif
+
+        // TODO: reply with exception
+        return;
+    }
+
+    // Register read start address
     word register_address = (word) payload[1] << 8 | (word) payload[2];
+
+    // Number of registers to read
     word read_length = (word) payload[3] << 8 | (word) payload[4];
 
     if (
@@ -1434,11 +1462,25 @@ void _communicationReportDigitalRegisterStructure(
  * 4 => Low byte of registers length
  */
 void _communicationReportAnalogRegisterStructure(
-    uint8_t packetId,
+    const uint8_t packetId,
     uint8_t * payload,
-    bool output
+    const uint16_t length,
+    const bool output
 ) {
+    // Check for correct received payload length
+    if (length != (uint8_t) 5) {
+        #if DEBUG_SUPPORT
+            DPRINT(F("[COMMUNICATION][ERR] Packet length is not correct\n"));
+        #endif
+
+        // TODO: reply with exception
+        return;
+    }
+
+    // Register read start address
     word register_address = (word) payload[1] << 8 | (word) payload[2];
+
+    // Number of registers to read
     word read_length = (word) payload[3] << 8 | (word) payload[4];
 
     if (
@@ -1503,8 +1545,9 @@ void _communicationReportAnalogRegisterStructure(
 // -----------------------------------------------------------------------------
 
 void _communicationRegisterInitializationRequestHandler(
-    uint8_t packetId,
-    uint8_t * payload
+    const uint8_t packetId,
+    uint8_t * payload,
+    const uint16_t length
 ) {
     switch (packetId)
     {
@@ -1513,19 +1556,19 @@ void _communicationRegisterInitializationRequestHandler(
             break;
 
         case COMMUNICATION_PACKET_DI_REGISTERS_STRUCTURE:
-            _communicationReportDigitalRegisterStructure(packetId, payload, false);
+            _communicationReportDigitalRegisterStructure(packetId, payload, length, false);
             break;
 
         case COMMUNICATION_PACKET_DO_REGISTERS_STRUCTURE:
-            _communicationReportDigitalRegisterStructure(packetId, payload, true);
+            _communicationReportDigitalRegisterStructure(packetId, payload, length, true);
             break;
 
         case COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE:
-            _communicationReportAnalogRegisterStructure(packetId, payload, false);
+            _communicationReportAnalogRegisterStructure(packetId, payload, length, false);
             break;
 
         case COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE:
-            _communicationReportAnalogRegisterStructure(packetId, payload, true);
+            _communicationReportAnalogRegisterStructure(packetId, payload, length, true);
             break;
     }
 }
@@ -1536,7 +1579,7 @@ void _communicationRegisterInitializationRequestHandler(
 
 void _communicationReceiverHandler(
     uint8_t * payload,
-    uint16_t length,
+    const uint16_t length,
     const PJON_Packet_Info &packetInfo
 ) {
     #if DEBUG_SUPPORT
@@ -1588,17 +1631,18 @@ void _communicationReceiverHandler(
     }
 
     // Reset master lost detection
-    _communication_master_lost = 0;
+    _communication_master_lost = false;
+    _communication_master_last_request = millis();
         
     // Trying to get node address from gateway
     if (_communicationIsPacketInGroup(packet_id, communication_packets_addresing, COMMUNICATION_PACKET_ADDRESS_MAX)) {
-        _communicationAddressRequestHandler(packet_id, payload);
+        _communicationAddressRequestHandler(packet_id, payload, length);
 
     } else if (_communicationIsPacketInGroup(packet_id, communication_packets_node_initialization, COMMUNICATION_PACKET_NODE_INIT_MAX)) {
         _communicationNodeInitializationRequestHandler(packet_id);
 
     } else if (_communicationIsPacketInGroup(packet_id, communication_packets_registers_initialization, COMMUNICATION_PACKET_REGISTERS_INIT_MAX)) {
-        _communicationRegisterInitializationRequestHandler(packet_id, payload);
+        _communicationRegisterInitializationRequestHandler(packet_id, payload, length);
 
     // Regular gateway messages
     } else {
@@ -1683,7 +1727,7 @@ void _communicationErrorHandler(
 ) {
     #if DEBUG_SUPPORT
         if (code == PJON_CONNECTION_LOST) {
-            _communication_master_lost = millis();
+            _communication_master_lost = true;
 
             DPRINT(F("[COMMUNICATION][ERR] Connection lost with gateway\n"));
 
@@ -1735,7 +1779,7 @@ bool communicationDiscardAddress()
     char output_content[6];
 
     output_content[0] = COMMUNICATION_PACKET_ADDRESS_DISCARD;
-    output_content[1] = communicationNodeAddress();
+    output_content[1] = _communication_bus.device_id();
 
     if (
         _communication_bus.send_packet_blocking(
@@ -1768,20 +1812,8 @@ bool communicationHasAssignedAddress() {
 
 // -----------------------------------------------------------------------------
 
-uint8_t communicationNodeAddress() {
-    return _communication_bus.device_id();
-}
-
-// -----------------------------------------------------------------------------
-
-void communicationResetNodeAddress() {
-    _communication_bus.set_id(PJON_NOT_ASSIGNED);
-}
-
-// -----------------------------------------------------------------------------
-
-bool communicationConnected() {
-    return communicationHasAssignedAddress();
+bool communicationIsMasterLost() {
+    return ((millis() - _communication_master_last_request) > COMMUNICATION_MASTER_PING_TIMEOUT || _communication_master_lost);
 }
 
 // -----------------------------------------------------------------------------
