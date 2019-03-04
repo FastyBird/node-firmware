@@ -12,10 +12,11 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 
 // Node addressing
 #define COMMUNICATION_PACKET_SEARCH_NODES               0x01
-#define COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM       0x02
-#define COMMUNICATION_PACKET_ADDRESS_DISCARD            0x03
+#define COMMUNICATION_PACKET_SEARCH_NEW_NODES           0x02
+#define COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM       0x03
+#define COMMUNICATION_PACKET_ADDRESS_DISCARD            0x04
 
-#define COMMUNICATION_PACKET_ADDRESS_MAX                3
+#define COMMUNICATION_PACKET_ADDRESS_MAX                4
 
 // Node initialization
 #define COMMUNICATION_PACKET_HW_MODEL                   0x11
@@ -41,17 +42,20 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #define COMMUNICATION_PACKET_READ_MULTI_DI              0x32   // Master requested DI multiple regiters reading
 #define COMMUNICATION_PACKET_READ_SINGLE_DO             0x33   // Master requested DO one regiter reading
 #define COMMUNICATION_PACKET_READ_MULTI_DO              0x34   // Master requested DO multiple regiters reading
-#define COMMUNICATION_PACKET_READ_AI                    0x35   // Master requested AI regiter reading
-#define COMMUNICATION_PACKET_READ_AO                    0x36   // Master requested AO regiter reading
+#define COMMUNICATION_PACKET_READ_SINGLE_AI             0x35   // Master requested AI one regiter reading
+#define COMMUNICATION_PACKET_READ_MULTI_AI              0x36   // Master requested AI multiple regiters reading
+#define COMMUNICATION_PACKET_READ_SINGLE_AO             0x37   // Master requested AO one regiter reading
+#define COMMUNICATION_PACKET_READ_MULTI_AO              0x38   // Master requested AO multiple regiters reading
 
-#define COMMUNICATION_PACKET_REGISTERS_REDING_MAX       6
+#define COMMUNICATION_PACKET_REGISTERS_REDING_MAX       8
 
 // Registers writing
 #define COMMUNICATION_PACKET_WRITE_ONE_DO               0x41
 #define COMMUNICATION_PACKET_WRITE_ONE_AO               0x42
 #define COMMUNICATION_PACKET_WRITE_MULTI_DO             0x43
+#define COMMUNICATION_PACKET_WRITE_MULTI_AO             0x44
 
-#define COMMUNICATION_PACKET_REGISTERS_WRITING_MAX      3
+#define COMMUNICATION_PACKET_REGISTERS_WRITING_MAX      4
 
 // Node misc communication
 #define COMMUNICATION_PACKET_NONE                       0xFF

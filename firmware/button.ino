@@ -73,7 +73,7 @@ void _buttonEvent(
     #endif
 
     // Store state into communication register
-    communicationWriteAnalogInput(_buttons[id].register_address, (word) event);
+    communicationWriteAnalogInput(_buttons[id].register_address, (uint8_t) event);
 }
 
 // -----------------------------------------------------------------------------
