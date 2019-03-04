@@ -15,60 +15,6 @@ PJON<ThroughSerial> _communication_bus(PJON_NOT_ASSIGNED);
 
 SoftwareSerial _communication_serial_bus(COMMUNICATION_BUS_TX_PIN, COMMUNICATION_BUS_RX_PIN);
 
-struct communication_binary_register_t {
-    uint8_t data_type;
-    bool value;
-};
-
-typedef struct {
-    uint8_t data_type;
-    uint8_t size;
-    char value[4];
-} communication_analog_register_t;
-
-struct communication_register_t {
-    Vector<communication_binary_register_t> digital_inputs;
-    Vector<communication_binary_register_t> digital_outputs;
-
-    Vector<communication_analog_register_t> analog_inputs;
-    Vector<communication_analog_register_t> analog_outputs;
-};
-
-typedef union {
-    uint8_t     number;
-    uint8_t     bytes[4];
-} UINT8_UNION_t;
-
-typedef union {
-    uint16_t    number;
-    uint8_t     bytes[4];
-} UINT16_UNION_t;
-
-typedef union {
-    uint32_t    number;
-    uint8_t     bytes[4];
-} UINT32_UNION_t;
-
-typedef union {
-    int8_t      number;
-    uint8_t     bytes[4];
-} INT8_UNION_t;
-
-typedef union {
-    int16_t     number;
-    uint8_t     bytes[4];
-} INT16_UNION_t;
-
-typedef union {
-    int32_t     number;
-    uint8_t     bytes[4];
-} INT32_UNION_t;
-
-typedef union {
-    float       number;
-    uint8_t     bytes[4];
-} FLOAT32_UNION_t;
-
 communication_register_t _communication_register;
 
 uint32_t _communication_last_node_search_request_time;
@@ -821,7 +767,9 @@ void _communicationWriteAnalogFromTransfer(
             break;
 
         default:
-            DPRINT(F("[COMMUNICATION][ERR] Provided unknown data type for writing into analog register\n"));
+            #if DEBUG_SUPPORT
+                DPRINT(F("[COMMUNICATION][ERR] Provided unknown data type for writing into analog register\n"));
+            #endif
             break;
     }
 }

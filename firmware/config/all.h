@@ -17,9 +17,6 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #if DEBUG_SUPPORT
     #define DPRINTLN(x) Serial.println(x)
     #define DPRINT(x) Serial.print(x)
-#else
-    #define DPRINTLN(x) void
-    #define DPRINT(x) void
 #endif
 
 // =============================================================================
