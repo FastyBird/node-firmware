@@ -9,9 +9,9 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #include <Vector.h>
 
 typedef struct {
-    byte pin;
-    bool reverse;
-    byte mode;
+    uint8_t pin;
+    bool    reverse;
+    uint8_t mode;
 } led_t;
 
 Vector<led_t> _leds;
@@ -23,7 +23,7 @@ bool _led_update = false;            // For relay-based modes
 // -----------------------------------------------------------------------------
 
 bool _ledStatus(
-    byte id
+    const uint8_t id
 ) {
     if (id >= ledCount()) {
         return false;
@@ -37,8 +37,8 @@ bool _ledStatus(
 // -----------------------------------------------------------------------------
 
 bool _ledStatus(
-    byte id,
-    bool status
+    const uint8_t id,
+    const bool status
 ) {
     if (id >=ledCount()) {
         return false;
@@ -52,7 +52,7 @@ bool _ledStatus(
 // -----------------------------------------------------------------------------
 
 bool _ledToggle(
-    byte id
+    const uint8_t id
 ) {
     if (id >= ledCount()) {
         return false;
@@ -63,8 +63,8 @@ bool _ledToggle(
 
 // -----------------------------------------------------------------------------
 
-byte _ledMode(
-    byte id
+uint8_t _ledMode(
+    const uint8_t id
 ) {
     if (id >= ledCount()) {
         return false;
@@ -76,8 +76,8 @@ byte _ledMode(
 // -----------------------------------------------------------------------------
 
 void _ledMode(
-    byte id,
-    byte mode
+    const uint8_t id,
+    const uint8_t mode
 ) {
     if (id >= ledCount()) {
         return;
@@ -89,7 +89,7 @@ void _ledMode(
 // -----------------------------------------------------------------------------
 
 void _ledBlink(
-    byte id,
+    const uint8_t id,
     unsigned long delayOff,
     unsigned long delayOn
 ) {
@@ -107,7 +107,7 @@ void _ledBlink(
 // -----------------------------------------------------------------------------
 
 void _ledConfigure() {
-    for (byte i = 0; i < ledCount(); i++) {
+    for (uint8_t i = 0; i < ledCount(); i++) {
         _ledMode(i, _ledMode(i));
     }
 
@@ -118,13 +118,15 @@ void _ledConfigure() {
 // MODULE API
 // -----------------------------------------------------------------------------
 
-byte ledCount() {
+uint8_t ledCount() {
     return _leds.size();
 }
 
 // -----------------------------------------------------------------------------
 
-void ledUpdate(bool value) {
+void ledUpdate(
+    const bool value
+) {
     _led_update = value;
 }
 
@@ -163,7 +165,7 @@ void ledSetup() {
         _leds.push_back((led_t) { LED8_PIN, LED8_PIN_INVERSE, LED8_MODE });
     #endif
 
-    for (byte i = 0; i < ledCount(); i++) {
+    for (uint8_t i = 0; i < ledCount(); i++) {
         pinMode(_leds[i].pin, OUTPUT);
 
         _ledStatus(i, false);
@@ -180,7 +182,7 @@ void ledSetup() {
 // -----------------------------------------------------------------------------
 
 void ledLoop() {
-    for (byte i = 0; i < ledCount(); i++) {
+    for (uint8_t i = 0; i < ledCount(); i++) {
         if (_ledMode(i) == LED_MODE_BUS) {
             if (communicationHasAssignedAddress() == false) {
                 _ledBlink(i, 500, 500);

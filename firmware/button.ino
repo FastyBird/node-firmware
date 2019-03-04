@@ -13,7 +13,7 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 
 typedef struct {
     DebounceEvent * button;
-    byte            register_address;      // Address in communication register to store state
+    uint8_t         register_address;      // Address in communication register to store state
 } button_t;
 
 Vector<button_t> _buttons;
@@ -22,10 +22,10 @@ Vector<button_t> _buttons;
 // MODULE PRIVATE
 // -----------------------------------------------------------------------------
 
-byte _buttonMapEvent(
-    byte event,
-    byte count,
-    uint16_t length
+uint8_t _buttonMapEvent(
+    const uint8_t event,
+    const uint8_t count,
+    const uint16_t length
 ) {
     if (event == EVENT_PRESSED) {
         return BUTTON_EVENT_PRESSED;
@@ -58,8 +58,8 @@ byte _buttonMapEvent(
 // -----------------------------------------------------------------------------
 
 void _buttonEvent(
-    byte id,
-    byte event
+    const uint8_t id,
+    const uint8_t event
 ) {
     if (id >= buttonCount() || event == 0) {
         return;
@@ -158,12 +158,12 @@ void buttonSetup() {
 // -----------------------------------------------------------------------------
 
 void buttonLoop() {
-    for (byte i = 0; i < buttonCount(); i++) {
-        if (byte event = _buttons[i].button->loop()) {
-            byte count = _buttons[i].button->getEventCount();
+    for (uint8_t i = 0; i < buttonCount(); i++) {
+        if (uint8_t event = _buttons[i].button->loop()) {
+            uint8_t count = _buttons[i].button->getEventCount();
             unsigned long length = _buttons[i].button->getEventLength();
 
-            byte mapped = _buttonMapEvent(event, count, length);
+            uint8_t mapped = _buttonMapEvent(event, count, length);
 
             _buttonEvent(i, mapped);
         }

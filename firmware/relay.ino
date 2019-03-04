@@ -13,11 +13,11 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 
 typedef struct {
     // Configuration variables
-    byte pin;                   // GPIO pin for the relay
-    byte type;                  // RELAY_TYPE_NORMAL, RELAY_TYPE_INVERSE, RELAY_TYPE_LATCHED or RELAY_TYPE_LATCHED_INVERSE
-    byte reset_pin;             // GPIO to reset the relay if RELAY_TYPE_LATCHED
+    uint8_t pin;                // GPIO pin for the relay
+    uint8_t type;               // RELAY_TYPE_NORMAL, RELAY_TYPE_INVERSE, RELAY_TYPE_LATCHED or RELAY_TYPE_LATCHED_INVERSE
+    uint8_t reset_pin;          // GPIO to reset the relay if RELAY_TYPE_LATCHED
 
-    uint8_t register_address;      // Address in communication register to store state
+    uint8_t register_address;   // Address in communication register to store state
 
     unsigned long delay_on;     // Delay to turn relay ON
     unsigned long delay_off;    // Delay to turn relay OFF
@@ -26,7 +26,7 @@ typedef struct {
     bool current_status;        // Holds the current (physical) status of the relay
     bool target_status;         // Holds the target status
     unsigned long fw_start;     // Flood window start time
-    byte fw_count;              // Number of changes within the current flood window
+    uint8_t fw_count;           // Number of changes within the current flood window
     unsigned long change_time;  // Scheduled time to change
 
 } relay_t;
@@ -40,7 +40,7 @@ bool _relayRecursive = false;
 // -----------------------------------------------------------------------------
 
 void _relayConfigure() {
-    for (byte i = 0; i < relayCount(); i++) {
+    for (uint8_t i = 0; i < relayCount(); i++) {
         if (_relays[i].pin == GPIO_NONE) {
             continue;
         }
@@ -66,8 +66,8 @@ void _relayBoot() {
     // Walk the relays
     bool status;
 
-    for (byte i = 0; i < relayCount(); i++) {
-        byte boot_mode = (bool) EEPROM.read(_relays[i].register_address);
+    for (uint8_t i = 0; i < relayCount(); i++) {
+        uint8_t boot_mode = (bool) EEPROM.read(_relays[i].register_address);
 
         #if DEBUG_SUPPORT
             DPRINT(F("[RELAY] Relay #"));
@@ -105,8 +105,8 @@ void _relayBoot() {
 // -----------------------------------------------------------------------------
 
 void _relayProviderStatus(
-    byte id,
-    bool status
+    const uint8_t id,
+    const bool status
 ) {
     // Check relay ID
     if (id >= relayCount()) {
@@ -160,11 +160,11 @@ void _relayProviderStatus(
  * @bool mode Requested mode
  */
 void _relayProcess(
-    bool mode
+    const bool mode
 ) {
     unsigned long current_time = millis();
 
-    for (byte id = 0; id < relayCount(); id++) {
+    for (uint8_t id = 0; id < relayCount(); id++) {
         // Only process the relays we have to change
         if (_relays[id].target_status == _relays[id].current_status) {
             continue;
@@ -199,14 +199,14 @@ void _relayProcess(
 // MODULE API
 // -----------------------------------------------------------------------------
 
-byte relayCount() {
+uint8_t relayCount() {
     return _relays.size();
 }
 
 // -----------------------------------------------------------------------------
 
 bool relayStatus(
-    byte id
+    const uint8_t id
 ) {
     // Check relay ID
     if (id >= relayCount()) {
@@ -220,8 +220,8 @@ bool relayStatus(
 // -----------------------------------------------------------------------------
 
 bool relayStatus(
-    byte id,
-    bool status
+    const uint8_t id,
+    const bool status
 ) {
     if (id >= relayCount()) {
         return false;
@@ -290,7 +290,7 @@ bool relayStatus(
 // -----------------------------------------------------------------------------
 
 void relayToggle(
-    byte id
+    const uint8_t id
 ) {
     if (id >= relayCount()) {
         return;
@@ -302,7 +302,7 @@ void relayToggle(
 // -----------------------------------------------------------------------------
 
 void relaySync(
-    byte id
+    const uint8_t id
 ) {
     // No sync if none or only one relay
     if (relayCount() < 2) {
@@ -317,12 +317,12 @@ void relaySync(
     // Flag sync mode
     _relayRecursive = true;
 
-    byte relaySync = RELAY_SYNC;
+    uint8_t relaySync = RELAY_SYNC;
     bool status = _relays[id].target_status;
 
     // If RELAY_SYNC_SAME all relays should have the same state
     if (relaySync == RELAY_SYNC_SAME) {
-        for (byte i = 0; i < relayCount(); i++) {
+        for (uint8_t i = 0; i < relayCount(); i++) {
             if (i != id) {
                 relayStatus(i, status);
             }
@@ -331,7 +331,7 @@ void relaySync(
     // If NONE_OR_ONE or ONE and setting ON we should set OFF all the others
     } else if (status) {
         if (relaySync != RELAY_SYNC_ANY) {
-            for (byte i = 0; i < relayCount(); i++) {
+            for (uint8_t i = 0; i < relayCount(); i++) {
                 if (i != id) {
                     relayStatus(i, false);
                 }
@@ -341,7 +341,7 @@ void relaySync(
     // If ONLY_ONE and setting OFF we should set ON the other one
     } else {
         if (relaySync == RELAY_SYNC_ONE) {
-            byte i = (id + 1) % relayCount();
+            uint8_t i = (id + 1) % relayCount();
             relayStatus(i, true);
         }
     }
@@ -413,7 +413,7 @@ void relaySetup() {
 //------------------------------------------------------------------------------
 
 void relayLoop() {
-    for (byte i = 0; i < relayCount(); i++) {
+    for (uint8_t i = 0; i < relayCount(); i++) {
         if (communicationReadDigitalOutput(_relays[i].register_address) != relayStatus(i)) {
             relayStatus(i, communicationReadDigitalOutput(_relays[i].register_address));
         }
