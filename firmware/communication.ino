@@ -627,7 +627,7 @@ void _communicationWriteAnalogFromTransfer(
             uint8_write_value.bytes[2] = value[2];
             uint8_write_value.bytes[3] = value[3];
 
-            communicationWriteAnalogOutput(address, uint8_stored_value);
+            communicationReadAnalogOutput(address, uint8_stored_value);
 
             if (uint8_stored_value != uint8_write_value.number) {
                 communicationWriteAnalogOutput(address, uint8_write_value.number);
@@ -649,7 +649,7 @@ void _communicationWriteAnalogFromTransfer(
             uint16_write_value.bytes[2] = value[2];
             uint16_write_value.bytes[3] = value[3];
 
-            communicationWriteAnalogOutput(address, uint16_stored_value);
+            communicationReadAnalogOutput(address, uint16_stored_value);
 
             if (uint16_stored_value != uint16_write_value.number) {
                 communicationWriteAnalogOutput(address, uint16_write_value.number);
@@ -671,7 +671,7 @@ void _communicationWriteAnalogFromTransfer(
             uint32_write_value.bytes[2] = value[2];
             uint32_write_value.bytes[3] = value[3];
 
-            communicationWriteAnalogOutput(address, uint32_stored_value);
+            communicationReadAnalogOutput(address, uint32_stored_value);
 
             if (uint32_stored_value != uint32_write_value.number) {
                 communicationWriteAnalogOutput(address, uint32_write_value.number);
@@ -693,7 +693,7 @@ void _communicationWriteAnalogFromTransfer(
             int8_write_value.bytes[2] = value[2];
             int8_write_value.bytes[3] = value[3];
 
-            communicationWriteAnalogOutput(address, int8_stored_value);
+            communicationReadAnalogOutput(address, int8_stored_value);
 
             if (int8_stored_value != int8_write_value.number) {
                 communicationWriteAnalogOutput(address, int8_write_value.number);
@@ -715,7 +715,7 @@ void _communicationWriteAnalogFromTransfer(
             int16_write_value.bytes[2] = value[2];
             int16_write_value.bytes[3] = value[3];
 
-            communicationWriteAnalogOutput(address, int16_stored_value);
+            communicationReadAnalogOutput(address, int16_stored_value);
 
             if (int16_stored_value != int16_write_value.number) {
                 communicationWriteAnalogOutput(address, int16_write_value.number);
@@ -737,7 +737,7 @@ void _communicationWriteAnalogFromTransfer(
             int32_write_value.bytes[2] = value[2];
             int32_write_value.bytes[3] = value[3];
 
-            communicationWriteAnalogOutput(address, int32_stored_value);
+            communicationReadAnalogOutput(address, int32_stored_value);
 
             if (int32_stored_value != int32_write_value.number) {
                 communicationWriteAnalogOutput(address, int32_write_value.number);
@@ -759,7 +759,7 @@ void _communicationWriteAnalogFromTransfer(
             float_write_value.bytes[2] = value[2];
             float_write_value.bytes[3] = value[3];
 
-            communicationWriteAnalogOutput(address, float_stored_value);
+            communicationReadAnalogOutput(address, float_stored_value);
 
             if (float_stored_value != float_write_value.number) {
                 communicationWriteAnalogOutput(address, float_write_value.number);
