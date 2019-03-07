@@ -9,6 +9,7 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #include <SoftwareSerial.h>
 #include <Arduino.h>
 #include <PJON.h>
+#include <EEPROM.h>
 
 PJON<ThroughSerial> _communication_bus(PJON_NOT_ASSIGNED);
 
@@ -19,9 +20,20 @@ communication_register_t _communication_register;
 uint32_t _communication_last_node_search_request_time;
 uint32_t _communication_master_last_request = 0;
 bool _communication_master_lost = false;
+bool _communication_address_confirmed = false;
 
 // -----------------------------------------------------------------------------
 // MODULE PRIVATE
+// -----------------------------------------------------------------------------
+
+void _communicationSetAddress(
+    const uint8_t address
+) {
+    _communication_bus.set_id(address);
+
+    EEPROM.update(FLASH_ADDRESS_NODE_ADDRESS, address);
+}
+
 // -----------------------------------------------------------------------------
 
 bool _communicationIsPacketInGroup(
@@ -167,13 +179,12 @@ void _communicationReportSingleDigitalRegisters(
         output_content[0] = (char) packetId;
         output_content[1] = (char) (register_address >> 8);
         output_content[2] = (char) (register_address & 0xFF);
-        output_content[3] = (char) COMMUNICATION_DATA_TYPE_BOOLEAN;
-        output_content[4] = (char) (read_value >> 8);
-        output_content[5] = (char) (read_value & 0xFF);
+        output_content[3] = (char) (read_value >> 8);
+        output_content[4] = (char) (read_value & 0xFF);
 
         #if DEBUG_SUPPORT
             // Reply to gateway
-            if (_communicationReplyToPacket(output_content, 6) == false) {
+            if (_communicationReplyToPacket(output_content, 5) == false) {
                 // Node was not able to notify gateway about its address
                 DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive digital register reading\n"));
 
@@ -182,7 +193,7 @@ void _communicationReportSingleDigitalRegisters(
             }
         #else
             // Reply to gateway
-            _communicationReplyToPacket(output_content, 6);
+            _communicationReplyToPacket(output_content, 5);
         #endif
 
     } else {
@@ -1175,8 +1186,10 @@ void _communicationAddressConfirmRequestHandler(
     }
 
     // Set node address to received from gateway
-    _communication_bus.set_id(address);
+    _communicationSetAddress(address);
     
+    _communication_address_confirmed = true;
+
     #if DEBUG_SUPPORT
         DPRINTLN();
         DPRINT(F("[COMMUNICATION] ===========================\n"));
@@ -1375,92 +1388,6 @@ void _communicationReportRegistersSizes(
  * 3 => High byte of registers length
  * 4 => Low byte of registers length
  */
-void _communicationReportDigitalRegisterStructure(
-    const uint8_t packetId,
-    uint8_t * payload,
-    const uint16_t length,
-    const bool output
-) {
-    // Check for correct received payload length
-    if (length != (uint8_t) 5) {
-        #if DEBUG_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Packet length is not correct\n"));
-        #endif
-
-        // TODO: reply with exception
-        return;
-    }
-
-    // Register read start address
-    word register_address = (word) payload[1] << 8 | (word) payload[2];
-
-    // Number of registers to read
-    word read_length = (word) payload[3] << 8 | (word) payload[4];
-
-    if (
-        // Read start address mus be between <0, buffer.size()>
-        register_address < _communicationGetDigitalBufferSize(output)
-        // Read length have to be same or smaller as registers size
-        && (register_address + read_length) <= _communicationGetDigitalBufferSize(output)
-    ) {
-        char output_content[PJON_PACKET_MAX_LENGTH];
-
-        // 0    => Packet identifier
-        // 1    => High byte of register address
-        // 2    => Low byte of register address
-        // 3    => Register length
-        // 4-n  => Register data type
-        output_content[0] = (char) packetId;
-        output_content[1] = (char) (register_address >> 8);
-        output_content[2] = (char) (register_address & 0xFF);
-        output_content[3] = (char) 0; // Temporary value, will be updated after collecting all
-
-        uint8_t byte_pointer = 4;
-        uint8_t byte_counter = 0;
-
-        for (uint8_t i = register_address; i < (register_address + read_length) && i < _communicationGetDigitalBufferSize(output); i++) {
-            output_content[byte_pointer] = COMMUNICATION_DATA_TYPE_BOOLEAN;
-
-            byte_pointer++;
-            byte_counter++;
-        }
-
-        // Update data bytes length
-        output_content[3] = (char) byte_counter;
-
-        #if DEBUG_SUPPORT
-            // Reply to gateway
-            if (_communicationReplyToPacket(output_content, byte_pointer) == false) {
-                // Node was not able to notify gateway about its address
-                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive node digital registers structure\n"));
-
-            } else {
-                DPRINT(F("[COMMUNICATION] Replied to gateway with digital registers structure\n"));
-            }
-        #else
-            // Reply to gateway
-            _communicationReplyToPacket(output_content, byte_pointer);
-        #endif
-
-    } else {
-        #if DEBUG_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read structure for undefined digital registers range\n"));
-        #endif
-
-        // TODO: Send exception
-    }
-}
-
-// -----------------------------------------------------------------------------
-
-/**
- * PAYLOAD:
- * 0 => Packet identifier
- * 1 => High byte of register address
- * 2 => Low byte of register address
- * 3 => High byte of registers length
- * 4 => Low byte of registers length
- */
 void _communicationReportAnalogRegisterStructure(
     const uint8_t packetId,
     uint8_t * payload,
@@ -1553,14 +1480,6 @@ void _communicationRegisterInitializationRequestHandler(
     {
         case COMMUNICATION_PACKET_REGISTERS_SIZE:
             _communicationReportRegistersSizes(packetId);
-            break;
-
-        case COMMUNICATION_PACKET_DI_REGISTERS_STRUCTURE:
-            _communicationReportDigitalRegisterStructure(packetId, payload, length, false);
-            break;
-
-        case COMMUNICATION_PACKET_DO_REGISTERS_STRUCTURE:
-            _communicationReportDigitalRegisterStructure(packetId, payload, length, true);
             break;
 
         case COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE:
@@ -1788,7 +1707,7 @@ bool communicationDiscardAddress()
             2
         ) == PJON_ACK
     ) {
-        _communication_bus.set_id(PJON_NOT_ASSIGNED);
+        _communicationSetAddress(PJON_NOT_ASSIGNED);
 
         #if DEBUG_SUPPORT
             DPRINT(F("[COMMUNICATION] Node address was successfully reseted\n"));
@@ -1831,7 +1750,6 @@ uint8_t communicationRegisterDigitalInput(
     bool defaultValue
 ) {
     _communication_register.digital_inputs.push_back((communication_binary_register_t) {
-        COMMUNICATION_DATA_TYPE_BOOLEAN,
         defaultValue
     });
 
@@ -1880,7 +1798,6 @@ uint8_t communicationRegisterDigitalOutput(
     const bool defaultValue
 ) {
     _communication_register.digital_outputs.push_back((communication_binary_register_t) {
-        COMMUNICATION_DATA_TYPE_BOOLEAN,
         defaultValue
     });
 
@@ -2094,6 +2011,12 @@ void communicationSetup() {
     _communication_bus.set_error(_communicationErrorHandler);
 
     _communication_bus.begin();
+
+    uint8_t node_address = (uint8_t) EEPROM.read(FLASH_ADDRESS_NODE_ADDRESS);
+
+    if (node_address != PJON_NOT_ASSIGNED && node_address > 0 && node_address < 250) {
+        _communication_bus.set_id(node_address);
+    }
 }
 
 // -----------------------------------------------------------------------------

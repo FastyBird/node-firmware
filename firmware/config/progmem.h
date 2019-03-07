@@ -35,14 +35,11 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
     };
 
     const char communication_packet_registers_size[] PROGMEM            = "COMMUNICATION_PACKET_REGISTERS_SIZE";
-    const char communication_packet_di_registers_structure[] PROGMEM    = "COMMUNICATION_PACKET_DI_REGISTERS_STRUCTURE";
-    const char communication_packet_do_registers_structure[] PROGMEM    = "COMMUNICATION_PACKET_DO_REGISTERS_STRUCTURE";
     const char communication_packet_ai_registers_structure[] PROGMEM    = "COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE";
     const char communication_packet_ao_registers_structure[] PROGMEM    = "COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE";
 
     PROGMEM const char * const communication_packets_registers_initialization_string[] = {
         communication_packet_registers_size,
-        communication_packet_di_registers_structure, communication_packet_do_registers_structure,
         communication_packet_ai_registers_structure, communication_packet_ao_registers_structure
     };
 
@@ -95,9 +92,8 @@ PROGMEM const int communication_packets_node_initialization[6] = {
     COMMUNICATION_PACKET_FW_MODEL, COMMUNICATION_PACKET_FW_MANUFACTURER, COMMUNICATION_PACKET_FW_VERSION
 };
 
-PROGMEM const int communication_packets_registers_initialization[5] = {
+PROGMEM const int communication_packets_registers_initialization[3] = {
     COMMUNICATION_PACKET_REGISTERS_SIZE,
-    COMMUNICATION_PACKET_DI_REGISTERS_STRUCTURE, COMMUNICATION_PACKET_DO_REGISTERS_STRUCTURE,
     COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE, COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE
 };
 

@@ -48,15 +48,14 @@ typedef union {
 } FLOAT32_UNION_t;
 
 struct communication_binary_register_t {
-    uint8_t data_type;
     bool value;
 };
 
-typedef struct {
+struct communication_analog_register_t {
     uint8_t data_type;
     uint8_t size;
     char value[4];
-} communication_analog_register_t;
+};
 
 typedef struct {
     Vector<communication_binary_register_t> digital_inputs;

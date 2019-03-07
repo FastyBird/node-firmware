@@ -18,6 +18,7 @@ typedef struct {
     uint8_t reset_pin;          // GPIO to reset the relay if RELAY_TYPE_LATCHED
 
     uint8_t register_address;   // Address in communication register to store state
+    uint8_t memory_address;     // Address in flash memory to store state
 
     unsigned long delay_on;     // Delay to turn relay ON
     unsigned long delay_off;    // Delay to turn relay OFF
@@ -67,7 +68,7 @@ void _relayBoot() {
     bool status;
 
     for (uint8_t i = 0; i < relayCount(); i++) {
-        uint8_t boot_mode = (bool) EEPROM.read(_relays[i].register_address);
+        uint8_t boot_mode = (bool) EEPROM.read(_relays[i].memory_address);
 
         #if DEBUG_SUPPORT
             DPRINT(F("[RELAY] Relay #"));
@@ -281,7 +282,7 @@ bool relayStatus(
 
         changed = true;
 
-        EEPROM.update(_relays[id].register_address, status);
+        EEPROM.update(_relays[id].memory_address, status);
     }
 
     return changed;
@@ -361,42 +362,42 @@ void relaySetup() {
     #if RELAY1_PIN != GPIO_NONE
         register_address = communicationRegisterDigitalOutput();
 
-        _relays.push_back((relay_t) { RELAY1_PIN, RELAY1_TYPE, RELAY1_RESET_PIN, register_address, RELAY1_DELAY_ON, RELAY1_DELAY_OFF });
+        _relays.push_back((relay_t) { RELAY1_PIN, RELAY1_TYPE, RELAY1_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_01, RELAY1_DELAY_ON, RELAY1_DELAY_OFF });
     #endif
     #if RELAY2_PIN != GPIO_NONE
         register_address = communicationRegisterDigitalOutput();
 
-        _relays.push_back((relay_t) { RELAY2_PIN, RELAY2_TYPE, RELAY2_RESET_PIN, register_address, RELAY2_DELAY_ON, RELAY2_DELAY_OFF });
+        _relays.push_back((relay_t) { RELAY2_PIN, RELAY2_TYPE, RELAY2_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_02, RELAY2_DELAY_ON, RELAY2_DELAY_OFF });
     #endif
     #if RELAY3_PIN != GPIO_NONE
         register_address = communicationRegisterDigitalOutput();
 
-        _relays.push_back((relay_t) { RELAY3_PIN, RELAY3_TYPE, RELAY3_RESET_PIN, register_address, RELAY3_DELAY_ON, RELAY3_DELAY_OFF });
+        _relays.push_back((relay_t) { RELAY3_PIN, RELAY3_TYPE, RELAY3_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_03, RELAY3_DELAY_ON, RELAY3_DELAY_OFF });
     #endif
     #if RELAY4_PIN != GPIO_NONE
         register_address = communicationRegisterDigitalOutput();
 
-        _relays.push_back((relay_t) { RELAY4_PIN, RELAY4_TYPE, RELAY4_RESET_PIN, register_address, RELAY4_DELAY_ON, RELAY4_DELAY_OFF });
+        _relays.push_back((relay_t) { RELAY4_PIN, RELAY4_TYPE, RELAY4_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_04, RELAY4_DELAY_ON, RELAY4_DELAY_OFF });
     #endif
     #if RELAY5_PIN != GPIO_NONE
         register_address = communicationRegisterDigitalOutput();
 
-        _relays.push_back((relay_t) { RELAY5_PIN, RELAY5_TYPE, RELAY5_RESET_PIN, register_address, RELAY5_DELAY_ON, RELAY5_DELAY_OFF });
+        _relays.push_back((relay_t) { RELAY5_PIN, RELAY5_TYPE, RELAY5_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_05, RELAY5_DELAY_ON, RELAY5_DELAY_OFF });
     #endif
     #if RELAY6_PIN != GPIO_NONE
         register_address = communicationRegisterDigitalOutput();
 
-        _relays.push_back((relay_t) { RELAY6_PIN, RELAY6_TYPE, RELAY6_RESET_PIN, register_address, RELAY6_DELAY_ON, RELAY6_DELAY_OFF });
+        _relays.push_back((relay_t) { RELAY6_PIN, RELAY6_TYPE, RELAY6_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_06, RELAY6_DELAY_ON, RELAY6_DELAY_OFF });
     #endif
     #if RELAY7_PIN != GPIO_NONE
         register_address = communicationRegisterDigitalOutput();
 
-        _relays.push_back((relay_t) { RELAY7_PIN, RELAY7_TYPE, RELAY7_RESET_PIN, register_address, RELAY7_DELAY_ON, RELAY7_DELAY_OFF });
+        _relays.push_back((relay_t) { RELAY7_PIN, RELAY7_TYPE, RELAY7_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_07, RELAY7_DELAY_ON, RELAY7_DELAY_OFF });
     #endif
     #if RELAY8_PIN != GPIO_NONE
         register_address = communicationRegisterDigitalOutput();
 
-        _relays.push_back((relay_t) { RELAY8_PIN, RELAY8_TYPE, RELAY8_RESET_PIN, register_address, RELAY8_DELAY_ON, RELAY8_DELAY_OFF });
+        _relays.push_back((relay_t) { RELAY8_PIN, RELAY8_TYPE, RELAY8_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_08, RELAY8_DELAY_ON, RELAY8_DELAY_OFF });
     #endif
 
     _relayConfigure();

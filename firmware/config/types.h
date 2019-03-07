@@ -7,6 +7,20 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 */
 
 // =============================================================================
+// FLASH MEMORY ADDRESSING
+// =============================================================================
+
+#define FLASH_ADDRESS_NODE_ADDRESS                      0x01
+#define FLASH_ADDRESS_RELAY_01                          0x10
+#define FLASH_ADDRESS_RELAY_02                          0x11
+#define FLASH_ADDRESS_RELAY_03                          0x12
+#define FLASH_ADDRESS_RELAY_04                          0x14
+#define FLASH_ADDRESS_RELAY_05                          0x15
+#define FLASH_ADDRESS_RELAY_06                          0x16
+#define FLASH_ADDRESS_RELAY_07                          0x17
+#define FLASH_ADDRESS_RELAY_08                          0x18
+
+// =============================================================================
 // COMMUNICATION PACKET
 // =============================================================================
 
@@ -30,12 +44,10 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 
 // Node registers initialization
 #define COMMUNICATION_PACKET_REGISTERS_SIZE             0x21
-#define COMMUNICATION_PACKET_DI_REGISTERS_STRUCTURE     0x22
-#define COMMUNICATION_PACKET_DO_REGISTERS_STRUCTURE     0x23
-#define COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE     0x24
-#define COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE     0x25
+#define COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE     0x22
+#define COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE     0x23
 
-#define COMMUNICATION_PACKET_REGISTERS_INIT_MAX         5
+#define COMMUNICATION_PACKET_REGISTERS_INIT_MAX         3
 
 // Registers reading
 #define COMMUNICATION_PACKET_READ_SINGLE_DI             0x31   // Master requested DI one regiter reading
@@ -68,14 +80,13 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // =============================================================================
 
 #define COMMUNICATION_DATA_TYPE_UNKNOWN                 0xFF
-#define COMMUNICATION_DATA_TYPE_BOOLEAN                 0x01
-#define COMMUNICATION_DATA_TYPE_UINT8                   0x02
-#define COMMUNICATION_DATA_TYPE_UINT16                  0x03
-#define COMMUNICATION_DATA_TYPE_UINT32                  0x04
-#define COMMUNICATION_DATA_TYPE_INT8                    0x05
-#define COMMUNICATION_DATA_TYPE_INT16                   0x06
-#define COMMUNICATION_DATA_TYPE_INT32                   0x07
-#define COMMUNICATION_DATA_TYPE_FLOAT32                 0x08
+#define COMMUNICATION_DATA_TYPE_UINT8                   0x01
+#define COMMUNICATION_DATA_TYPE_UINT16                  0x02
+#define COMMUNICATION_DATA_TYPE_UINT32                  0x03
+#define COMMUNICATION_DATA_TYPE_INT8                    0x04
+#define COMMUNICATION_DATA_TYPE_INT16                   0x05
+#define COMMUNICATION_DATA_TYPE_INT32                   0x06
+#define COMMUNICATION_DATA_TYPE_FLOAT32                 0x07
 
 // =============================================================================
 // LED
