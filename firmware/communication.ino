@@ -18,6 +18,7 @@ SoftwareSerial _communication_serial_bus(COMMUNICATION_BUS_TX_PIN, COMMUNICATION
 communication_register_t _communication_register;
 
 uint32_t _communication_last_node_search_request_time;
+uint32_t _communication_last_new_node_search_request_time;
 uint32_t _communication_master_last_request = 0;
 bool _communication_master_lost = false;
 bool _communication_address_confirmed = false;
@@ -1113,9 +1114,7 @@ void _communicationNodesSearchRequestHandler(
     uint8_t * payload,
     const uint16_t length
 ) {
-    if (millis() - _communication_last_node_search_request_time > (COMMUNICATION_ADDRESSING_TIMEOUT * 1.125)) {
-        _communication_last_node_search_request_time = millis();
-
+    if (communicationHasAssignedAddress() && millis() - _communication_last_node_search_request_time > (COMMUNICATION_ADDRESSING_TIMEOUT * 1.125)) {
         char output_content[PJON_PACKET_MAX_LENGTH];
 
         // 0    => Packet identifier
@@ -1139,11 +1138,59 @@ void _communicationNodesSearchRequestHandler(
         output_content[byte_pointer] = 0; // Be sure to set the null terminator!!!
 
         // Non blocking packet transfer
-        _communication_bus.send(
+        uint16_t result = _communication_bus.send_packet_blocking(
             COMMUNICATION_BUS_GATEWAY_ADDR,
             output_content,
             (byte_pointer + 1)
         );
+
+        if (result == PJON_ACK) {
+            _communication_last_node_search_request_time = millis();
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+/**
+ * PAYLOAD:
+ * 0 => Packet identifier
+ */
+void _communicationNewNodesSearchRequestHandler(
+    uint8_t * payload,
+    const uint16_t length
+) {
+    if (communicationHasAssignedAddress() == false && millis() - _communication_last_new_node_search_request_time > (COMMUNICATION_ADDRESSING_TIMEOUT * 1.125)) {
+        char output_content[PJON_PACKET_MAX_LENGTH];
+
+        // 0    => Packet identifier
+        // 1    => Max packet size
+        // 2    => Node SN length
+        // 3-n  => Node parsed SN
+        output_content[0] = (uint8_t) COMMUNICATION_PACKET_SEARCH_NEW_NODES;
+        output_content[1] = (uint8_t) PJON_PACKET_MAX_LENGTH;
+        output_content[2] = (uint8_t) (strlen((char *) NODE_SERIAL_NO) + 1);
+
+        uint8_t byte_pointer = 3;
+
+        for (uint8_t i = 0; i < strlen((char *) NODE_SERIAL_NO); i++) {
+            output_content[byte_pointer] = ((char *) NODE_SERIAL_NO)[i];
+
+            byte_pointer++;
+        }
+
+        output_content[byte_pointer] = 0; // Be sure to set the null terminator!!!
+
+        // Non blocking packet transfer
+        uint16_t result = _communication_bus.send_packet_blocking(
+            COMMUNICATION_BUS_GATEWAY_ADDR,
+            output_content,
+            (byte_pointer + 1)
+        );
+
+        if (result == PJON_ACK) {
+            _communication_last_new_node_search_request_time = millis();
+        }
     }
 }
 
@@ -1245,6 +1292,13 @@ void _communicationAddressRequestHandler(
          */
         case COMMUNICATION_PACKET_SEARCH_NODES:
             _communicationNodesSearchRequestHandler(payload, length);
+            break;
+
+        /**
+         * Gateway is searching for not addressed nodes
+         */
+        case COMMUNICATION_PACKET_SEARCH_NEW_NODES:
+            _communicationNewNodesSearchRequestHandler(payload, length);
             break;
 
         /**
