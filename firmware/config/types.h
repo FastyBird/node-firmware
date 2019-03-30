@@ -24,10 +24,12 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // COMMUNICATION PACKET
 // =============================================================================
 
+// Node searching
+#define COMMUNICATION_PACKET_SEARCH_NEW_NODES           0x01
+#define COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM       0x02
+
 // Node addressing
-#define COMMUNICATION_PACKET_SEARCH_NODES               0x01
-#define COMMUNICATION_PACKET_SEARCH_NEW_NODES           0x02
-#define COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM       0x03
+#define COMMUNICATION_PACKET_SEARCH_NODES               0x03
 #define COMMUNICATION_PACKET_ADDRESS_DISCARD            0x04
 
 #define COMMUNICATION_PACKET_ADDRESS_MAX                4

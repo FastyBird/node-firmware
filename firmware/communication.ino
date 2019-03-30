@@ -32,7 +32,9 @@ void _communicationSetAddress(
 ) {
     _communication_bus.set_id(address);
 
-    EEPROM.update(FLASH_ADDRESS_NODE_ADDRESS, address);
+    #if !COMMUNICATION_DISABLE_ADDRESS_STORING
+        EEPROM.update(FLASH_ADDRESS_NODE_ADDRESS, address);
+    #endif
 }
 
 // -----------------------------------------------------------------------------
@@ -1229,6 +1231,15 @@ void _communicationAddressConfirmRequestHandler(
 
     // Check if received packet if for this node
     if (strcmp((char *) NODE_SERIAL_NO, (char *) node_sn) != 0) {
+        #if DEBUG_SUPPORT
+            DPRINT(F("[COMMUNICATION][INFO] Packet is for other node: \""));
+            DPRINT(node_sn);
+            DPRINTLN(F("\""));
+            DPRINT(F("[COMMUNICATION][INFO] Node SN is: \""));
+            DPRINT((char *) NODE_SERIAL_NO);
+            DPRINTLN(F("\""));
+        #endif
+
         return;
     }
 
@@ -2066,7 +2077,22 @@ void communicationSetup() {
 
     _communication_bus.begin();
 
-    uint8_t node_address = (uint8_t) EEPROM.read(FLASH_ADDRESS_NODE_ADDRESS);
+    #if COMMUNICATION_DISABLE_ADDRESS_STORING
+        uint8_t node_address = PJON_NOT_ASSIGNED;
+    #else
+        uint8_t node_address = (uint8_t) EEPROM.read(FLASH_ADDRESS_NODE_ADDRESS);
+
+    #endif
+
+    #if DEBUG_SUPPORT
+        if (node_address == PJON_NOT_ASSIGNED) {
+            DPRINTLN(F("[COMMUNICATION] Unaddressed node"));
+
+        } else {
+            DPRINT(F("[COMMUNICATION] Stored node address: "));
+            DPRINTLN(node_address);
+        }
+    #endif
 
     if (node_address != PJON_NOT_ASSIGNED && node_address > 0 && node_address < 250) {
         _communication_bus.set_id(node_address);
