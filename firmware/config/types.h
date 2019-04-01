@@ -91,6 +91,18 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #define COMMUNICATION_DATA_TYPE_FLOAT32                 0x07
 
 // =============================================================================
+// BUTTON EVENT MAPPING
+// =============================================================================
+
+#define COMMUNICATION_BUTTON_EVENT_NONE                 0
+#define COMMUNICATION_BUTTON_EVENT_PRESSED              1
+#define COMMUNICATION_BUTTON_EVENT_CLICK                2
+#define COMMUNICATION_BUTTON_EVENT_DBLCLICK             3
+#define COMMUNICATION_BUTTON_EVENT_TRIPLECLICK          4
+#define COMMUNICATION_BUTTON_EVENT_LNGCLICK             5
+#define COMMUNICATION_BUTTON_EVENT_LNGLNGCLICK          6
+
+// =============================================================================
 // LED
 // =============================================================================
 
@@ -106,11 +118,12 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 
 #define BUTTON_EVENT_NONE                               0
 #define BUTTON_EVENT_PRESSED                            1
-#define BUTTON_EVENT_CLICK                              2
-#define BUTTON_EVENT_DBLCLICK                           3
-#define BUTTON_EVENT_LNGCLICK                           4
-#define BUTTON_EVENT_LNGLNGCLICK                        5
-#define BUTTON_EVENT_TRIPLECLICK                        6
+#define BUTTON_EVENT_RELEASED                           2
+#define BUTTON_EVENT_CLICK                              3
+#define BUTTON_EVENT_DBLCLICK                           4
+#define BUTTON_EVENT_TRIPLECLICK                        5
+#define BUTTON_EVENT_LNGCLICK                           6
+#define BUTTON_EVENT_LNGLNGCLICK                        7
 
 // =============================================================================
 // RELAY

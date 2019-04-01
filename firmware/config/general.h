@@ -78,11 +78,15 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #endif
 
 // =============================================================================
-// BUTTON MODULE
+// BUTTON MODULE|EXPANDER BUTTON MODULE
 // =============================================================================
 
 #ifndef BUTTON_SUPPORT
 #define BUTTON_SUPPORT                          0
+#endif
+
+#ifndef BUTTON_EXPANDER_SUPPORT
+#define BUTTON_EXPANDER_SUPPORT                 0
 #endif
 
 #ifndef BUTTON_DEBOUNCE_DELAY
@@ -98,7 +102,7 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #endif
 
 #ifndef BUTTON_LNGLNGCLICK_DELAY
-#define BUTTON_LNGLNGCLICK_DELAY                10000               // Time in ms holding the button down to get a long-long click
+#define BUTTON_LNGLNGCLICK_DELAY                5000                // Time in ms holding the button down to get a long-long click
 #endif
 
 // =============================================================================

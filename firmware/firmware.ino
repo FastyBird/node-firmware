@@ -30,6 +30,10 @@ void setup() {
         buttonSetup();
     #endif
 
+    #if BUTTON_EXPANDER_SUPPORT
+        expanderSetup();
+    #endif
+
     #if RELAY_PROVIDER != RELAY_PROVIDER_NONE
         relaySetup();
     #endif
@@ -42,6 +46,10 @@ void setup() {
 void loop() {
     #if BUTTON_SUPPORT
         buttonLoop();
+    #endif
+
+    #if BUTTON_EXPANDER_SUPPORT
+        expanderLoop();
     #endif
 
     #if RELAY_PROVIDER != RELAY_PROVIDER_NONE
