@@ -40,6 +40,30 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #ifndef BUTTON8_PIN
 #define BUTTON8_PIN         GPIO_NONE
 #endif
+#ifndef BUTTON9_PIN
+#define BUTTON9_PIN         GPIO_NONE
+#endif
+#ifndef BUTTON10_PIN
+#define BUTTON10_PIN        GPIO_NONE
+#endif
+#ifndef BUTTON11_PIN
+#define BUTTON11_PIN        GPIO_NONE
+#endif
+#ifndef BUTTON12_PIN
+#define BUTTON12_PIN        GPIO_NONE
+#endif
+#ifndef BUTTON13_PIN
+#define BUTTON13_PIN        GPIO_NONE
+#endif
+#ifndef BUTTON14_PIN
+#define BUTTON14_PIN        GPIO_NONE
+#endif
+#ifndef BUTTON15_PIN
+#define BUTTON15_PIN        GPIO_NONE
+#endif
+#ifndef BUTTON16_PIN
+#define BUTTON16_PIN        GPIO_NONE
+#endif
 
 // =============================================================================
 // LEDs

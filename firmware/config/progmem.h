@@ -49,14 +49,17 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
     const char communication_packet_read_multi_do[] PROGMEM             = "COMMUNICATION_PACKET_READ_MULTI_DO";
     const char communication_packet_read_single_ai[] PROGMEM            = "COMMUNICATION_PACKET_READ_SINGLE_AI";
     const char communication_packet_read_multi_ai[] PROGMEM             = "COMMUNICATION_PACKET_READ_MULTI_AI";
-    const char communication_packet_read_single_a0[] PROGMEM            = "COMMUNICATION_PACKET_READ_SINGLE_AO";
+    const char communication_packet_read_single_ao[] PROGMEM            = "COMMUNICATION_PACKET_READ_SINGLE_AO";
     const char communication_packet_read_multi_ao[] PROGMEM             = "COMMUNICATION_PACKET_READ_MULTI_AO";
+    const char communication_packet_read_single_ev[] PROGMEM            = "COMMUNICATION_PACKET_READ_SINGLE_EV";
+    const char communication_packet_read_multi_ev[] PROGMEM             = "COMMUNICATION_PACKET_READ_MULTI_EV";
 
     PROGMEM const char * const communication_packets_registers_reading_string[] = {
         communication_packet_read_single_di, communication_packet_read_multi_di,
         communication_packet_read_single_do, communication_packet_read_multi_do,
         communication_packet_read_single_ai, communication_packet_read_multi_ai,
-        communication_packet_read_single_a0, communication_packet_read_multi_ao
+        communication_packet_read_single_ao, communication_packet_read_multi_ao,
+        communication_packet_read_single_ev, communication_packet_read_multi_ev
     };
 
     const char communication_packet_write_one_do[] PROGMEM              = "COMMUNICATION_PACKET_WRITE_ONE_DO";
@@ -97,11 +100,12 @@ PROGMEM const int communication_packets_registers_initialization[3] = {
     COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE, COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE
 };
 
-PROGMEM const int communication_packets_registers_reading[8] = {
+PROGMEM const int communication_packets_registers_reading[10] = {
     COMMUNICATION_PACKET_READ_SINGLE_DI, COMMUNICATION_PACKET_READ_MULTI_DI,
     COMMUNICATION_PACKET_READ_SINGLE_DO, COMMUNICATION_PACKET_READ_MULTI_DO,
     COMMUNICATION_PACKET_READ_SINGLE_AI, COMMUNICATION_PACKET_READ_MULTI_AI,
-    COMMUNICATION_PACKET_READ_SINGLE_AO, COMMUNICATION_PACKET_READ_MULTI_AO
+    COMMUNICATION_PACKET_READ_SINGLE_AO, COMMUNICATION_PACKET_READ_MULTI_AO,
+    COMMUNICATION_PACKET_READ_SINGLE_EV, COMMUNICATION_PACKET_READ_MULTI_EV
 };
 
 PROGMEM const int communication_packets_registers_writing[4] = {

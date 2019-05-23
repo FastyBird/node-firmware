@@ -57,12 +57,18 @@ struct communication_analog_register_t {
     char value[4];
 };
 
+struct communication_event_register_t {
+    uint8_t value;
+};
+
 typedef struct {
     Vector<communication_binary_register_t> digital_inputs;
     Vector<communication_binary_register_t> digital_outputs;
 
     Vector<communication_analog_register_t> analog_inputs;
     Vector<communication_analog_register_t> analog_outputs;
+
+    Vector<communication_event_register_t> event_inputs;
 } communication_register_t;
 
 // =============================================================================

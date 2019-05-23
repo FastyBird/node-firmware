@@ -60,8 +60,10 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #define COMMUNICATION_PACKET_READ_MULTI_AI              0x36   // Master requested AI multiple regiters reading
 #define COMMUNICATION_PACKET_READ_SINGLE_AO             0x37   // Master requested AO one regiter reading
 #define COMMUNICATION_PACKET_READ_MULTI_AO              0x38   // Master requested AO multiple regiters reading
+#define COMMUNICATION_PACKET_READ_SINGLE_EV             0x39   // Master requested EV one regiter reading
+#define COMMUNICATION_PACKET_READ_MULTI_EV              0x3A   // Master requested EV multiple regiters reading
 
-#define COMMUNICATION_PACKET_REGISTERS_REDING_MAX       8
+#define COMMUNICATION_PACKET_REGISTERS_REDING_MAX       10
 
 // Registers writing
 #define COMMUNICATION_PACKET_WRITE_ONE_DO               0x41

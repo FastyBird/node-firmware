@@ -172,7 +172,7 @@ void _expanderButtonEvent(
     uint8_t communication_mapped_event = _expanderButtonMapEventForCommunication(event);
 
     // Store state into communication register
-    communicationWriteAnalogInput(_expander_communication_register_address[id], communication_mapped_event);
+    communicationWriteEventInput(_expander_communication_register_address[id], communication_mapped_event);
 }
 
 // -----------------------------------------------------------------------------
@@ -200,7 +200,7 @@ void expanderSetup() {
         _expander_reset_count[i] = true;
 
         // Reserve address in register
-        _expander_communication_register_address[i] = communicationRegisterAnalogInput(COMMUNICATION_DATA_TYPE_UINT8);
+        _expander_communication_register_address[i] = communicationRegisterEventInput();
     }
 
     #if DEBUG_SUPPORT

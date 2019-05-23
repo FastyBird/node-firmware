@@ -138,6 +138,16 @@ uint8_t _communicationGetAnalogBufferSize(
 }
 
 // -----------------------------------------------------------------------------
+
+/**
+ * Get EV buffer size
+ */
+uint8_t _communicationGetEventBufferSize()
+{
+    return _communication_register.event_inputs.size();
+}
+
+// -----------------------------------------------------------------------------
 // DIGITAL REGISTERS
 // -----------------------------------------------------------------------------
 
@@ -1104,6 +1114,141 @@ void _communicationWriteMultipleAnalogOutputs(
     }
 }
 */
+
+// -----------------------------------------------------------------------------
+// EVENT REGISTERS
+// -----------------------------------------------------------------------------
+
+/**
+ * PAYLOAD:
+ * 0 => Packet identifier
+ * 1 => High byte of register address
+ * 2 => Low byte of register address
+ */
+void _communicationReportSingleEventRegisters(
+    const uint8_t packetId,
+    uint8_t * payload
+) {
+    char output_content[PJON_PACKET_MAX_LENGTH];
+
+    word register_address = (word) payload[1] << 8 | (word) payload[2];
+    
+    #if DEBUG_SUPPORT
+        DPRINT(F("[COMMUNICATION] Requested reading from single event"));
+        DPRINT(F(" input (EV) "));
+        DPRINT(F("buffer at address: "));
+        DPRINTLN(register_address);
+    #endif
+
+    if (
+        // Read start address mus be between <0, buffer.size()>
+        register_address < _communicationGetEventBufferSize()
+    ) {
+        // 0 => Packet identifier
+        // 1 => High byte of register address
+        // 2 => Low byte of register address
+        // 3 => Register value
+        output_content[0] = (char) packetId;
+        output_content[1] = (char) (register_address >> 8);
+        output_content[2] = (char) (register_address & 0xFF);
+        output_content[3] = (char) communicationReadEventInput(register_address);
+
+        #if DEBUG_SUPPORT
+            // Reply to gateway
+            if (_communicationReplyToPacket(output_content, 4) == false) {
+                // Node was not able to notify gateway about its address
+                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive event register reading\n"));
+
+            } else {
+                DPRINT(F("[COMMUNICATION] Replied to gateway with event registers content\n"));
+            }
+        #else
+            // Reply to gateway
+            _communicationReplyToPacket(output_content, 4);
+        #endif
+
+    } else {
+        #if DEBUG_SUPPORT
+            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined event registers range\n"));
+        #endif
+
+        // TODO: Send exception
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+void _communicationReportMultiEventRegisters(
+    const uint8_t packetId,
+    uint8_t * payload
+) {
+    char output_content[PJON_PACKET_MAX_LENGTH];
+
+    word register_address = (word) payload[1] << 8 | (word) payload[2];
+    word read_length = (word) payload[3] << 8 | (word) payload[4];
+    
+    #if DEBUG_SUPPORT
+        DPRINT(F("[COMMUNICATION] Requested reading from multiple event"));
+        DPRINT(F(" inputs (EV) "));
+        DPRINT(F("buffer at address: "));
+        DPRINT(register_address);
+        DPRINT(F(" and length: "));
+        DPRINTLN(read_length);
+    #endif
+
+    if (
+        // Read start address mus be between <0, buffer.size()>
+        register_address < _communicationGetEventBufferSize()
+        // Read length have to be same or smaller as registers size
+        && (register_address + read_length) <= _communicationGetEventBufferSize()
+    ) {
+        uint8_t byte_counter = 0;
+
+        // 0    => Packet identifier
+        // 1    => High byte of register address
+        // 2    => Low byte of register address
+        // 3    => Count of data bytes
+        // 4-n  => Packet data
+        output_content[0] = (char) packetId;
+        output_content[1] = (char) (register_address >> 8);
+        output_content[2] = (char) (register_address & 0xFF);
+        output_content[3] = (char) 0; // Temporary value, will be updated after collecting all
+
+        uint8_t byte_pointer = 4;
+
+        for (uint8_t i = register_address; i < (register_address + read_length) && i < _communicationGetEventBufferSize(); i++) {
+            output_content[byte_pointer] = (char) communicationReadEventInput(i);
+
+            byte_pointer++;
+            byte_counter++;
+        }
+
+        // Update data bytes length
+        output_content[3] = (char) byte_counter;
+
+        #if DEBUG_SUPPORT
+            // Reply to gateway
+            if (_communicationReplyToPacket(output_content, (byte_counter + 4)) == false) {
+                // Node was not able to notify gateway about its address
+                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive event register reading\n"));
+
+            } else {
+                DPRINT(F("[COMMUNICATION] Replied to gateway with event registers content\n"));
+            }
+        #else
+            // Reply to gateway
+            _communicationReplyToPacket(output_content, (byte_counter + 4));
+        #endif
+
+    } else {
+        #if DEBUG_SUPPORT
+            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined event registers range\n"));
+        #endif
+
+        // TODO: Send exception
+    }
+}
+
 // -----------------------------------------------------------------------------
 // NODE ADDRESSING PROCESS
 // -----------------------------------------------------------------------------
@@ -1415,22 +1560,24 @@ void _communicationNodeInitializationRequestHandler(
 void _communicationReportRegistersSizes(
     const uint8_t packetId
 ) {
-    char output_content[5];
+    char output_content[7];
 
     // 0 => Packet identifier
     // 1 => DI buffer size
     // 2 => DO buffer size
     // 3 => AI buffer size
     // 4 => AO buffer size
+    // 5 => EV buffer size
     output_content[0] = (char) packetId;
     output_content[1] = (char) _communicationGetDigitalBufferSize(false);
     output_content[2] = (char) _communicationGetDigitalBufferSize(true);
     output_content[3] = (char) _communicationGetAnalogBufferSize(false);
     output_content[4] = (char) _communicationGetAnalogBufferSize(true);
+    output_content[5] = (char) _communicationGetEventBufferSize();
 
     #if DEBUG_SUPPORT
         // Reply to gateway
-        if (_communicationReplyToPacket(output_content, 5) == false) {
+        if (_communicationReplyToPacket(output_content, 6) == false) {
             // Node was not able to notify gateway about its address
             DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive node registers sizes\n"));
 
@@ -1439,7 +1586,7 @@ void _communicationReportRegistersSizes(
         }
     #else
         // Reply to gateway
-        _communicationReplyToPacket(output_content, 5);
+        _communicationReplyToPacket(output_content, 6);
     #endif
 }
 
@@ -1670,6 +1817,14 @@ void _communicationReceiverHandler(
 
             case COMMUNICATION_PACKET_READ_MULTI_AO:
                 _communicationReportMultiAnalogRegisters(packet_id, payload, true);
+                break;
+        
+            case COMMUNICATION_PACKET_READ_SINGLE_EV:
+                _communicationReportSingleEventRegisters(packet_id, payload);
+                break;
+
+            case COMMUNICATION_PACKET_READ_MULTI_EV:
+                _communicationReportMultiEventRegisters(packet_id, payload);
                 break;
         
         /**
@@ -2061,6 +2216,60 @@ void communicationReadAnalogOutput(const uint8_t address, int8_t &value) { commu
 void communicationReadAnalogOutput(const uint8_t address, int16_t &value) { communicationReadAnalogRegister(true, address, &value, 2); }
 void communicationReadAnalogOutput(const uint8_t address, int32_t &value) { communicationReadAnalogRegister(true, address, &value, 4); }
 void communicationReadAnalogOutput(const uint8_t address, float &value) { communicationReadAnalogRegister(true, address, &value, 4); }
+
+// -----------------------------------------------------------------------------
+// EVENT REGISTERS
+// -----------------------------------------------------------------------------
+
+uint8_t communicationReadEventRegister(
+    const uint8_t address
+) {
+    if (address < _communication_register.event_inputs.size()) {
+        return _communication_register.event_inputs[address].value;
+    }
+
+    return 0;
+}
+
+// -----------------------------------------------------------------------------
+
+bool communicationWriteEventRegister(
+    const uint8_t address,
+    const uint8_t value
+) {
+    if (address > _communication_register.event_inputs.size()) {
+        return false;
+    }
+
+    _communication_register.event_inputs[address].value = value;
+
+    return true;
+}
+
+// -----------------------------------------------------------------------------
+// EVENT INPUTS
+// -----------------------------------------------------------------------------
+
+uint8_t communicationRegisterEventInput()
+{
+    _communication_register.event_inputs.push_back((communication_event_register_t) {
+        0
+    });
+
+    uint8_t address = (_communication_register.event_inputs.size() - 1);
+
+    return address;
+}
+
+// -----------------------------------------------------------------------------
+
+// Specialized convenience setters (these do not cost memory because of inlining)
+bool communicationWriteEventInput(const uint8_t address, const uint8_t value) { return communicationWriteEventRegister(address, value); }
+
+// -----------------------------------------------------------------------------
+
+// Specialized convenience setters (these do not cost memory because of inlining)
+uint8_t communicationReadEventInput(const uint8_t address) { return communicationReadEventRegister(address); }
 
 // -----------------------------------------------------------------------------
 // MODULE CORE

@@ -81,6 +81,57 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
     #define BUTTON7_MODE                BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
     #define BUTTON8_MODE                BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
 
+#elif defined(FASTYBIRD_16CH_BUTTONS)
+
+    // Info
+    #define NODE_MANUFACTURER           "FASTYBIRD"
+    #define NODE_NAME                   "16CH_BUTTONS"
+
+    // BUS
+    #define COMMUNICATION_BUS_TX_PIN    3
+    #define COMMUNICATION_BUS_RX_PIN    2
+
+    // LEDs
+    #define LED1_PIN                    13
+    #define LED1_PIN_INVERSE            1
+
+    // Buttons
+    #define BUTTON_SUPPORT              1
+
+    #define BUTTON1_PIN                 4
+    #define BUTTON2_PIN                 5
+    #define BUTTON3_PIN                 6
+    #define BUTTON4_PIN                 7
+    #define BUTTON5_PIN                 8
+    #define BUTTON6_PIN                 9
+    #define BUTTON7_PIN                 10
+    #define BUTTON8_PIN                 11
+    #define BUTTON9_PIN                 12
+    #define BUTTON10_PIN                A0
+    #define BUTTON11_PIN                A1
+    #define BUTTON12_PIN                A2
+    #define BUTTON13_PIN                A3
+    #define BUTTON14_PIN                A4
+    #define BUTTON15_PIN                A5
+    #define BUTTON16_PIN                A6
+
+    #define BUTTON1_MODE                BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON2_MODE                BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON3_MODE                BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON4_MODE                BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON5_MODE                BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON6_MODE                BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON7_MODE                BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON8_MODE                BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON9_MODE                BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON10_MODE               BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON11_MODE               BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON12_MODE               BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON13_MODE               BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON14_MODE               BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON15_MODE               BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+    #define BUTTON16_MODE               BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
+
 #elif defined(FASTYBIRD_16CH_BUTTONS_EXPANDER)
 
     // Info
