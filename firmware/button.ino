@@ -89,119 +89,118 @@ int buttonCount() {
 // -----------------------------------------------------------------------------
 
 void buttonSetup() {
-    unsigned long _btn_delay = BUTTON_DBLCLICK_DELAY;
     uint8_t register_address;
 
     #if BUTTON1_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON1_PIN, BUTTON1_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON1_PIN, BUTTON1_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON2_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON2_PIN, BUTTON2_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON2_PIN, BUTTON2_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON3_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON3_PIN, BUTTON3_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON3_PIN, BUTTON3_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON4_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON4_PIN, BUTTON4_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON4_PIN, BUTTON4_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON5_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON5_PIN, BUTTON5_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON5_PIN, BUTTON5_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON6_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON6_PIN, BUTTON6_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON6_PIN, BUTTON6_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON7_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON7_PIN, BUTTON7_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON7_PIN, BUTTON7_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON8_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON8_PIN, BUTTON8_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON8_PIN, BUTTON8_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON9_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON9_PIN, BUTTON9_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON9_PIN, BUTTON9_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON10_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON10_PIN, BUTTON10_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON10_PIN, BUTTON10_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON11_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON11_PIN, BUTTON11_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON11_PIN, BUTTON11_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON12_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON12_PIN, BUTTON12_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON12_PIN, BUTTON12_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON13_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON13_PIN, BUTTON13_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON13_PIN, BUTTON13_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON14_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON14_PIN, BUTTON14_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON14_PIN, BUTTON14_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON15_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON15_PIN, BUTTON15_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON15_PIN, BUTTON15_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
     #if BUTTON16_PIN != GPIO_NONE
     {
         register_address = communicationRegisterEventInput();
 
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON16_PIN, BUTTON16_MODE, BUTTON_DEBOUNCE_DELAY, _btn_delay), register_address});
+        _buttons.push_back((button_t) {new DebounceEvent(BUTTON16_PIN, BUTTON16_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
     }
     #endif
 

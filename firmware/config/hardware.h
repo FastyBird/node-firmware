@@ -81,6 +81,9 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
     #define BUTTON7_MODE                BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
     #define BUTTON8_MODE                BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP
 
+/**
+ * BUTTONS INTERAFACE BASED ON ARDUINO NANO
+ */
 #elif defined(FASTYBIRD_16CH_BUTTONS)
 
     // Info
