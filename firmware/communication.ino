@@ -71,7 +71,7 @@ uint8_t _communicationGetPacketIndexInGroup(
 
 // -----------------------------------------------------------------------------
 
-#if DEBUG_SUPPORT
+#if DEBUG_COMMUNICATION_SUPPORT
     void _communicationDebugLogPacket(
         const uint8_t packetId
     ) {
@@ -85,9 +85,6 @@ uint8_t _communicationGetPacketIndexInGroup(
 
         } else if (_communicationIsPacketInGroup(packetId, communication_packets_node_initialization, COMMUNICATION_PACKET_NODE_INIT_MAX)) {
             strcpy_P(buffer, (char *) pgm_read_word(&communication_packets_node_initialization_string[_communicationGetPacketIndexInGroup(packetId, communication_packets_node_initialization, COMMUNICATION_PACKET_NODE_INIT_MAX)]));
-
-        } else if (_communicationIsPacketInGroup(packetId, communication_packets_registers_initialization, COMMUNICATION_PACKET_REGISTERS_INIT_MAX)) {
-            strcpy_P(buffer, (char *) pgm_read_word(&communication_packets_registers_initialization_string[_communicationGetPacketIndexInGroup(packetId, communication_packets_registers_initialization, COMMUNICATION_PACKET_REGISTERS_INIT_MAX)]));
 
         } else if (_communicationIsPacketInGroup(packetId, communication_packets_registers_reading, COMMUNICATION_PACKET_REGISTERS_REDING_MAX)) {
             strcpy_P(buffer, (char *) pgm_read_word(&communication_packets_registers_reading_string[_communicationGetPacketIndexInGroup(packetId, communication_packets_registers_reading, COMMUNICATION_PACKET_REGISTERS_REDING_MAX)]));
@@ -160,7 +157,7 @@ void _communicationReportSingleDigitalRegisters(
 
     word register_address = (word) payload[1] << 8 | (word) payload[2];
     
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Requested reading from single digital"));
         if (output) {
             DPRINT(F(" output (DO) "));
@@ -195,7 +192,7 @@ void _communicationReportSingleDigitalRegisters(
         output_content[3] = (char) (read_value >> 8);
         output_content[4] = (char) (read_value & 0xFF);
 
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to gateway
             if (_communicationReplyToPacket(output_content, 5) == false) {
                 // Node was not able to notify gateway about its address
@@ -210,7 +207,7 @@ void _communicationReportSingleDigitalRegisters(
         #endif
 
     } else {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined digital registers range\n"));
         #endif
 
@@ -230,7 +227,7 @@ void _communicationReportMultiDigitalRegisters(
     word register_address = (word) payload[1] << 8 | (word) payload[2];
     word read_length = (word) payload[3] << 8 | (word) payload[4];
     
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Requested reading from multiple digital"));
         if (output) {
             DPRINT(F(" outputs (DO) "));
@@ -321,7 +318,7 @@ void _communicationReportMultiDigitalRegisters(
         // Update data bytes length
         output_content[3] = (char) byte_counter;
 
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to gateway
             if (_communicationReplyToPacket(output_content, (byte_counter + 4)) == false) {
                 // Node was not able to notify gateway about its address
@@ -336,7 +333,7 @@ void _communicationReportMultiDigitalRegisters(
         #endif
 
     } else {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined digital registers range\n"));
         #endif
 
@@ -355,14 +352,14 @@ void _communicationWriteSingleDigitalOutput(
     word register_address = (word) payload[1] << 8 | (word) payload[2];
     word write_value = (word) payload[3] << 8 | (word) payload[4];
 
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Requested writing single value to DO register at address: "));
         DPRINTLN(register_address);
     #endif
 
     // Check if value is TRUE|FALSE or 1|0
     if (write_value != 0xFF00 && write_value != 0x0000) {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] DO register accept only bool value\n"));
         #endif
 
@@ -377,7 +374,7 @@ void _communicationWriteSingleDigitalOutput(
     ) {
         if (communicationReadDigitalOutput(register_address) != (bool) write_value) {
             communicationWriteDigitalOutput(register_address, (bool) write_value);
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION] Value was written into DO register\n"));
 
         } else {
@@ -396,7 +393,7 @@ void _communicationWriteSingleDigitalOutput(
         output_content[3] = (char) (write_value >> 8);
         output_content[4] = (char) (write_value & 0xFF);
 
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to gateway
             if (_communicationReplyToPacket(output_content, 5) == false) {
                 // Node was not able to notify gateway about its address
@@ -410,7 +407,7 @@ void _communicationWriteSingleDigitalOutput(
         #endif
 
     } else {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to write to undefined DO register address\n"));
         #endif
 
@@ -431,7 +428,7 @@ void _communicationWriteMultipleDigitalOutputs(
 
     uint8_t bytes_count = (uint8_t) payload[5];
 
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Requested write to DO register at address: "));
         DPRINT(register_address);
         DPRINT(F(" and length: "));
@@ -463,7 +460,7 @@ void _communicationWriteMultipleDigitalOutputs(
 
                 if (communicationReadDigitalOutput(write_address) != write_value) {
                     communicationWriteDigitalOutput(write_address, write_value);
-                #if DEBUG_SUPPORT
+                #if DEBUG_COMMUNICATION_SUPPORT
                     DPRINT(F("[COMMUNICATION] Value was written into DO register at address: "));
                     DPRINTLN(write_address);
 
@@ -495,7 +492,7 @@ void _communicationWriteMultipleDigitalOutputs(
         output_content[3] = (char) (write_byte >> 8);
         output_content[4] = (char) (write_byte & 0xFF);
 
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to gateway
             if (_communicationReplyToPacket(output_content, 5) == false) {
                 // Node was not able to notify gateway about its address
@@ -510,7 +507,7 @@ void _communicationWriteMultipleDigitalOutputs(
         #endif
 
     } else {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to write to undefined DO registers range\n"));
         #endif
 
@@ -655,7 +652,7 @@ void _communicationWriteAnalogFromTransfer(
 
             if (uint8_stored_value != uint8_write_value.number) {
                 communicationWriteAnalogOutput(address, uint8_write_value.number);
-            #if DEBUG_SUPPORT
+            #if DEBUG_COMMUNICATION_SUPPORT
                 DPRINT(F("[COMMUNICATION] Value was written into AO register\n"));
 
             } else {
@@ -677,7 +674,7 @@ void _communicationWriteAnalogFromTransfer(
 
             if (uint16_stored_value != uint16_write_value.number) {
                 communicationWriteAnalogOutput(address, uint16_write_value.number);
-            #if DEBUG_SUPPORT
+            #if DEBUG_COMMUNICATION_SUPPORT
                 DPRINT(F("[COMMUNICATION] Value was written into AO register\n"));
 
             } else {
@@ -699,7 +696,7 @@ void _communicationWriteAnalogFromTransfer(
 
             if (uint32_stored_value != uint32_write_value.number) {
                 communicationWriteAnalogOutput(address, uint32_write_value.number);
-            #if DEBUG_SUPPORT
+            #if DEBUG_COMMUNICATION_SUPPORT
                 DPRINT(F("[COMMUNICATION] Value was written into AO register\n"));
 
             } else {
@@ -721,7 +718,7 @@ void _communicationWriteAnalogFromTransfer(
 
             if (int8_stored_value != int8_write_value.number) {
                 communicationWriteAnalogOutput(address, int8_write_value.number);
-            #if DEBUG_SUPPORT
+            #if DEBUG_COMMUNICATION_SUPPORT
                 DPRINT(F("[COMMUNICATION] Value was written into AO register\n"));
 
             } else {
@@ -743,7 +740,7 @@ void _communicationWriteAnalogFromTransfer(
 
             if (int16_stored_value != int16_write_value.number) {
                 communicationWriteAnalogOutput(address, int16_write_value.number);
-            #if DEBUG_SUPPORT
+            #if DEBUG_COMMUNICATION_SUPPORT
                 DPRINT(F("[COMMUNICATION] Value was written into AO register\n"));
 
             } else {
@@ -765,7 +762,7 @@ void _communicationWriteAnalogFromTransfer(
 
             if (int32_stored_value != int32_write_value.number) {
                 communicationWriteAnalogOutput(address, int32_write_value.number);
-            #if DEBUG_SUPPORT
+            #if DEBUG_COMMUNICATION_SUPPORT
                 DPRINT(F("[COMMUNICATION] Value was written into AO register\n"));
 
             } else {
@@ -787,7 +784,7 @@ void _communicationWriteAnalogFromTransfer(
 
             if (float_stored_value != float_write_value.number) {
                 communicationWriteAnalogOutput(address, float_write_value.number);
-            #if DEBUG_SUPPORT
+            #if DEBUG_COMMUNICATION_SUPPORT
                 DPRINT(F("[COMMUNICATION] Value was written into AO register\n"));
 
             } else {
@@ -797,7 +794,7 @@ void _communicationWriteAnalogFromTransfer(
             break;
 
         default:
-            #if DEBUG_SUPPORT
+            #if DEBUG_COMMUNICATION_SUPPORT
                 DPRINT(F("[COMMUNICATION][ERR] Provided unknown data type for writing into analog register\n"));
             #endif
             break;
@@ -821,7 +818,7 @@ void _communicationReportSingleAnalogRegisters(
 
     word register_address = (word) payload[1] << 8 | (word) payload[2];
     
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Requested reading from single analog"));
         if (output) {
             DPRINT(F(" output (AO) "));
@@ -863,7 +860,7 @@ void _communicationReportSingleAnalogRegisters(
         output_content[6] = read_value[2];
         output_content[7] = read_value[3];
 
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to gateway
             if (_communicationReplyToPacket(output_content, 8) == false) {
                 // Node was not able to notify gateway about its address
@@ -878,7 +875,7 @@ void _communicationReportSingleAnalogRegisters(
         #endif
 
     } else {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined analog registers range\n"));
         #endif
 
@@ -898,7 +895,7 @@ void _communicationReportMultiAnalogRegisters(
     word register_address = (word) payload[1] << 8 | (word) payload[2];
     word read_length = (word) payload[3] << 8 | (word) payload[4];
     
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Requested reading from multiple analog"));
         if (output) {
             DPRINT(F(" outputs (AO) "));
@@ -956,7 +953,7 @@ void _communicationReportMultiAnalogRegisters(
         // Update data bytes length
         output_content[3] = (char) byte_counter;
 
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to gateway
             if (_communicationReplyToPacket(output_content, (byte_counter + 4)) == false) {
                 // Node was not able to notify gateway about its address
@@ -971,7 +968,7 @@ void _communicationReportMultiAnalogRegisters(
         #endif
 
     } else {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined analog registers range\n"));
         #endif
 
@@ -989,7 +986,7 @@ void _communicationWriteSingleAnalogOutput(
 
     word register_address = (word) payload[1] << 8 | (word) payload[2];
 
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Requested writing single value to AO register at address: "));
         DPRINTLN(register_address);
     #endif
@@ -1019,7 +1016,7 @@ void _communicationWriteSingleAnalogOutput(
         output_content[5] = (char) payload[5];
         output_content[6] = (char) payload[6];
 
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to gateway
             if (_communicationReplyToPacket(output_content, 7) == false) {
                 // Node was not able to notify gateway about its address
@@ -1034,7 +1031,7 @@ void _communicationWriteSingleAnalogOutput(
         #endif
 
     } else {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to write to undefined AO register address\n"));
         #endif
 
@@ -1054,7 +1051,7 @@ void _communicationWriteMultipleAnalogOutputs(
     word write_length = (word) payload[3] << 8 | (word) payload[4];
     uint8_t bytes_count = (uint8_t) payload[5];
 
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Requested write to AO register at address: "));
         DPRINT(register_address);
         DPRINT(F(" and length: "));
@@ -1091,7 +1088,7 @@ void _communicationWriteMultipleAnalogOutputs(
         output_content[3] = (char) (write_byte >> 8);
         output_content[4] = (char) (write_byte & 0xFF);
 
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to gateway
             if (_communicationReplyToPacket(output_content, 5) == false) {
                 // Node was not able to notify gateway about its address
@@ -1106,7 +1103,7 @@ void _communicationWriteMultipleAnalogOutputs(
         #endif
 
     } else {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to write to undefined AO registers range\n"));
         #endif
 
@@ -1133,7 +1130,7 @@ void _communicationReportSingleEventRegisters(
 
     word register_address = (word) payload[1] << 8 | (word) payload[2];
     
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Requested reading from single event"));
         DPRINT(F(" input (EV) "));
         DPRINT(F("buffer at address: "));
@@ -1153,7 +1150,7 @@ void _communicationReportSingleEventRegisters(
         output_content[2] = (char) (register_address & 0xFF);
         output_content[3] = (char) communicationReadEventInput(register_address);
 
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to gateway
             if (_communicationReplyToPacket(output_content, 4) == false) {
                 // Node was not able to notify gateway about its address
@@ -1168,7 +1165,7 @@ void _communicationReportSingleEventRegisters(
         #endif
 
     } else {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined event registers range\n"));
         #endif
 
@@ -1187,7 +1184,7 @@ void _communicationReportMultiEventRegisters(
     word register_address = (word) payload[1] << 8 | (word) payload[2];
     word read_length = (word) payload[3] << 8 | (word) payload[4];
     
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Requested reading from multiple event"));
         DPRINT(F(" inputs (EV) "));
         DPRINT(F("buffer at address: "));
@@ -1226,7 +1223,7 @@ void _communicationReportMultiEventRegisters(
         // Update data bytes length
         output_content[3] = (char) byte_counter;
 
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to gateway
             if (_communicationReplyToPacket(output_content, (byte_counter + 4)) == false) {
                 // Node was not able to notify gateway about its address
@@ -1241,7 +1238,7 @@ void _communicationReportMultiEventRegisters(
         #endif
 
     } else {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined event registers range\n"));
         #endif
 
@@ -1251,52 +1248,6 @@ void _communicationReportMultiEventRegisters(
 
 // -----------------------------------------------------------------------------
 // NODE ADDRESSING PROCESS
-// -----------------------------------------------------------------------------
-
-/**
- * PAYLOAD:
- * 0 => Packet identifier
- */
-void _communicationNodesSearchRequestHandler(
-    uint8_t * payload,
-    const uint16_t length
-) {
-    if (communicationHasAssignedAddress() && millis() - _communication_last_node_search_request_time > (COMMUNICATION_ADDRESSING_TIMEOUT * 1.125)) {
-        char output_content[PJON_PACKET_MAX_LENGTH];
-
-        // 0    => Packet identifier
-        // 1    => Node bus address
-        // 2    => Max packet size
-        // 3    => Node SN length
-        // 4-n  => Node parsed SN
-        output_content[0] = (uint8_t) COMMUNICATION_PACKET_SEARCH_NODES;
-        output_content[1] = (uint8_t) _communication_bus.device_id();
-        output_content[2] = (uint8_t) PJON_PACKET_MAX_LENGTH;
-        output_content[3] = (uint8_t) (strlen((char *) NODE_SERIAL_NO) + 1);
-
-        uint8_t byte_pointer = 4;
-
-        for (uint8_t i = 0; i < strlen((char *) NODE_SERIAL_NO); i++) {
-            output_content[byte_pointer] = ((char *) NODE_SERIAL_NO)[i];
-
-            byte_pointer++;
-        }
-
-        output_content[byte_pointer] = 0; // Be sure to set the null terminator!!!
-
-        // Non blocking packet transfer
-        uint16_t result = _communication_bus.send_packet_blocking(
-            COMMUNICATION_BUS_GATEWAY_ADDR,
-            output_content,
-            (byte_pointer + 1)
-        );
-
-        if (result == PJON_ACK) {
-            _communication_last_node_search_request_time = millis();
-        }
-    }
-}
-
 // -----------------------------------------------------------------------------
 
 /**
@@ -1329,7 +1280,7 @@ void _communicationNewNodesSearchRequestHandler(
         output_content[byte_pointer] = 0; // Be sure to set the null terminator!!!
 
         // Non blocking packet transfer
-        uint16_t result = _communication_bus.send_packet_blocking(
+        uint16_t result = _communication_bus.send_packet(
             COMMUNICATION_BUS_GATEWAY_ADDR,
             output_content,
             (byte_pointer + 1)
@@ -1356,7 +1307,7 @@ void _communicationAddressConfirmRequestHandler(
 ) {
     // Check for correct received payload length
     if (length < (uint8_t) 4 || length != (uint8_t) (3 + (uint8_t) payload[2])) {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Packet length is not correct\n"));
         #endif
 
@@ -1376,7 +1327,7 @@ void _communicationAddressConfirmRequestHandler(
 
     // Check if received packet if for this node
     if (strcmp((char *) NODE_SERIAL_NO, (char *) node_sn) != 0) {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][INFO] Packet is for other node: \""));
             DPRINT(node_sn);
             DPRINTLN(F("\""));
@@ -1393,7 +1344,7 @@ void _communicationAddressConfirmRequestHandler(
     
     _communication_address_confirmed = true;
 
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINTLN();
         DPRINT(F("[COMMUNICATION] ===========================\n"));
         DPRINT(F("[COMMUNICATION] Node address was set to: "));
@@ -1429,7 +1380,7 @@ void _communicationAddressConfirmRequestHandler(
         (byte_pointer + 1)
     );
 
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Received node address was successfully confirmed to gateway\n"));
     #endif
 }
@@ -1443,13 +1394,6 @@ void _communicationAddressRequestHandler(
 ) {
     switch (packetId)
     {
-        /**
-         * Gateway is searching for nodes
-         */
-        case COMMUNICATION_PACKET_SEARCH_NODES:
-            _communicationNodesSearchRequestHandler(payload, length);
-            break;
-
         /**
          * Gateway is searching for not addressed nodes
          */
@@ -1499,7 +1443,7 @@ void _communicationReportDescriptionRequestHandler(
 
     output_content[byte_pointer] = 0; // Be sure to set the null terminator!!!
 
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         // Reply to gateway
         if (_communicationReplyToPacket(output_content, (byte_pointer + 1)) == false) {
             // Node was not able to notify gateway about its address
@@ -1523,7 +1467,9 @@ void _communicationReportDescriptionRequestHandler(
 // -----------------------------------------------------------------------------
 
 void _communicationNodeInitializationRequestHandler(
-    const uint8_t packetId
+    const uint8_t packetId,
+    uint8_t * payload,
+    const uint16_t length
 ) {
     switch (packetId)
     {
@@ -1550,6 +1496,18 @@ void _communicationNodeInitializationRequestHandler(
         case COMMUNICATION_PACKET_FW_VERSION:
             _communicationReportDescriptionRequestHandler(packetId, (char *) FIRMWARE_VERSION);
             return;
+
+        case COMMUNICATION_PACKET_REGISTERS_SIZE:
+            _communicationReportRegistersSizes(packetId);
+            break;
+
+        case COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE:
+            _communicationReportAnalogRegisterStructure(packetId, payload, length, false);
+            break;
+
+        case COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE:
+            _communicationReportAnalogRegisterStructure(packetId, payload, length, true);
+            break;
     }
 }
 
@@ -1575,7 +1533,7 @@ void _communicationReportRegistersSizes(
     output_content[4] = (char) _communicationGetAnalogBufferSize(true);
     output_content[5] = (char) _communicationGetEventBufferSize();
 
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         // Reply to gateway
         if (_communicationReplyToPacket(output_content, 6) == false) {
             // Node was not able to notify gateway about its address
@@ -1608,7 +1566,7 @@ void _communicationReportAnalogRegisterStructure(
 ) {
     // Check for correct received payload length
     if (length != (uint8_t) 5) {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Packet length is not correct\n"));
         #endif
 
@@ -1658,7 +1616,7 @@ void _communicationReportAnalogRegisterStructure(
         // Update data bytes length
         output_content[3] = (char) byte_counter;
 
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to gateway
             if (_communicationReplyToPacket(output_content, byte_pointer) == false) {
                 // Node was not able to notify gateway about its address
@@ -1673,7 +1631,7 @@ void _communicationReportAnalogRegisterStructure(
         #endif
 
     } else {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read structure for undefined analog registers range\n"));
         #endif
 
@@ -1690,17 +1648,7 @@ void _communicationRegisterInitializationRequestHandler(
 ) {
     switch (packetId)
     {
-        case COMMUNICATION_PACKET_REGISTERS_SIZE:
-            _communicationReportRegistersSizes(packetId);
-            break;
 
-        case COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE:
-            _communicationReportAnalogRegisterStructure(packetId, payload, length, false);
-            break;
-
-        case COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE:
-            _communicationReportAnalogRegisterStructure(packetId, payload, length, true);
-            break;
     }
 }
 
@@ -1713,7 +1661,7 @@ void _communicationReceiverHandler(
     const uint16_t length,
     const PJON_Packet_Info &packetInfo
 ) {
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINTLN();
         DPRINT(F("[COMMUNICATION] ===============\n"));
         DPRINT(F("[COMMUNICATION] Received packet\n"));
@@ -1721,7 +1669,7 @@ void _communicationReceiverHandler(
     #endif
 
     if (length <= 0) {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Received packet is without content\n"));
         #endif
 
@@ -1732,14 +1680,14 @@ void _communicationReceiverHandler(
     uint8_t packet_id = (uint8_t) payload[0];
 
     if (packet_id == COMMUNICATION_PACKET_NONE) {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Unknown packet\n"));
         #endif
 
         return;
     }
 
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Received packet: "));
         _communicationDebugLogPacket(packet_id);
     #endif
@@ -1753,7 +1701,7 @@ void _communicationReceiverHandler(
     
     // Only packets from gateway are accepted
     if (sender_address != COMMUNICATION_BUS_GATEWAY_ADDR) {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION][ERR] Received packet from unknown gateway address: "));
             DPRINTLN(sender_address);
         #endif
@@ -1770,19 +1718,12 @@ void _communicationReceiverHandler(
         _communicationAddressRequestHandler(packet_id, payload, length);
 
     } else if (_communicationIsPacketInGroup(packet_id, communication_packets_node_initialization, COMMUNICATION_PACKET_NODE_INIT_MAX)) {
-        _communicationNodeInitializationRequestHandler(packet_id);
-
-    } else if (_communicationIsPacketInGroup(packet_id, communication_packets_registers_initialization, COMMUNICATION_PACKET_REGISTERS_INIT_MAX)) {
-        _communicationRegisterInitializationRequestHandler(packet_id, payload, length);
+        _communicationNodeInitializationRequestHandler(packet_id, payload, length);
 
     // Regular gateway messages
     } else {
         switch (packet_id)
         {
-            case COMMUNICATION_PACKET_GATEWAY_PING:
-                // Nothing to do, gateway is just testing connection
-                break;
-        
         /**
          * REGISTERS READING
          */
@@ -1849,7 +1790,7 @@ void _communicationReceiverHandler(
         }
     }
 
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] ========================\n"));
         DPRINT(F("[COMMUNICATION] Handling packet finished\n"));
         DPRINT(F("[COMMUNICATION] ========================\n"));
@@ -1864,7 +1805,7 @@ void _communicationErrorHandler(
     const uint16_t data,
     void *customPointer
 ) {
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         if (code == PJON_CONNECTION_LOST) {
             _communication_master_lost = true;
 
@@ -1888,7 +1829,7 @@ bool _communicationReplyToPacket(
     char * payload,
     const uint8_t size
 ) {
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Preparing reply packet: "));
         _communicationDebugLogPacket(payload[0]);
     #endif
@@ -1899,7 +1840,7 @@ bool _communicationReplyToPacket(
     );
 
     if (result == PJON_FAIL) {
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION] Sending replypacket failed\n"));
         #endif
 
@@ -1921,7 +1862,7 @@ bool communicationDiscardAddress()
     output_content[1] = _communication_bus.device_id();
 
     if (
-        _communication_bus.send_packet_blocking(
+        _communication_bus.send_packet(
             COMMUNICATION_BUS_GATEWAY_ADDR,
             output_content,
             2
@@ -1929,14 +1870,14 @@ bool communicationDiscardAddress()
     ) {
         _communicationSetAddress(PJON_NOT_ASSIGNED);
 
-        #if DEBUG_SUPPORT
+        #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION] Node address was successfully reseted\n"));
         #endif
 
         return true;
     }
 
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION][ERR] Node address could not be discarded\n"));
     #endif
 
@@ -2280,6 +2221,8 @@ void communicationSetup() {
 
     _communication_bus.strategy.set_serial(&_communication_serial_bus);
 
+    _communication_bus.set_synchronous_acknowledge(false);
+
     // Communication callbacks
     _communication_bus.set_receiver(_communicationReceiverHandler);
     _communication_bus.set_error(_communicationErrorHandler);
@@ -2293,7 +2236,7 @@ void communicationSetup() {
 
     #endif
 
-    #if DEBUG_SUPPORT
+    #if DEBUG_COMMUNICATION_SUPPORT
         if (node_address == PJON_NOT_ASSIGNED) {
             DPRINTLN(F("[COMMUNICATION] Unaddressed node"));
 

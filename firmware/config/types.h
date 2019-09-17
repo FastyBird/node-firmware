@@ -27,12 +27,9 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // Node searching
 #define COMMUNICATION_PACKET_SEARCH_NEW_NODES           0x01
 #define COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM       0x02
+#define COMMUNICATION_PACKET_ADDRESS_DISCARD            0x03
 
-// Node addressing
-#define COMMUNICATION_PACKET_SEARCH_NODES               0x03
-#define COMMUNICATION_PACKET_ADDRESS_DISCARD            0x04
-
-#define COMMUNICATION_PACKET_ADDRESS_MAX                4
+#define COMMUNICATION_PACKET_ADDRESS_MAX                3
 
 // Node initialization
 #define COMMUNICATION_PACKET_HW_MODEL                   0x11
@@ -41,43 +38,38 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #define COMMUNICATION_PACKET_FW_MODEL                   0x14
 #define COMMUNICATION_PACKET_FW_MANUFACTURER            0x15
 #define COMMUNICATION_PACKET_FW_VERSION                 0x16
+#define COMMUNICATION_PACKET_REGISTERS_SIZE             0x17
+#define COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE     0x18
+#define COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE     0x19
 
-#define COMMUNICATION_PACKET_NODE_INIT_MAX              6
-
-// Node registers initialization
-#define COMMUNICATION_PACKET_REGISTERS_SIZE             0x21
-#define COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE     0x22
-#define COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE     0x23
-
-#define COMMUNICATION_PACKET_REGISTERS_INIT_MAX         3
+#define COMMUNICATION_PACKET_NODE_INIT_MAX              9
 
 // Registers reading
-#define COMMUNICATION_PACKET_READ_SINGLE_DI             0x31   // Master requested DI one regiter reading
-#define COMMUNICATION_PACKET_READ_MULTI_DI              0x32   // Master requested DI multiple regiters reading
-#define COMMUNICATION_PACKET_READ_SINGLE_DO             0x33   // Master requested DO one regiter reading
-#define COMMUNICATION_PACKET_READ_MULTI_DO              0x34   // Master requested DO multiple regiters reading
-#define COMMUNICATION_PACKET_READ_SINGLE_AI             0x35   // Master requested AI one regiter reading
-#define COMMUNICATION_PACKET_READ_MULTI_AI              0x36   // Master requested AI multiple regiters reading
-#define COMMUNICATION_PACKET_READ_SINGLE_AO             0x37   // Master requested AO one regiter reading
-#define COMMUNICATION_PACKET_READ_MULTI_AO              0x38   // Master requested AO multiple regiters reading
-#define COMMUNICATION_PACKET_READ_SINGLE_EV             0x39   // Master requested EV one regiter reading
-#define COMMUNICATION_PACKET_READ_MULTI_EV              0x3A   // Master requested EV multiple regiters reading
+#define COMMUNICATION_PACKET_READ_SINGLE_DI             0x21   // Master requested DI one regiter reading
+#define COMMUNICATION_PACKET_READ_MULTI_DI              0x22   // Master requested DI multiple regiters reading
+#define COMMUNICATION_PACKET_READ_SINGLE_DO             0x23   // Master requested DO one regiter reading
+#define COMMUNICATION_PACKET_READ_MULTI_DO              0x24   // Master requested DO multiple regiters reading
+#define COMMUNICATION_PACKET_READ_SINGLE_AI             0x25   // Master requested AI one regiter reading
+#define COMMUNICATION_PACKET_READ_MULTI_AI              0x26   // Master requested AI multiple regiters reading
+#define COMMUNICATION_PACKET_READ_SINGLE_AO             0x27   // Master requested AO one regiter reading
+#define COMMUNICATION_PACKET_READ_MULTI_AO              0x28   // Master requested AO multiple regiters reading
+#define COMMUNICATION_PACKET_READ_SINGLE_EV             0x29   // Master requested EV one regiter reading
+#define COMMUNICATION_PACKET_READ_MULTI_EV              0x2A   // Master requested EV multiple regiters reading
 
 #define COMMUNICATION_PACKET_REGISTERS_REDING_MAX       10
 
 // Registers writing
-#define COMMUNICATION_PACKET_WRITE_ONE_DO               0x41
-#define COMMUNICATION_PACKET_WRITE_ONE_AO               0x42
-#define COMMUNICATION_PACKET_WRITE_MULTI_DO             0x43
-#define COMMUNICATION_PACKET_WRITE_MULTI_AO             0x44
+#define COMMUNICATION_PACKET_WRITE_ONE_DO               0x31
+#define COMMUNICATION_PACKET_WRITE_ONE_AO               0x32
+#define COMMUNICATION_PACKET_WRITE_MULTI_DO             0x33
+#define COMMUNICATION_PACKET_WRITE_MULTI_AO             0x34
 
 #define COMMUNICATION_PACKET_REGISTERS_WRITING_MAX      4
 
 // Node misc communication
 #define COMMUNICATION_PACKET_NONE                       0xFF
-#define COMMUNICATION_PACKET_GATEWAY_PING               0x51   // Master is testing node if is alive
 
-#define COMMUNICATION_PACKET_MISC_MAX                   2
+#define COMMUNICATION_PACKET_MISC_MAX                   1
 
 // =============================================================================
 // REGISTERS VALUES DATATYPES

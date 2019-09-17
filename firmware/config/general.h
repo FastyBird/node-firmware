@@ -14,6 +14,10 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #define DEBUG_SUPPORT                           1                   // Enable serial debug log
 #endif
 
+#ifndef DEBUG_COMMUNICATION_SUPPORT
+#define DEBUG_COMMUNICATION_SUPPORT             1                   // Enable communication serial debug log
+#endif
+
 #ifndef SERIAL_BAUDRATE
 #define SERIAL_BAUDRATE                         115200              // Default baudrate
 #endif

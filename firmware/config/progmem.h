@@ -12,14 +12,12 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // PACKETS HUMAN READABLE TRANSLATIONS
 // =============================================================================
 
-    const char communication_packet_search_nodes[] PROGMEM              = "COMMUNICATION_PACKET_SEARCH_NODES";
     const char communication_packet_search_new_nodes[] PROGMEM          = "COMMUNICATION_PACKET_SEARCH_NEW_NODES";
     const char communication_packet_node_address_confirm[] PROGMEM      = "COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM";
     const char communication_packet_address_discard[] PROGMEM           = "COMMUNICATION_PACKET_ADDRESS_DISCARD";
 
     PROGMEM const char * const communication_packets_addresing_string[] = {
-        communication_packet_search_nodes, communication_packet_search_new_nodes,
-        communication_packet_node_address_confirm, communication_packet_address_discard
+        communication_packet_search_new_nodes,communication_packet_node_address_confirm, communication_packet_address_discard
     };
 
     const char communication_packet_hw_model[] PROGMEM                  = "COMMUNICATION_PACKET_HW_MODEL";
@@ -28,17 +26,13 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
     const char communication_packet_fw_model[] PROGMEM                  = "COMMUNICATION_PACKET_FW_MODEL";
     const char communication_packet_fw_manufacturer[] PROGMEM           = "COMMUNICATION_PACKET_FW_MANUFACTURER";
     const char communication_packet_fw_version[] PROGMEM                = "COMMUNICATION_PACKET_FW_VERSION";
-
-    PROGMEM const char * const communication_packets_node_initialization_string[] = {
-        communication_packet_hw_model, communication_packet_hw_manufacturer, communication_packet_hw_version,
-        communication_packet_fw_model, communication_packet_fw_manufacturer, communication_packet_fw_version
-    };
-
     const char communication_packet_registers_size[] PROGMEM            = "COMMUNICATION_PACKET_REGISTERS_SIZE";
     const char communication_packet_ai_registers_structure[] PROGMEM    = "COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE";
     const char communication_packet_ao_registers_structure[] PROGMEM    = "COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE";
 
-    PROGMEM const char * const communication_packets_registers_initialization_string[] = {
+    PROGMEM const char * const communication_packets_node_initialization_string[] = {
+        communication_packet_hw_model, communication_packet_hw_manufacturer, communication_packet_hw_version,
+        communication_packet_fw_model, communication_packet_fw_manufacturer, communication_packet_fw_version,
         communication_packet_registers_size,
         communication_packet_ai_registers_structure, communication_packet_ao_registers_structure
     };
@@ -73,10 +67,9 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
     };
 
     const char communication_packet_none[] PROGMEM                      = "COMMUNICATION_PACKET_NONE";
-    const char communication_packet_ping[] PROGMEM                      = "COMMUNICATION_PACKET_GATEWAY_PING";
 
     PROGMEM const char * const communication_packets_misc_string[] = {
-        communication_packet_none, communication_packet_ping
+        communication_packet_none
     };
 
 #endif
@@ -85,17 +78,13 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // PACKETS GROUPS
 // =============================================================================
 
-PROGMEM const int communication_packets_addresing[4] = {
-    COMMUNICATION_PACKET_SEARCH_NODES, COMMUNICATION_PACKET_SEARCH_NEW_NODES,
-    COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM, COMMUNICATION_PACKET_ADDRESS_DISCARD
+PROGMEM const int communication_packets_addresing[3] = {
+    COMMUNICATION_PACKET_SEARCH_NEW_NODES, COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM, COMMUNICATION_PACKET_ADDRESS_DISCARD
 };
 
-PROGMEM const int communication_packets_node_initialization[6] = {
+PROGMEM const int communication_packets_node_initialization[9] = {
     COMMUNICATION_PACKET_HW_MODEL, COMMUNICATION_PACKET_HW_MANUFACTURER, COMMUNICATION_PACKET_HW_VERSION,
-    COMMUNICATION_PACKET_FW_MODEL, COMMUNICATION_PACKET_FW_MANUFACTURER, COMMUNICATION_PACKET_FW_VERSION
-};
-
-PROGMEM const int communication_packets_registers_initialization[3] = {
+    COMMUNICATION_PACKET_FW_MODEL, COMMUNICATION_PACKET_FW_MANUFACTURER, COMMUNICATION_PACKET_FW_VERSION,
     COMMUNICATION_PACKET_REGISTERS_SIZE,
     COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE, COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE
 };
@@ -113,6 +102,6 @@ PROGMEM const int communication_packets_registers_writing[4] = {
     COMMUNICATION_PACKET_WRITE_MULTI_DO, COMMUNICATION_PACKET_WRITE_MULTI_AO
 };
 
-PROGMEM const int communication_packets_misc[2] = {
-    COMMUNICATION_PACKET_NONE, COMMUNICATION_PACKET_GATEWAY_PING
+PROGMEM const int communication_packets_misc[1] = {
+    COMMUNICATION_PACKET_NONE
 };
