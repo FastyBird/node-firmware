@@ -80,7 +80,8 @@ void _buttonEvent(
 // MODULE API
 // -----------------------------------------------------------------------------
 
-int buttonCount() {
+int buttonCount()
+{
     return _buttons.size();
 }
 
@@ -88,7 +89,8 @@ int buttonCount() {
 // MODULE CORE
 // -----------------------------------------------------------------------------
 
-void buttonSetup() {
+void buttonSetup()
+{
     uint8_t register_address;
 
     #if BUTTON1_PIN != GPIO_NONE
@@ -212,7 +214,8 @@ void buttonSetup() {
 
 // -----------------------------------------------------------------------------
 
-void buttonLoop() {
+void buttonLoop()
+{
     for (uint8_t i = 0; i < buttonCount(); i++) {
         if (uint8_t event = _buttons[i].button->loop()) {
             uint8_t count = _buttons[i].button->getEventCount();

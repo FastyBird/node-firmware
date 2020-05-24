@@ -12,12 +12,15 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // PACKETS HUMAN READABLE TRANSLATIONS
 // =============================================================================
 
-    const char communication_packet_search_new_nodes[] PROGMEM          = "COMMUNICATION_PACKET_SEARCH_NEW_NODES";
-    const char communication_packet_node_address_confirm[] PROGMEM      = "COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM";
+    const char communication_packet_search_nodes[] PROGMEM              = "COMMUNICATION_PACKET_SEARCH_NODES";
+    const char communication_packet_search_nodes_confirm[] PROGMEM      = "COMMUNICATION_PACKET_SEARCH_NODES_CONFIRM";
+    const char communication_packet_address[] PROGMEM                   = "COMMUNICATION_PACKET_ADDRESS";
+    const char communication_packet_address_confirm[] PROGMEM           = "COMMUNICATION_PACKET_ADDRESS_CONFIRM";
     const char communication_packet_address_discard[] PROGMEM           = "COMMUNICATION_PACKET_ADDRESS_DISCARD";
 
     PROGMEM const char * const communication_packets_addresing_string[] = {
-        communication_packet_search_new_nodes,communication_packet_node_address_confirm, communication_packet_address_discard
+        communication_packet_search_nodes, communication_packet_search_nodes_confirm,
+        communication_packet_address, communication_packet_address_confirm, communication_packet_address_discard
     };
 
     const char communication_packet_hw_model[] PROGMEM                  = "COMMUNICATION_PACKET_HW_MODEL";
@@ -66,10 +69,13 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
         communication_packet_write_multi_do, communication_packet_write_multi_ao
     };
 
+    const char communication_packet_ping[] PROGMEM                      = "COMMUNICATION_PACKET_PING";
+    const char communication_packet_pong[] PROGMEM                      = "COMMUNICATION_PACKET_PONG";
+    const char communication_packet_hello[] PROGMEM                     = "COMMUNICATION_PACKET_HELLO";
     const char communication_packet_none[] PROGMEM                      = "COMMUNICATION_PACKET_NONE";
 
     PROGMEM const char * const communication_packets_misc_string[] = {
-        communication_packet_none
+        communication_packet_ping, communication_packet_pong, communication_packet_none, communication_packet_hello
     };
 
 #endif
@@ -78,8 +84,9 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // PACKETS GROUPS
 // =============================================================================
 
-PROGMEM const int communication_packets_addresing[3] = {
-    COMMUNICATION_PACKET_SEARCH_NEW_NODES, COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM, COMMUNICATION_PACKET_ADDRESS_DISCARD
+PROGMEM const int communication_packets_addresing[5] = {
+    COMMUNICATION_PACKET_SEARCH_NODES, COMMUNICATION_PACKET_SEARCH_NODES_CONFIRM,
+    COMMUNICATION_PACKET_ADDRESS, COMMUNICATION_PACKET_ADDRESS_CONFIRM, COMMUNICATION_PACKET_ADDRESS_DISCARD
 };
 
 PROGMEM const int communication_packets_node_initialization[9] = {
@@ -102,6 +109,6 @@ PROGMEM const int communication_packets_registers_writing[4] = {
     COMMUNICATION_PACKET_WRITE_MULTI_DO, COMMUNICATION_PACKET_WRITE_MULTI_AO
 };
 
-PROGMEM const int communication_packets_misc[1] = {
-    COMMUNICATION_PACKET_NONE
+PROGMEM const int communication_packets_misc[4] = {
+    COMMUNICATION_PACKET_PING, COMMUNICATION_PACKET_PONG, COMMUNICATION_PACKET_HELLO, COMMUNICATION_PACKET_NONE
 };

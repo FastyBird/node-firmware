@@ -6,7 +6,8 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 
 */
 
-unsigned long getUptime() {
+unsigned long getUptime()
+{
     static unsigned long last_uptime = 0;
     static unsigned char uptime_overflows = 0;
 

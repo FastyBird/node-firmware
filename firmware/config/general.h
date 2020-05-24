@@ -49,12 +49,12 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #define COMMUNICATION_BUS_RX_PIN                GPIO_NONE
 #endif
 
-#ifndef COMMUNICATION_BUS_GATEWAY_ADDR
-#define COMMUNICATION_BUS_GATEWAY_ADDR          254                 // Gateway network address definition
+#ifndef COMMUNICATION_BUS_MASTER_ADDR
+#define COMMUNICATION_BUS_MASTER_ADDR           254                 // Master network address definition
 #endif
 
 #ifndef COMMUNICATION_ADDRESSING_TIMEOUT
-#define COMMUNICATION_ADDRESSING_TIMEOUT        4000                // Master COMMUNICATION_ACQUIRE_ADDRESS_REQUEST and COMMUNICATION_ACQUIRE_ADDRESS_NEGATE timeout
+#define COMMUNICATION_ADDRESSING_TIMEOUT        5000                // Assigning address process timeout
 #endif
 
 #ifndef COMMUNICATION_MASTER_PING_TIMEOUT

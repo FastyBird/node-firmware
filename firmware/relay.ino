@@ -40,7 +40,8 @@ bool _relayRecursive = false;
 // MODULE PRIVATE
 // -----------------------------------------------------------------------------
 
-void _relayConfigure() {
+void _relayConfigure()
+{
     for (uint8_t i = 0; i < relayCount(); i++) {
         if (_relays[i].pin == GPIO_NONE) {
             continue;
@@ -61,7 +62,8 @@ void _relayConfigure() {
 
 // -----------------------------------------------------------------------------
 
-void _relayBoot() {
+void _relayBoot()
+{
     _relayRecursive = true;
 
     // Walk the relays
@@ -200,7 +202,8 @@ void _relayProcess(
 // MODULE API
 // -----------------------------------------------------------------------------
 
-uint8_t relayCount() {
+uint8_t relayCount()
+{
     return _relays.size();
 }
 
@@ -355,7 +358,8 @@ void relaySync(
 // MODULE CORE
 // -----------------------------------------------------------------------------
 
-void relaySetup() {
+void relaySetup()
+{
     uint8_t register_address;
 
     // Ad-hoc relays
@@ -413,7 +417,8 @@ void relaySetup() {
 
 //------------------------------------------------------------------------------
 
-void relayLoop() {
+void relayLoop()
+{
     for (uint8_t i = 0; i < relayCount(); i++) {
         if (communicationReadDigitalOutput(_relays[i].register_address) != relayStatus(i)) {
             relayStatus(i, communicationReadDigitalOutput(_relays[i].register_address));

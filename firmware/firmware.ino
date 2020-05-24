@@ -21,7 +21,8 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // BOOTING
 // -----------------------------------------------------------------------------
 
-void setup() {
+void setup()
+{
     Serial.begin(SERIAL_BAUDRATE);
 
     communicationSetup();
@@ -43,7 +44,8 @@ void setup() {
 
 // -----------------------------------------------------------------------------
 
-void loop() {
+void loop()
+{
     #if BUTTON_SUPPORT
         buttonLoop();
     #endif

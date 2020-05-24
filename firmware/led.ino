@@ -132,7 +132,8 @@ void ledUpdate(
 
 // -----------------------------------------------------------------------------
 
-void ledSetup() {
+void ledSetup()
+{
     #if LED1_PIN != GPIO_NONE
         _leds.push_back((led_t) { LED1_PIN, LED1_PIN_INVERSE, LED1_MODE });
     #endif
@@ -181,7 +182,8 @@ void ledSetup() {
 
 // -----------------------------------------------------------------------------
 
-void ledLoop() {
+void ledLoop()
+{
     for (uint8_t i = 0; i < ledCount(); i++) {
         if (_ledMode(i) == LED_MODE_BUS) {
             if (communicationHasAssignedAddress() == false) {

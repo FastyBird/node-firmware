@@ -58,7 +58,9 @@ struct communication_analog_register_t {
 };
 
 struct communication_event_register_t {
-    uint8_t value;
+    uint8_t data_type;
+    uint8_t size;
+    char value[4];
 };
 
 typedef struct {

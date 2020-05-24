@@ -187,7 +187,8 @@ bool _expanderReadPin(
 // 
 // -----------------------------------------------------------------------------
 
-void expanderSetup() {
+void expanderSetup()
+{
     mcp.begin();
 
     for (uint8_t i = 0; i < EXPANDER_INPUTS; i++) {
@@ -211,7 +212,8 @@ void expanderSetup() {
 
 // -----------------------------------------------------------------------------
 
-void expanderLoop() {
+void expanderLoop()
+{
     for (uint8_t i = 0; i < EXPANDER_INPUTS; i++) {
         if (uint8_t event = _expanderButtonRead(i)) {
             _expanderButtonEvent(i, event);

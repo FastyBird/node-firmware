@@ -25,11 +25,13 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // =============================================================================
 
 // Node searching
-#define COMMUNICATION_PACKET_SEARCH_NEW_NODES           0x01
-#define COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM       0x02
-#define COMMUNICATION_PACKET_ADDRESS_DISCARD            0x03
+#define COMMUNICATION_PACKET_SEARCH_NODES               0x01
+#define COMMUNICATION_PACKET_SEARCH_NODES_CONFIRM       0x02
+#define COMMUNICATION_PACKET_ADDRESS                    0x03
+#define COMMUNICATION_PACKET_ADDRESS_CONFIRM            0x04
+#define COMMUNICATION_PACKET_ADDRESS_DISCARD            0x05
 
-#define COMMUNICATION_PACKET_ADDRESS_MAX                3
+#define COMMUNICATION_PACKET_ADDRESS_MAX                5
 
 // Node initialization
 #define COMMUNICATION_PACKET_HW_MODEL                   0x11
@@ -67,9 +69,12 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 #define COMMUNICATION_PACKET_REGISTERS_WRITING_MAX      4
 
 // Node misc communication
+#define COMMUNICATION_PACKET_PING                       0x41
+#define COMMUNICATION_PACKET_PONG                       0x42
+#define COMMUNICATION_PACKET_HELLO                      0x43
 #define COMMUNICATION_PACKET_NONE                       0xFF
 
-#define COMMUNICATION_PACKET_MISC_MAX                   1
+#define COMMUNICATION_PACKET_MISC_MAX                   4
 
 // =============================================================================
 // REGISTERS VALUES DATATYPES

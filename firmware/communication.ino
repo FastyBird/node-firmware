@@ -193,22 +193,22 @@ void _communicationReportSingleDigitalRegisters(
         output_content[4] = (char) (read_value & 0xFF);
 
         #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to gateway
+            // Reply to master
             if (_communicationReplyToPacket(output_content, 5) == false) {
-                // Node was not able to notify gateway about its address
-                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive digital register reading\n"));
+                // Node was not able to notify master about its address
+                DPRINT(F("[COMMUNICATION][ERR] Master could not receive digital register reading\n"));
 
             } else {
-                DPRINT(F("[COMMUNICATION] Replied to gateway with digital registers content\n"));
+                DPRINT(F("[COMMUNICATION] Replied to master with digital registers content\n"));
             }
         #else
-            // Reply to gateway
+            // Reply to master
             _communicationReplyToPacket(output_content, 5);
         #endif
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined digital registers range\n"));
+            DPRINT(F("[COMMUNICATION][ERR] Master is trying to read from undefined digital registers range\n"));
         #endif
 
         // TODO: Send exception
@@ -319,22 +319,22 @@ void _communicationReportMultiDigitalRegisters(
         output_content[3] = (char) byte_counter;
 
         #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to gateway
+            // Reply to master
             if (_communicationReplyToPacket(output_content, (byte_counter + 4)) == false) {
-                // Node was not able to notify gateway about its address
-                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive digital register reading\n"));
+                // Node was not able to notify master about its address
+                DPRINT(F("[COMMUNICATION][ERR] Master could not receive digital register reading\n"));
 
             } else {
-                DPRINT(F("[COMMUNICATION] Replied to gateway with digital registers content\n"));
+                DPRINT(F("[COMMUNICATION] Replied to master with digital registers content\n"));
             }
         #else
-            // Reply to gateway
+            // Reply to master
             _communicationReplyToPacket(output_content, (byte_counter + 4));
         #endif
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined digital registers range\n"));
+            DPRINT(F("[COMMUNICATION][ERR] Master is trying to read from undefined digital registers range\n"));
         #endif
 
         // TODO: Send exception
@@ -394,13 +394,13 @@ void _communicationWriteSingleDigitalOutput(
         output_content[4] = (char) (write_value & 0xFF);
 
         #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to gateway
+            // Reply to master
             if (_communicationReplyToPacket(output_content, 5) == false) {
-                // Node was not able to notify gateway about its address
-                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive DO register write result\n"));
+                // Node was not able to notify master about its address
+                DPRINT(F("[COMMUNICATION][ERR] Master could not receive DO register write result\n"));
 
             } else {
-                DPRINT(F("[COMMUNICATION] Replied to gateway with DO register write result\n"));
+                DPRINT(F("[COMMUNICATION] Replied to master with DO register write result\n"));
             }
         #else
             _communicationReplyToPacket(output_content, 5);
@@ -408,7 +408,7 @@ void _communicationWriteSingleDigitalOutput(
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to write to undefined DO register address\n"));
+            DPRINT(F("[COMMUNICATION][ERR] Master is trying to write to undefined DO register address\n"));
         #endif
 
         // TODO: Send exception
@@ -493,22 +493,22 @@ void _communicationWriteMultipleDigitalOutputs(
         output_content[4] = (char) (write_byte & 0xFF);
 
         #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to gateway
+            // Reply to master
             if (_communicationReplyToPacket(output_content, 5) == false) {
-                // Node was not able to notify gateway about its address
-                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive multiple DO register write result\n"));
+                // Node was not able to notify master about its address
+                DPRINT(F("[COMMUNICATION][ERR] Master could not receive multiple DO register write result\n"));
 
             } else {
-                DPRINT(F("[COMMUNICATION] Replied to gateway with multiple DO register write result\n"));
+                DPRINT(F("[COMMUNICATION] Replied to master with multiple DO register write result\n"));
             }
         #else
-            // Reply to gateway
+            // Reply to master
             _communicationReplyToPacket(output_content, 5);
         #endif
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to write to undefined DO registers range\n"));
+            DPRINT(F("[COMMUNICATION][ERR] Master is trying to write to undefined DO registers range\n"));
         #endif
 
         // TODO: Send exception
@@ -532,6 +532,7 @@ void _communicationReadAnalogForTransfer(
     {
         case COMMUNICATION_DATA_TYPE_UINT8:
             UINT8_UNION_t uint8_read_value;
+
             if (output) {
                 communicationReadAnalogOutput(address, uint8_read_value.number);
 
@@ -544,6 +545,7 @@ void _communicationReadAnalogForTransfer(
 
         case COMMUNICATION_DATA_TYPE_UINT16:
             UINT16_UNION_t uint16_read_value;
+
             if (output) {
                 communicationReadAnalogOutput(address, uint16_read_value.number);
 
@@ -556,6 +558,7 @@ void _communicationReadAnalogForTransfer(
 
         case COMMUNICATION_DATA_TYPE_UINT32:
             UINT32_UNION_t uint32_read_value;
+
             if (output) {
                 communicationReadAnalogOutput(address, uint32_read_value.number);
 
@@ -568,6 +571,7 @@ void _communicationReadAnalogForTransfer(
 
         case COMMUNICATION_DATA_TYPE_INT8:
             INT8_UNION_t int8_read_value;
+
             if (output) {
                 communicationReadAnalogOutput(address, int8_read_value.number);
 
@@ -580,6 +584,7 @@ void _communicationReadAnalogForTransfer(
 
         case COMMUNICATION_DATA_TYPE_INT16:
             INT16_UNION_t int16_read_value;
+
             if (output) {
                 communicationReadAnalogOutput(address, int16_read_value.number);
 
@@ -592,6 +597,7 @@ void _communicationReadAnalogForTransfer(
 
         case COMMUNICATION_DATA_TYPE_INT32:
             INT32_UNION_t int32_read_value;
+
             if (output) {
                 communicationReadAnalogOutput(address, int32_read_value.number);
 
@@ -604,6 +610,7 @@ void _communicationReadAnalogForTransfer(
 
         case COMMUNICATION_DATA_TYPE_FLOAT32:
             FLOAT32_UNION_t float_read_value;
+
             if (output) {
                 communicationReadAnalogOutput(address, float_read_value.number);
 
@@ -801,6 +808,42 @@ void _communicationWriteAnalogFromTransfer(
     }
 }
 
+
+// -----------------------------------------------------------------------------
+// EVENT REGISTERS
+// -----------------------------------------------------------------------------
+
+/**
+ * Read value from event register & transform it to 4 bytes
+ */
+void _communicationReadEventForTransfer(
+    const uint8_t dataType,
+    const uint8_t address,
+    char * value
+) {
+    switch (dataType)
+    {
+        case COMMUNICATION_DATA_TYPE_UINT8:
+            UINT8_UNION_t uint8_read_value;
+
+            communicationReadEventInput(address, uint8_read_value.number);
+
+            memcpy(value, uint8_read_value.bytes, 1);
+            break;
+
+        default:
+            char buffer[4];
+
+            buffer[0] = 0;
+            buffer[1] = 0;
+            buffer[2] = 0;
+            buffer[3] = 0;
+
+            memcpy(value, buffer, 4);
+            break;
+    }
+}
+
 // -----------------------------------------------------------------------------
 
 /**
@@ -836,8 +879,7 @@ void _communicationReportSingleAnalogRegisters(
         // 0    => Packet identifier
         // 1    => High byte of register address
         // 2    => Low byte of register address
-        // 3    => Register data type
-        // 4-7  => Register value
+        // 3-6  => Register value
         output_content[0] = (char) packetId;
         output_content[1] = (char) (register_address >> 8);
         output_content[2] = (char) (register_address & 0xFF);
@@ -847,36 +889,32 @@ void _communicationReportSingleAnalogRegisters(
         if (output) {
             _communicationReadAnalogForTransfer(output, _communication_register.analog_outputs[register_address].data_type, register_address, read_value);
 
-            output_content[3] = (char) _communication_register.analog_outputs[register_address].data_type;
-
         } else {
             _communicationReadAnalogForTransfer(output, _communication_register.analog_inputs[register_address].data_type, register_address, read_value);
-
-            output_content[3] = (char) _communication_register.analog_inputs[register_address].data_type;
         }
 
-        output_content[4] = read_value[0];
-        output_content[5] = read_value[1];
-        output_content[6] = read_value[2];
-        output_content[7] = read_value[3];
+        output_content[3] = read_value[0];
+        output_content[4] = read_value[1];
+        output_content[5] = read_value[2];
+        output_content[6] = read_value[3];
 
         #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to gateway
-            if (_communicationReplyToPacket(output_content, 8) == false) {
-                // Node was not able to notify gateway about its address
-                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive analog register reading\n"));
+            // Reply to master
+            if (_communicationReplyToPacket(output_content, 7) == false) {
+                // Node was not able to notify master about its address
+                DPRINT(F("[COMMUNICATION][ERR] Master could not receive analog register reading\n"));
 
             } else {
-                DPRINT(F("[COMMUNICATION] Replied to gateway with analog registers content\n"));
+                DPRINT(F("[COMMUNICATION] Replied to master with analog registers content\n"));
             }
         #else
-            // Reply to gateway
-            _communicationReplyToPacket(output_content, 8);
+            // Reply to master
+            _communicationReplyToPacket(output_content, 7);
         #endif
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined analog registers range\n"));
+            DPRINT(F("[COMMUNICATION][ERR] Master is trying to read from undefined analog registers range\n"));
         #endif
 
         // TODO: Send exception
@@ -954,22 +992,22 @@ void _communicationReportMultiAnalogRegisters(
         output_content[3] = (char) byte_counter;
 
         #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to gateway
+            // Reply to master
             if (_communicationReplyToPacket(output_content, (byte_counter + 4)) == false) {
-                // Node was not able to notify gateway about its address
-                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive analog register reading\n"));
+                // Node was not able to notify master about its address
+                DPRINT(F("[COMMUNICATION][ERR] Master could not receive analog register reading\n"));
 
             } else {
-                DPRINT(F("[COMMUNICATION] Replied to gateway with analog registers content\n"));
+                DPRINT(F("[COMMUNICATION] Replied to master with analog registers content\n"));
             }
         #else
-            // Reply to gateway
+            // Reply to master
             _communicationReplyToPacket(output_content, (byte_counter + 4));
         #endif
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined analog registers range\n"));
+            DPRINT(F("[COMMUNICATION][ERR] Master is trying to read from undefined analog registers range\n"));
         #endif
 
         // TODO: Send exception
@@ -1017,22 +1055,22 @@ void _communicationWriteSingleAnalogOutput(
         output_content[6] = (char) payload[6];
 
         #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to gateway
+            // Reply to master
             if (_communicationReplyToPacket(output_content, 7) == false) {
-                // Node was not able to notify gateway about its address
-                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive AO register write result\n"));
+                // Node was not able to notify master about its address
+                DPRINT(F("[COMMUNICATION][ERR] Master could not receive AO register write result\n"));
 
             } else {
-                DPRINT(F("[COMMUNICATION] Replied to gateway with AO register write result\n"));
+                DPRINT(F("[COMMUNICATION] Replied to master with AO register write result\n"));
             }
         #else
-            // Reply to gateway
+            // Reply to master
             _communicationReplyToPacket(output_content, 7);
         #endif
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to write to undefined AO register address\n"));
+            DPRINT(F("[COMMUNICATION][ERR] Master is trying to write to undefined AO register address\n"));
         #endif
 
         // TODO: Send exception
@@ -1089,22 +1127,22 @@ void _communicationWriteMultipleAnalogOutputs(
         output_content[4] = (char) (write_byte & 0xFF);
 
         #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to gateway
+            // Reply to master
             if (_communicationReplyToPacket(output_content, 5) == false) {
-                // Node was not able to notify gateway about its address
-                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive multiple AO register write result\n"));
+                // Node was not able to notify master about its address
+                DPRINT(F("[COMMUNICATION][ERR] Master could not receive multiple AO register write result\n"));
 
             } else {
-                DPRINT(F("[COMMUNICATION] Replied to gateway with multiple AO register write result\n"));
+                DPRINT(F("[COMMUNICATION] Replied to master with multiple AO register write result\n"));
             }
         #else
-            // Reply to gateway
+            // Reply to master
             _communicationReplyToPacket(output_content, 5);
         #endif
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to write to undefined AO registers range\n"));
+            DPRINT(F("[COMMUNICATION][ERR] Master is trying to write to undefined AO registers range\n"));
         #endif
 
         // TODO: Send exception
@@ -1141,32 +1179,40 @@ void _communicationReportSingleEventRegisters(
         // Read start address mus be between <0, buffer.size()>
         register_address < _communicationGetEventBufferSize()
     ) {
-        // 0 => Packet identifier
-        // 1 => High byte of register address
-        // 2 => Low byte of register address
-        // 3 => Register value
+        // 0    => Packet identifier
+        // 1    => High byte of register address
+        // 2    => Low byte of register address
+        // 3-6  => Register value
         output_content[0] = (char) packetId;
         output_content[1] = (char) (register_address >> 8);
         output_content[2] = (char) (register_address & 0xFF);
-        output_content[3] = (char) communicationReadEventInput(register_address);
+
+        char read_value[4] = { 0 };
+
+        _communicationReadEventForTransfer(_communication_register.event_inputs[register_address].data_type, register_address, read_value);
+
+        output_content[3] = read_value[0];
+        output_content[4] = read_value[1];
+        output_content[5] = read_value[2];
+        output_content[6] = read_value[3];
 
         #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to gateway
-            if (_communicationReplyToPacket(output_content, 4) == false) {
-                // Node was not able to notify gateway about its address
-                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive event register reading\n"));
+            // Reply to master
+            if (_communicationReplyToPacket(output_content, 7) == false) {
+                // Node was not able to notify master about its address
+                DPRINT(F("[COMMUNICATION][ERR] Master could not receive event register reading\n"));
 
             } else {
-                DPRINT(F("[COMMUNICATION] Replied to gateway with event registers content\n"));
+                DPRINT(F("[COMMUNICATION] Replied to master with event registers content\n"));
             }
         #else
-            // Reply to gateway
-            _communicationReplyToPacket(output_content, 4);
+            // Reply to master
+            _communicationReplyToPacket(output_content, 7);
         #endif
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined event registers range\n"));
+            DPRINT(F("[COMMUNICATION][ERR] Master is trying to read from undefined event registers range\n"));
         #endif
 
         // TODO: Send exception
@@ -1213,33 +1259,43 @@ void _communicationReportMultiEventRegisters(
 
         uint8_t byte_pointer = 4;
 
-        for (uint8_t i = register_address; i < (register_address + read_length) && i < _communicationGetEventBufferSize(); i++) {
-            output_content[byte_pointer] = (char) communicationReadEventInput(i);
+        char read_value[4];
 
+        for (uint8_t i = register_address; i < (register_address + read_length) && i < _communicationGetEventBufferSize(); i++) {
+            _communicationReadEventForTransfer(_communication_register.event_inputs[i].data_type, i, read_value);
+
+            output_content[byte_pointer] = read_value[0];
             byte_pointer++;
-            byte_counter++;
+            output_content[byte_pointer] = read_value[1];
+            byte_pointer++;
+            output_content[byte_pointer] = read_value[2];
+            byte_pointer++;
+            output_content[byte_pointer] = read_value[3];
+            byte_pointer++;
+
+            byte_counter = byte_counter + 4;
         }
 
         // Update data bytes length
         output_content[3] = (char) byte_counter;
 
         #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to gateway
+            // Reply to master
             if (_communicationReplyToPacket(output_content, (byte_counter + 4)) == false) {
-                // Node was not able to notify gateway about its address
-                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive event register reading\n"));
+                // Node was not able to notify master about its address
+                DPRINT(F("[COMMUNICATION][ERR] Master could not receive event register reading\n"));
 
             } else {
-                DPRINT(F("[COMMUNICATION] Replied to gateway with event registers content\n"));
+                DPRINT(F("[COMMUNICATION] Replied to master with event registers content\n"));
             }
         #else
-            // Reply to gateway
+            // Reply to master
             _communicationReplyToPacket(output_content, (byte_counter + 4));
         #endif
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read from undefined event registers range\n"));
+            DPRINT(F("[COMMUNICATION][ERR] Master is trying to read from undefined event registers range\n"));
         #endif
 
         // TODO: Send exception
@@ -1251,21 +1307,27 @@ void _communicationReportMultiEventRegisters(
 // -----------------------------------------------------------------------------
 
 /**
- * PAYLOAD:
- * 0 => Packet identifier
+ * Parse received payload - Searching unaddressed nodes
+ * 
+ * 0    => Received packet identifier       => COMMUNICATION_PACKET_SEARCH_NODES
  */
 void _communicationNewNodesSearchRequestHandler(
     uint8_t * payload,
     const uint16_t length
 ) {
-    if (communicationHasAssignedAddress() == false && millis() - _communication_last_new_node_search_request_time > (COMMUNICATION_ADDRESSING_TIMEOUT * 1.125)) {
+    if (
+        // Node is without assigned address
+        communicationHasAssignedAddress() == false
+        // Node is not waiting for master reply
+        && millis() - _communication_last_new_node_search_request_time > COMMUNICATION_ADDRESSING_TIMEOUT
+    ) {
         char output_content[PJON_PACKET_MAX_LENGTH];
 
         // 0    => Packet identifier
         // 1    => Max packet size
         // 2    => Node SN length
         // 3-n  => Node parsed SN
-        output_content[0] = (uint8_t) COMMUNICATION_PACKET_SEARCH_NEW_NODES;
+        output_content[0] = (uint8_t) COMMUNICATION_PACKET_SEARCH_NODES_CONFIRM;
         output_content[1] = (uint8_t) PJON_PACKET_MAX_LENGTH;
         output_content[2] = (uint8_t) (strlen((char *) NODE_SERIAL_NO) + 1);
 
@@ -1279,9 +1341,7 @@ void _communicationNewNodesSearchRequestHandler(
 
         output_content[byte_pointer] = 0; // Be sure to set the null terminator!!!
 
-        // Non blocking packet transfer
-        uint16_t result = _communication_bus.send_packet(
-            COMMUNICATION_BUS_GATEWAY_ADDR,
+        uint16_t result = _communicationReplyToPacket(
             output_content,
             (byte_pointer + 1)
         );
@@ -1295,9 +1355,10 @@ void _communicationNewNodesSearchRequestHandler(
 // -----------------------------------------------------------------------------
 
 /**
- * PAYLOAD:
- * 0    => Packet identifier
- * 1    => Gateway assigned address
+ * Parse received payload - Confirming address
+ * 
+ * 0    => Received packet identifier       => COMMUNICATION_PACKET_ADDRESS
+ * 1    => Master assigned address
  * 2    => Node SN length
  * 3-n  => Node SN
  */
@@ -1315,12 +1376,12 @@ void _communicationAddressConfirmRequestHandler(
         return;
     }
 
-    // Extract address assigned by gateway
+    // Extract address assigned by master
     uint8_t address = (uint8_t) payload[1];
 
     char node_sn[(uint8_t) payload[2]];
 
-    // Extract node serial number from payload
+    // Extract serial number from payload
     for (uint8_t i = 0; i < (uint8_t) payload[2]; i++) {
         node_sn[i] = (char) payload[i + 3];
     }
@@ -1339,7 +1400,7 @@ void _communicationAddressConfirmRequestHandler(
         return;
     }
 
-    // Set node address to received from gateway
+    // Set node address to address received from master
     _communicationSetAddress(address);
     
     _communication_address_confirmed = true;
@@ -1358,10 +1419,10 @@ void _communicationAddressConfirmRequestHandler(
     char output_content[PJON_PACKET_MAX_LENGTH];
 
     // 0    => Packet identifier
-    // 1    => Gateway assigned address
+    // 1    => Master assigned address
     // 2    => Node SN length
     // 3-n  => Node SN
-    output_content[0] = (uint8_t) COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM;
+    output_content[0] = (uint8_t) COMMUNICATION_PACKET_ADDRESS_CONFIRM;
     output_content[1] = (uint8_t) address;
     output_content[2] = (uint8_t) (strlen((char *) NODE_SERIAL_NO) + 1);
 
@@ -1381,47 +1442,20 @@ void _communicationAddressConfirmRequestHandler(
     );
 
     #if DEBUG_COMMUNICATION_SUPPORT
-        DPRINT(F("[COMMUNICATION] Received node address was successfully confirmed to gateway\n"));
+        DPRINT(F("[COMMUNICATION] Received node address was successfully confirmed to master\n"));
     #endif
-}
-
-// -----------------------------------------------------------------------------
-
-void _communicationAddressRequestHandler(
-    const uint8_t packetId,
-    uint8_t * payload,
-    const uint16_t length
-) {
-    switch (packetId)
-    {
-        /**
-         * Gateway is searching for not addressed nodes
-         */
-        case COMMUNICATION_PACKET_SEARCH_NEW_NODES:
-            _communicationNewNodesSearchRequestHandler(payload, length);
-            break;
-
-        /**
-         * Gateway provided node address
-         */
-        case COMMUNICATION_PACKET_NODE_ADDRESS_CONFIRM:
-            _communicationAddressConfirmRequestHandler(payload, length);
-            break;
-
-        /**
-         * Gateway confirmed node address discarding request
-         */
-        case COMMUNICATION_PACKET_ADDRESS_DISCARD:
-            // TODO
-            break;
-    }
 }
 
 // -----------------------------------------------------------------------------
 // NODE INITIALIZATION
 // -----------------------------------------------------------------------------
 
-void _communicationReportDescriptionRequestHandler(
+/**
+ * Parse received payload - Node description
+ * 
+ * 0    => Received packet identifier       => COMMUNICATION_PACKET_HW_MODEL|COMMUNICATION_PACKET_HW_MANUFACTURER|COMMUNICATION_PACKET_HW_VERSION|COMMUNICATION_PACKET_FW_MODEL|COMMUNICATION_PACKET_FW_MANUFACTURER|COMMUNICATION_PACKET_FW_VERSION
+ */
+void _communicationReportDescriptionHandler(
     const uint8_t packetId,
     const char * sendContent
 ) {
@@ -1444,78 +1478,36 @@ void _communicationReportDescriptionRequestHandler(
     output_content[byte_pointer] = 0; // Be sure to set the null terminator!!!
 
     #if DEBUG_COMMUNICATION_SUPPORT
-        // Reply to gateway
+        // Reply to master
         if (_communicationReplyToPacket(output_content, (byte_pointer + 1)) == false) {
-            // Node was not able to notify gateway about its address
-            DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive node description packet: "));
+            // Node was not able to notify master about its address
+            DPRINT(F("[COMMUNICATION][ERR] Master could not receive node description packet: "));
             DPRINT(packetId);
             DPRINT(F(" with content: "));
             DPRINTLN(sendContent);
 
         } else {
-            DPRINT(F("[COMMUNICATION] Replied to gateway with description packet: "));
+            DPRINT(F("[COMMUNICATION] Replied to master with description packet: "));
             DPRINT(packetId);
             DPRINT(F(" with content: "));
             DPRINTLN(sendContent);
         }
     #else
-        // Reply to gateway
+        // Reply to master
         _communicationReplyToPacket(output_content, (byte_pointer + 1));
     #endif
-}
-
-// -----------------------------------------------------------------------------
-
-void _communicationNodeInitializationRequestHandler(
-    const uint8_t packetId,
-    uint8_t * payload,
-    const uint16_t length
-) {
-    switch (packetId)
-    {
-        case COMMUNICATION_PACKET_HW_MODEL:
-            _communicationReportDescriptionRequestHandler(packetId, (char *) NODE_NAME);
-            return;
-
-        case COMMUNICATION_PACKET_HW_MANUFACTURER:
-            _communicationReportDescriptionRequestHandler(packetId, (char *) NODE_MANUFACTURER);
-            return;
-
-        case COMMUNICATION_PACKET_HW_VERSION:
-            _communicationReportDescriptionRequestHandler(packetId, (char *) NODE_VERSION);
-            return;
-
-        case COMMUNICATION_PACKET_FW_MODEL:
-            _communicationReportDescriptionRequestHandler(packetId, (char *) FIRMWARE_NAME);
-            return;
-
-        case COMMUNICATION_PACKET_FW_MANUFACTURER:
-            _communicationReportDescriptionRequestHandler(packetId, (char *) FIRMWARE_MANUFACTURER);
-            return;
-
-        case COMMUNICATION_PACKET_FW_VERSION:
-            _communicationReportDescriptionRequestHandler(packetId, (char *) FIRMWARE_VERSION);
-            return;
-
-        case COMMUNICATION_PACKET_REGISTERS_SIZE:
-            _communicationReportRegistersSizes(packetId);
-            break;
-
-        case COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE:
-            _communicationReportAnalogRegisterStructure(packetId, payload, length, false);
-            break;
-
-        case COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE:
-            _communicationReportAnalogRegisterStructure(packetId, payload, length, true);
-            break;
-    }
 }
 
 // -----------------------------------------------------------------------------
 // REGISTERS INITIALIZATION
 // -----------------------------------------------------------------------------
 
-void _communicationReportRegistersSizes(
+/**
+ * Parse received payload - Registers sizes
+ * 
+ * 0    => Received packet identifier       => COMMUNICATION_PACKET_REGISTERS_SIZE
+ */
+void _communicationReportRegistersSizesHandler(
     const uint8_t packetId
 ) {
     char output_content[7];
@@ -1534,16 +1526,16 @@ void _communicationReportRegistersSizes(
     output_content[5] = (char) _communicationGetEventBufferSize();
 
     #if DEBUG_COMMUNICATION_SUPPORT
-        // Reply to gateway
+        // Reply to master
         if (_communicationReplyToPacket(output_content, 6) == false) {
-            // Node was not able to notify gateway about its address
-            DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive node registers sizes\n"));
+            // Node was not able to notify master about its address
+            DPRINT(F("[COMMUNICATION][ERR] Master could not receive node registers sizes\n"));
 
         } else {
-            DPRINT(F("[COMMUNICATION] Replied to gateway with registers sizes\n"));
+            DPRINT(F("[COMMUNICATION] Replied to master with registers sizes\n"));
         }
     #else
-        // Reply to gateway
+        // Reply to master
         _communicationReplyToPacket(output_content, 6);
     #endif
 }
@@ -1551,14 +1543,15 @@ void _communicationReportRegistersSizes(
 // -----------------------------------------------------------------------------
 
 /**
- * PAYLOAD:
- * 0 => Packet identifier
- * 1 => High byte of register address
- * 2 => Low byte of register address
- * 3 => High byte of registers length
- * 4 => Low byte of registers length
+ * Parse received payload - Analog registers structure
+ * 
+ * 0    => Received packet identifier       => COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE|COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE
+ * 1    => High byte of register address
+ * 2    => Low byte of register address
+ * 3    => High byte of registers length
+ * 4    => Low byte of registers length
  */
-void _communicationReportAnalogRegisterStructure(
+void _communicationReportAnalogRegisterStructureHandler(
     const uint8_t packetId,
     uint8_t * payload,
     const uint16_t length,
@@ -1617,22 +1610,22 @@ void _communicationReportAnalogRegisterStructure(
         output_content[3] = (char) byte_counter;
 
         #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to gateway
+            // Reply to master
             if (_communicationReplyToPacket(output_content, byte_pointer) == false) {
-                // Node was not able to notify gateway about its address
-                DPRINT(F("[COMMUNICATION][ERR] Gateway could not receive node analog registers structure\n"));
+                // Node was not able to notify master about its address
+                DPRINT(F("[COMMUNICATION][ERR] Master could not receive node analog registers structure\n"));
 
             } else {
-                DPRINT(F("[COMMUNICATION] Replied to gateway with analog registers structure\n"));
+                DPRINT(F("[COMMUNICATION] Replied to master with analog registers structure\n"));
             }
         #else
-            // Reply to gateway
+            // Reply to master
             _communicationReplyToPacket(output_content, byte_pointer);
         #endif
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Gateway is trying to read structure for undefined analog registers range\n"));
+            DPRINT(F("[COMMUNICATION][ERR] Master is trying to read structure for undefined analog registers range\n"));
         #endif
 
         // TODO: Send exception
@@ -1641,15 +1634,76 @@ void _communicationReportAnalogRegisterStructure(
 
 // -----------------------------------------------------------------------------
 
-void _communicationRegisterInitializationRequestHandler(
-    const uint8_t packetId,
-    uint8_t * payload,
-    const uint16_t length
+/**
+ * Parse received payload - Gateway hello
+ * 
+ * 0    => Received packet identifier   => COMMUNICATION_PACKET_HELLO
+ */
+void _communicationHelloHandler(
+    const uint8_t packetId
 ) {
-    switch (packetId)
-    {
+    char output_content[PJON_PACKET_MAX_LENGTH];
 
+    // 0    => Packet identifier
+    // 1    => Node SN length
+    // 2-n  => Node SN
+    output_content[0] = (char) packetId;
+    output_content[1] = (uint8_t) (strlen((char *) NODE_SERIAL_NO) + 1);
+
+    uint8_t byte_pointer = 2;
+
+    for (uint8_t i = 0; i < strlen((char *) NODE_SERIAL_NO); i++) {
+        output_content[byte_pointer] = ((char *) NODE_SERIAL_NO)[i];
+
+        byte_pointer++;
     }
+
+    output_content[byte_pointer] = 0; // Be sure to set the null terminator!!!
+
+    #if DEBUG_COMMUNICATION_SUPPORT
+        // Reply to master
+        if (_communicationReplyToPacket(output_content, (byte_pointer + 1)) == false) {
+            // Node was not able to notify master about its address
+            DPRINT(F("[COMMUNICATION][ERR] Master could not receive node hello reply\n"));
+
+        } else {
+            DPRINT(F("[COMMUNICATION] Replied to master with hello\n"));
+        }
+    #else
+        // Reply to master
+        _communicationReplyToPacket(output_content, (byte_pointer + 1));
+    #endif
+}
+
+// -----------------------------------------------------------------------------
+
+/**
+ * Parse received payload - Gateway ping
+ * 
+ * 0    => Received packet identifier   => COMMUNICATION_PACKET_PING
+ */
+void _communicationPingHandler()
+{
+    char output_content[1];
+
+    // 0 => Packet identifier
+    output_content[0] = (char) COMMUNICATION_PACKET_PONG;
+
+    output_content[1] = 0; // Be sure to set the null terminator!!!
+
+    #if DEBUG_COMMUNICATION_SUPPORT
+        // Reply to master
+        if (_communicationReplyToPacket(output_content, 1) == false) {
+            // Node was not able to notify master about its address
+            DPRINT(F("[COMMUNICATION][ERR] Master could not receive node ping reply\n"));
+
+        } else {
+            DPRINT(F("[COMMUNICATION] Replied to master with pong\n"));
+        }
+    #else
+        // Reply to master
+        _communicationReplyToPacket(output_content, 1);
+    #endif
 }
 
 // -----------------------------------------------------------------------------
@@ -1699,10 +1753,10 @@ void _communicationReceiverHandler(
         sender_address = packetInfo.sender_id;
     }
     
-    // Only packets from gateway are accepted
-    if (sender_address != COMMUNICATION_BUS_GATEWAY_ADDR) {
+    // Only packets from master are accepted
+    if (sender_address != COMMUNICATION_BUS_MASTER_ADDR) {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINT(F("[COMMUNICATION][ERR] Received packet from unknown gateway address: "));
+            DPRINT(F("[COMMUNICATION][ERR] Received packet from unknown master address: "));
             DPRINTLN(sender_address);
         #endif
 
@@ -1712,82 +1766,150 @@ void _communicationReceiverHandler(
     // Reset master lost detection
     _communication_master_lost = false;
     _communication_master_last_request = millis();
-        
-    // Trying to get node address from gateway
-    if (_communicationIsPacketInGroup(packet_id, communication_packets_addresing, COMMUNICATION_PACKET_ADDRESS_MAX)) {
-        _communicationAddressRequestHandler(packet_id, payload, length);
+    
+    switch (packet_id)
+    {
 
-    } else if (_communicationIsPacketInGroup(packet_id, communication_packets_node_initialization, COMMUNICATION_PACKET_NODE_INIT_MAX)) {
-        _communicationNodeInitializationRequestHandler(packet_id, payload, length);
+    /**
+     * MISC COMMUNICATION
+     */
 
-    // Regular gateway messages
-    } else {
-        switch (packet_id)
-        {
+        case COMMUNICATION_PACKET_PING:
+            _communicationPingHandler();
+            break;
+
+        case COMMUNICATION_PACKET_HELLO:
+            _communicationHelloHandler(packet_id);
+            break;
+
+    /**
+     * ADDRESSING PROCESS
+     */
+
         /**
-         * REGISTERS READING
+         * Master is searching for not addressed nodes
          */
+        case COMMUNICATION_PACKET_SEARCH_NODES:
+            _communicationNewNodesSearchRequestHandler(payload, length);
+            break;
 
-            case COMMUNICATION_PACKET_READ_SINGLE_DI:
-                _communicationReportSingleDigitalRegisters(packet_id, payload, false);
-                break;
-
-            case COMMUNICATION_PACKET_READ_MULTI_DI:
-                _communicationReportMultiDigitalRegisters(packet_id, payload, false);
-                break;
-
-            case COMMUNICATION_PACKET_READ_SINGLE_DO:
-                _communicationReportSingleDigitalRegisters(packet_id, payload, true);
-                break;
-
-            case COMMUNICATION_PACKET_READ_MULTI_DO:
-                _communicationReportMultiDigitalRegisters(packet_id, payload, true);
-                break;
-        
-            case COMMUNICATION_PACKET_READ_SINGLE_AI:
-                _communicationReportSingleAnalogRegisters(packet_id, payload, false);
-                break;
-
-            case COMMUNICATION_PACKET_READ_MULTI_AI:
-                _communicationReportMultiAnalogRegisters(packet_id, payload, false);
-                break;
-        
-            case COMMUNICATION_PACKET_READ_SINGLE_AO:
-                _communicationReportSingleAnalogRegisters(packet_id, payload, true);
-                break;
-
-            case COMMUNICATION_PACKET_READ_MULTI_AO:
-                _communicationReportMultiAnalogRegisters(packet_id, payload, true);
-                break;
-        
-            case COMMUNICATION_PACKET_READ_SINGLE_EV:
-                _communicationReportSingleEventRegisters(packet_id, payload);
-                break;
-
-            case COMMUNICATION_PACKET_READ_MULTI_EV:
-                _communicationReportMultiEventRegisters(packet_id, payload);
-                break;
-        
         /**
-         * REGISTERS WRITING
+         * Master provided node address
          */
-        
-            case COMMUNICATION_PACKET_WRITE_ONE_DO:
-                _communicationWriteSingleDigitalOutput(packet_id, payload);
-                break;
-        
-            case COMMUNICATION_PACKET_WRITE_ONE_AO:
-                _communicationWriteSingleAnalogOutput(packet_id, payload);
-                break;
-        
-            case COMMUNICATION_PACKET_WRITE_MULTI_DO:
-                _communicationWriteMultipleDigitalOutputs(packet_id, payload);
-                break;
-        
-            case COMMUNICATION_PACKET_WRITE_MULTI_AO:
-                //_communicationWriteMultipleAnalogOutputs(packet_id, payload);
-                break;
-        }
+        case COMMUNICATION_PACKET_ADDRESS:
+            _communicationAddressConfirmRequestHandler(payload, length);
+            break;
+
+        /**
+         * Master confirmed node address discarding request
+         */
+        case COMMUNICATION_PACKET_ADDRESS_DISCARD:
+            // TODO
+            break;
+
+    /**
+     * INITIALIZATION PROCESS
+     */
+
+        case COMMUNICATION_PACKET_HW_MODEL:
+            _communicationReportDescriptionHandler(packet_id, (char *) NODE_NAME);
+            return;
+
+        case COMMUNICATION_PACKET_HW_MANUFACTURER:
+            _communicationReportDescriptionHandler(packet_id, (char *) NODE_MANUFACTURER);
+            return;
+
+        case COMMUNICATION_PACKET_HW_VERSION:
+            _communicationReportDescriptionHandler(packet_id, (char *) NODE_VERSION);
+            return;
+
+        case COMMUNICATION_PACKET_FW_MODEL:
+            _communicationReportDescriptionHandler(packet_id, (char *) FIRMWARE_NAME);
+            return;
+
+        case COMMUNICATION_PACKET_FW_MANUFACTURER:
+            _communicationReportDescriptionHandler(packet_id, (char *) FIRMWARE_MANUFACTURER);
+            return;
+
+        case COMMUNICATION_PACKET_FW_VERSION:
+            _communicationReportDescriptionHandler(packet_id, (char *) FIRMWARE_VERSION);
+            return;
+
+        case COMMUNICATION_PACKET_REGISTERS_SIZE:
+            _communicationReportRegistersSizesHandler(packet_id);
+            break;
+
+        case COMMUNICATION_PACKET_AI_REGISTERS_STRUCTURE:
+            _communicationReportAnalogRegisterStructureHandler(packet_id, payload, length, false);
+            break;
+
+        case COMMUNICATION_PACKET_AO_REGISTERS_STRUCTURE:
+            _communicationReportAnalogRegisterStructureHandler(packet_id, payload, length, true);
+            break;
+
+    /**
+     * REGISTERS READING
+     */
+
+        case COMMUNICATION_PACKET_READ_SINGLE_DI:
+            _communicationReportSingleDigitalRegisters(packet_id, payload, false);
+            break;
+
+        case COMMUNICATION_PACKET_READ_MULTI_DI:
+            _communicationReportMultiDigitalRegisters(packet_id, payload, false);
+            break;
+
+        case COMMUNICATION_PACKET_READ_SINGLE_DO:
+            _communicationReportSingleDigitalRegisters(packet_id, payload, true);
+            break;
+
+        case COMMUNICATION_PACKET_READ_MULTI_DO:
+            _communicationReportMultiDigitalRegisters(packet_id, payload, true);
+            break;
+    
+        case COMMUNICATION_PACKET_READ_SINGLE_AI:
+            _communicationReportSingleAnalogRegisters(packet_id, payload, false);
+            break;
+
+        case COMMUNICATION_PACKET_READ_MULTI_AI:
+            _communicationReportMultiAnalogRegisters(packet_id, payload, false);
+            break;
+    
+        case COMMUNICATION_PACKET_READ_SINGLE_AO:
+            _communicationReportSingleAnalogRegisters(packet_id, payload, true);
+            break;
+
+        case COMMUNICATION_PACKET_READ_MULTI_AO:
+            _communicationReportMultiAnalogRegisters(packet_id, payload, true);
+            break;
+    
+        case COMMUNICATION_PACKET_READ_SINGLE_EV:
+            _communicationReportSingleEventRegisters(packet_id, payload);
+            break;
+
+        case COMMUNICATION_PACKET_READ_MULTI_EV:
+            _communicationReportMultiEventRegisters(packet_id, payload);
+            break;
+    
+    /**
+     * REGISTERS WRITING
+     */
+    
+        case COMMUNICATION_PACKET_WRITE_ONE_DO:
+            _communicationWriteSingleDigitalOutput(packet_id, payload);
+            break;
+    
+        case COMMUNICATION_PACKET_WRITE_MULTI_DO:
+            _communicationWriteMultipleDigitalOutputs(packet_id, payload);
+            break;
+    
+        case COMMUNICATION_PACKET_WRITE_ONE_AO:
+            _communicationWriteSingleAnalogOutput(packet_id, payload);
+            break;
+    
+        case COMMUNICATION_PACKET_WRITE_MULTI_AO:
+            //_communicationWriteMultipleAnalogOutputs(packet_id, payload);
+            break;
     }
 
     #if DEBUG_COMMUNICATION_SUPPORT
@@ -1803,13 +1925,13 @@ void _communicationReceiverHandler(
 void _communicationErrorHandler(
     const uint8_t code,
     const uint16_t data,
-    void *customPointer
+    void * customPointer
 ) {
     #if DEBUG_COMMUNICATION_SUPPORT
         if (code == PJON_CONNECTION_LOST) {
             _communication_master_lost = true;
 
-            DPRINT(F("[COMMUNICATION][ERR] Connection lost with gateway\n"));
+            DPRINT(F("[COMMUNICATION][ERR] Connection lost with master\n"));
 
         } else if (code == PJON_PACKETS_BUFFER_FULL) {
             DPRINT(F("[COMMUNICATION][ERR] Buffer is full\n"));
@@ -1863,7 +1985,7 @@ bool communicationDiscardAddress()
 
     if (
         _communication_bus.send_packet(
-            COMMUNICATION_BUS_GATEWAY_ADDR,
+            COMMUNICATION_BUS_MASTER_ADDR,
             output_content,
             2
         ) == PJON_ACK
@@ -1886,13 +2008,15 @@ bool communicationDiscardAddress()
 
 // -----------------------------------------------------------------------------
 
-bool communicationHasAssignedAddress() {
+bool communicationHasAssignedAddress()
+{
     return _communication_bus.device_id() != PJON_NOT_ASSIGNED;
 }
 
 // -----------------------------------------------------------------------------
 
-bool communicationIsMasterLost() {
+bool communicationIsMasterLost()
+{
     return ((millis() - _communication_master_last_request) > COMMUNICATION_MASTER_PING_TIMEOUT || _communication_master_lost);
 }
 
@@ -1900,6 +2024,9 @@ bool communicationIsMasterLost() {
 // DIGITAL INPUTS
 // -----------------------------------------------------------------------------
 
+/**
+ * Allocate memory for digital input
+ */
 uint8_t communicationRegisterDigitalInput()
 {
     return communicationRegisterDigitalInput(false);
@@ -1907,6 +2034,9 @@ uint8_t communicationRegisterDigitalInput()
 
 // -----------------------------------------------------------------------------
 
+/**
+ * Allocate memory for digital input with default value
+ */
 uint8_t communicationRegisterDigitalInput(
     bool defaultValue
 ) {
@@ -1948,6 +2078,9 @@ bool communicationReadDigitalInput(
 // DIGITAL OUTPUTS
 // -----------------------------------------------------------------------------
 
+/**
+ * Allocate memory for digital output
+ */
 uint8_t communicationRegisterDigitalOutput()
 {
     return communicationRegisterDigitalOutput(false);
@@ -1955,6 +2088,9 @@ uint8_t communicationRegisterDigitalOutput()
 
 // -----------------------------------------------------------------------------
 
+/**
+ * Allocate memory for digital output with default value
+ */
 uint8_t communicationRegisterDigitalOutput(
     const bool defaultValue
 ) {
@@ -2062,6 +2198,9 @@ bool communicationWriteAnalogRegister(
 // ANALOG INPUTS
 // -----------------------------------------------------------------------------
 
+/**
+ * Allocate memory for analog input
+ */
 uint8_t communicationRegisterAnalogInput(
     const uint8_t dataType
 ) {
@@ -2073,13 +2212,23 @@ uint8_t communicationRegisterAnalogInput(
 
     memset(_communication_register.analog_inputs[address].value, 0, 4);
 
-    if (dataType == COMMUNICATION_DATA_TYPE_UINT8 || dataType == COMMUNICATION_DATA_TYPE_INT8) {
+    if (
+        dataType == COMMUNICATION_DATA_TYPE_UINT8
+        || dataType == COMMUNICATION_DATA_TYPE_INT8
+    ) {
         _communication_register.analog_inputs[address].size = 1;
 
-    } else if (dataType == COMMUNICATION_DATA_TYPE_UINT16 || dataType == COMMUNICATION_DATA_TYPE_INT16) {
+    } else if (
+        dataType == COMMUNICATION_DATA_TYPE_UINT16
+        || dataType == COMMUNICATION_DATA_TYPE_INT16
+    ) {
         _communication_register.analog_inputs[address].size = 2;
 
-    } else if (dataType == COMMUNICATION_DATA_TYPE_UINT32 || dataType == COMMUNICATION_DATA_TYPE_INT32 || dataType == COMMUNICATION_DATA_TYPE_FLOAT32) {
+    } else if (
+        dataType == COMMUNICATION_DATA_TYPE_UINT32
+        || dataType == COMMUNICATION_DATA_TYPE_INT32
+        || dataType == COMMUNICATION_DATA_TYPE_FLOAT32
+    ) {
         _communication_register.analog_inputs[address].size = 4;
     }
 
@@ -2112,6 +2261,9 @@ void communicationReadAnalogInput(const uint8_t address, float &value) { communi
 // ANALOG OUTPUTS
 // -----------------------------------------------------------------------------
 
+/**
+ * Allocate memory for analog output
+ */
 uint8_t communicationRegisterAnalogOutput(
     const uint8_t dataType
 ) {
@@ -2123,13 +2275,23 @@ uint8_t communicationRegisterAnalogOutput(
 
     memset(_communication_register.analog_outputs[address].value, 0, 4);
 
-    if (dataType == COMMUNICATION_DATA_TYPE_UINT8 || dataType == COMMUNICATION_DATA_TYPE_INT8) {
+    if (
+        dataType == COMMUNICATION_DATA_TYPE_UINT8
+        || dataType == COMMUNICATION_DATA_TYPE_INT8
+    ) {
         _communication_register.analog_outputs[address].size = 1;
 
-    } else if (dataType == COMMUNICATION_DATA_TYPE_UINT16 || dataType == COMMUNICATION_DATA_TYPE_INT16) {
+    } else if (
+        dataType == COMMUNICATION_DATA_TYPE_UINT16
+        || dataType == COMMUNICATION_DATA_TYPE_INT16
+    ) {
         _communication_register.analog_outputs[address].size = 2;
 
-    } else if (dataType == COMMUNICATION_DATA_TYPE_UINT32 || dataType == COMMUNICATION_DATA_TYPE_INT32 || dataType == COMMUNICATION_DATA_TYPE_FLOAT32) {
+    } else if (
+        dataType == COMMUNICATION_DATA_TYPE_UINT32
+        || dataType == COMMUNICATION_DATA_TYPE_INT32
+        || dataType == COMMUNICATION_DATA_TYPE_FLOAT32
+    ) {
         _communication_register.analog_outputs[address].size = 4;
     }
 
@@ -2162,39 +2324,14 @@ void communicationReadAnalogOutput(const uint8_t address, float &value) { commun
 // EVENT REGISTERS
 // -----------------------------------------------------------------------------
 
-uint8_t communicationReadEventRegister(
-    const uint8_t address
-) {
-    if (address < _communication_register.event_inputs.size()) {
-        return _communication_register.event_inputs[address].value;
-    }
-
-    return 0;
-}
-
-// -----------------------------------------------------------------------------
-
-bool communicationWriteEventRegister(
-    const uint8_t address,
-    const uint8_t value
-) {
-    if (address > _communication_register.event_inputs.size()) {
-        return false;
-    }
-
-    _communication_register.event_inputs[address].value = value;
-
-    return true;
-}
-
-// -----------------------------------------------------------------------------
-// EVENT INPUTS
-// -----------------------------------------------------------------------------
-
+/**
+ * Allocate memory for event input
+ */
 uint8_t communicationRegisterEventInput()
 {
     _communication_register.event_inputs.push_back((communication_event_register_t) {
-        0
+        COMMUNICATION_DATA_TYPE_UINT8,
+        1
     });
 
     uint8_t address = (_communication_register.event_inputs.size() - 1);
@@ -2204,19 +2341,59 @@ uint8_t communicationRegisterEventInput()
 
 // -----------------------------------------------------------------------------
 
-// Specialized convenience setters (these do not cost memory because of inlining)
-bool communicationWriteEventInput(const uint8_t address, const uint8_t value) { return communicationWriteEventRegister(address, value); }
+bool communicationWriteEventInput(
+    const uint8_t address,
+    const void * value,
+    const uint8_t size
+) {
+    if (address > _communication_register.event_inputs.size()) {
+        return false;
+    }
+
+    if (_communication_register.event_inputs[address].size == size) {
+        memcpy(_communication_register.event_inputs[address].value, value, size);
+    }
+
+    return true;
+}
 
 // -----------------------------------------------------------------------------
 
 // Specialized convenience setters (these do not cost memory because of inlining)
-uint8_t communicationReadEventInput(const uint8_t address) { return communicationReadEventRegister(address); }
+bool communicationWriteEventInput(const uint8_t address, const uint8_t value) { return communicationWriteEventInput(address, &value, 1); }
+
+// -----------------------------------------------------------------------------
+
+uint8_t communicationReadEventInput(
+    const uint8_t address,
+    void * value,
+    const uint8_t size
+) {
+    if (
+        address < _communication_register.event_inputs.size()
+        && _communication_register.event_inputs[address].size == size
+    ) {
+        memcpy(value, _communication_register.event_inputs[address].value, size);
+
+        return;
+    }
+
+    char default_value[4] = { 0 };
+
+    memcpy(value, default_value, size);
+}
+
+// -----------------------------------------------------------------------------
+
+// Specialized convenience setters (these do not cost memory because of inlining)
+void communicationReadEventInput(const uint8_t address, uint8_t &value) { communicationReadEventInput(address, &value, 1); }
 
 // -----------------------------------------------------------------------------
 // MODULE CORE
 // -----------------------------------------------------------------------------
 
-void communicationSetup() {
+void communicationSetup()
+{
     _communication_serial_bus.begin(SERIAL_BAUDRATE);
 
     _communication_bus.strategy.set_serial(&_communication_serial_bus);
@@ -2233,7 +2410,6 @@ void communicationSetup() {
         uint8_t node_address = PJON_NOT_ASSIGNED;
     #else
         uint8_t node_address = (uint8_t) EEPROM.read(FLASH_ADDRESS_NODE_ADDRESS);
-
     #endif
 
     #if DEBUG_COMMUNICATION_SUPPORT
@@ -2253,7 +2429,8 @@ void communicationSetup() {
 
 // -----------------------------------------------------------------------------
 
-void communicationLoop() {
+void communicationLoop()
+{
     // -------------------------------------------------------------------------
     // Bus communication
     // -------------------------------------------------------------------------
