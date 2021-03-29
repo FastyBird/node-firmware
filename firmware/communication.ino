@@ -1544,9 +1544,6 @@ void _communicationPairDeviceSetAddress(
         return;
     }
 
-    // Free used memory
-    free(device_sn);
-
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
     // 0    => Packet identifier
@@ -1605,16 +1602,22 @@ void _communicationPairDeviceProvideAboutInfo(
 ) {
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
-    // 0 => Packet identifier
-    // 1 => Command response content type
-    // 2 => High byte of max packet length
-    // 3 => Low byte of max packet length
-    // 4 => High byte of Device description support
-    // 5 => Low byte of Device description support
-    // 6 => High byte of Device configuration support
-    // 7 => Low byte of Device configuration support
-    // 8 => High byte of PubSub support
-    // 9 => Low byte of PubSub support
+    // 0  => Packet identifier
+    // 1  => Command response content type
+    // 2  => High byte of max packet length
+    // 3  => Low byte of max packet length
+    // 4  => High byte of Device description support
+    // 5  => Low byte of Device description support
+    // 6  => High byte of Device configuration support
+    // 7  => Low byte of Device configuration support
+    // 8  => Supported key length
+    // 9  => High byte of PubSub - PUB support
+    // 10 => Low byte of PubSub - PUB support
+    // 11 => High byte of PubSub - SUB support
+    // 12 => Low byte of PubSub - SUB support
+    // 13 => Maximum supported subscriptions count
+    // 14 => Maximum supported conditions count per subscriptions
+    // 15 => Maximum supported actions count per subscriptions
     _communication_output_buffer[0] = (uint8_t) COMMUNICATION_PACKET_PAIR_DEVICE;
     _communication_output_buffer[1] = (uint8_t) COMMUNICATION_PAIRING_RESPONSE_ABOUT_INFO;
     _communication_output_buffer[2] = (char) (PJON_PACKET_MAX_LENGTH >> 8);
@@ -1623,14 +1626,18 @@ void _communicationPairDeviceProvideAboutInfo(
     _communication_output_buffer[5] = (char) ((COMMUNICATION_DESCRIPTION_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
     _communication_output_buffer[6] = (char) ((COMMUNICATION_SETTINGS_SUPPORT ? 0xFF00 : 0x0000) >> 8);
     _communication_output_buffer[7] = (char) ((COMMUNICATION_SETTINGS_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
-    _communication_output_buffer[8] = (char) ((COMMUNICATION_PUB_SUB_PUB_SUPPORT ? 0xFF00 : 0x0000) >> 8);
-    _communication_output_buffer[9] = (char) ((COMMUNICATION_PUB_SUB_PUB_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
-    _communication_output_buffer[10] = (char) ((COMMUNICATION_PUB_SUB_SUB_SUPPORT ? 0xFF00 : 0x0000) >> 8);
-    _communication_output_buffer[11] = (char) ((COMMUNICATION_PUB_SUB_SUB_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
+    _communication_output_buffer[8] = (char) COMMUNICATION_REGISTER_KEY_LENGTH;
+    _communication_output_buffer[9] = (char) ((COMMUNICATION_PUB_SUB_PUB_SUPPORT ? 0xFF00 : 0x0000) >> 8);
+    _communication_output_buffer[10] = (char) ((COMMUNICATION_PUB_SUB_PUB_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
+    _communication_output_buffer[11] = (char) ((COMMUNICATION_PUB_SUB_SUB_SUPPORT ? 0xFF00 : 0x0000) >> 8);
+    _communication_output_buffer[12] = (char) ((COMMUNICATION_PUB_SUB_SUB_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
+    _communication_output_buffer[13] = (char) COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS : 0;
+    _communication_output_buffer[14] = (char) COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_PUB_SUB_MAX_CONDITIONS : 0;
+    _communication_output_buffer[15] = (char) COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_PUB_SUB_MAX_ACTIONS : 0;
 
     #if DEBUG_COMMUNICATION_SUPPORT
         // Reply to master
-        if (_communicationReplyToPacket(_communication_output_buffer, 10) == false) {
+        if (_communicationReplyToPacket(_communication_output_buffer, 16) == false) {
             DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive maximum packet size"));
 
         } else {
@@ -1638,7 +1645,7 @@ void _communicationPairDeviceProvideAboutInfo(
         }
     #else
         // Reply to master
-        _communicationReplyToPacket(_communication_output_buffer, 10);
+        _communicationReplyToPacket(_communication_output_buffer, 16);
     #endif
 }
 
