@@ -2,17 +2,17 @@
 
 CONFIGURATION IMPORT CONTAINER
 
-Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
+Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 */
 
 #include "version.h"
 #include "types.h"
-#include "hardware.h"
-#include "defaults.h"
-#include "general.h"
 #include "prototypes.h"
+#include "hardware.h"
+#include "general.h"
 #include "progmem.h"
+#include "dependencies.h"
 
 #if DEBUG_SUPPORT
     #define DPRINTLN(x) Serial.println(x)
@@ -23,5 +23,5 @@ Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
 // NODE GLOBAL DESCRIPTION
 // =============================================================================
 
-#define NODE_SERIAL_NO     "0124004A"   // Serial number generated during compilation process
-#define NODE_VERSION       "0.0.1"      // Hardware version (PCB revision)
+#define DEVICE_SERIAL_NO     "0124004A"   // Serial number generated during compilation process
+#define DEVICE_VERSION       "0.0.1"      // Hardware version (PCB revision)

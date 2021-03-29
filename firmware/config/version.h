@@ -2,11 +2,11 @@
 
 FIRMWARE DESCRIPTION
 
-Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
+Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 */
 
-#define FIRMWARE_NAME           "FB_NODE"
+#define FIRMWARE_NAME           "FB_DEVICE"
 #define FIRMWARE_MANUFACTURER   "FASTYBIRD"
 #define FIRMWARE_VERSION        "0.0.1"
 

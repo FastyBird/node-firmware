@@ -2,21 +2,9 @@
 
 BUTTON MODULE
 
-Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
+Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 */
-
-#if BUTTON_SUPPORT
-
-#include <DebounceEvent.h>
-#include <Vector.h>
-
-typedef struct {
-    DebounceEvent * button;
-    uint8_t         register_address;      // Address in communication register to store state
-} button_t;
-
-Vector<button_t> _buttons;
 
 // -----------------------------------------------------------------------------
 // MODULE PRIVATE
@@ -35,10 +23,10 @@ uint8_t _buttonMapEvent(
 
     } else if (event == EVENT_RELEASED) {
         if (count == 1) {
-            if (length > BUTTON_LNGLNGCLICK_DELAY) {
+            if (length >= BUTTON_LNGLNGCLICK_DELAY) {
                 return BUTTON_EVENT_LNGLNGCLICK;
 
-            } else if (length > BUTTON_LNGCLICK_DELAY) {
+            } else if (length >= BUTTON_LNGCLICK_DELAY) {
                 return BUTTON_EVENT_LNGCLICK;
             }
 
@@ -49,6 +37,9 @@ uint8_t _buttonMapEvent(
 
         } else if (count == 3) {
             return BUTTON_EVENT_TRIPLECLICK;
+
+        } else {
+            return BUTTON_EVENT_RELEASED;
         }
     }
 
@@ -61,9 +52,19 @@ void _buttonEvent(
     const uint8_t id,
     const uint8_t event
 ) {
-    if (id >= buttonCount() || event == 0) {
+    if (id >= BUTTON_MAX_ITEMS) {
         return;
     }
+
+    if (button_module_items[id].current_status == event) {
+        return;
+    }
+
+    if (button_module_items[id].current_status == BUTTON_EVENT_PRESSED && event == BUTTON_EVENT_NONE) {
+        return;
+    }
+
+    button_module_items[id].current_status = event;
 
     #if DEBUG_SUPPORT
         DPRINT(F("[BUTTON] Button #"));
@@ -72,17 +73,60 @@ void _buttonEvent(
         DPRINTLN(event);
     #endif
 
-    // Store state into communication register
-    communicationWriteEventInput(_buttons[id].register_address, (uint8_t) event);
-}
+    #if COMMUNICATION_MAX_AI_REGISTER_SIZE
+        // Store state into communication register only if device is in running mode and address is defined
+        if (button_module_items[id].register_address != INDEX_NONE /*&& firmwareIsRunning()*/) {
+            communicationWriteAnalogInput(button_module_items[id].register_address, event);
+        }
+    #endif
 
-// -----------------------------------------------------------------------------
-// MODULE API
-// -----------------------------------------------------------------------------
+    #if SYSTEM_CONFIGURE_DEVICE_BUTTON != INDEX_NONE
+        if (id == SYSTEM_CONFIGURE_DEVICE_BUTTON) {
+            switch (event)
+            {
 
-int buttonCount()
-{
-    return _buttons.size();
+                case BUTTON_EVENT_CLICK:
+                    if (communicationIsInPairingMode()) {
+                        communicationDisablePairingMode();
+
+                    } else {
+                        if (firmwareGetDeviceState() == DEVICE_STATE_RUNNING) {
+                            firmwareSetDeviceState(DEVICE_STATE_STOPPED_BY_OPERATOR);
+
+                        } else if (
+                            firmwareGetDeviceState() == DEVICE_STATE_STOPPED_BY_OPERATOR
+                            || firmwareGetDeviceState() == DEVICE_STATE_STOPPED
+                        ) {
+                            firmwareSetDeviceState(DEVICE_STATE_RUNNING);
+                        }
+                    }
+                    break;
+
+                case BUTTON_EVENT_LNGCLICK:
+                    #if DEBUG_SUPPORT
+                        DPRINTLN(F("[BUTTON] Activating pairing mode"));
+                    #endif
+
+                    if (
+                        firmwareGetDeviceState() == DEVICE_STATE_STOPPED_BY_OPERATOR
+                        || firmwareGetDeviceState() == DEVICE_STATE_STOPPED
+                    ) {
+                        firmwareSetDeviceState(DEVICE_STATE_RUNNING);
+                    }
+
+                    communicationEnablePairingMode();
+                    break;
+
+                case BUTTON_EVENT_LNGLNGCLICK:
+                    // Clear stored values to factory settings
+                    //for (uint8_t i = 0 ; i < EEPROM.length() ; i++) {
+                    //    EEPROM.write(i, 0);
+                    //}
+                    break;
+
+            }
+        }
+    #endif
 }
 
 // -----------------------------------------------------------------------------
@@ -91,124 +135,9 @@ int buttonCount()
 
 void buttonSetup()
 {
-    uint8_t register_address;
-
-    #if BUTTON1_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON1_PIN, BUTTON1_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON2_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON2_PIN, BUTTON2_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON3_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON3_PIN, BUTTON3_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON4_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON4_PIN, BUTTON4_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON5_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON5_PIN, BUTTON5_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON6_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON6_PIN, BUTTON6_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON7_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON7_PIN, BUTTON7_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON8_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON8_PIN, BUTTON8_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON9_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON9_PIN, BUTTON9_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON10_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON10_PIN, BUTTON10_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON11_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON11_PIN, BUTTON11_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON12_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON12_PIN, BUTTON12_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON13_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON13_PIN, BUTTON13_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON14_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON14_PIN, BUTTON14_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON15_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON15_PIN, BUTTON15_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-    #if BUTTON16_PIN != GPIO_NONE
-    {
-        register_address = communicationRegisterEventInput();
-
-        _buttons.push_back((button_t) {new DebounceEvent(BUTTON16_PIN, BUTTON16_MODE, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), register_address});
-    }
-    #endif
-
     #if DEBUG_SUPPORT
         DPRINT(F("[BUTTON] Number of buttons: "));
-        DPRINTLN(buttonCount());
+        DPRINTLN(BUTTON_MAX_ITEMS);
     #endif
 }
 
@@ -216,16 +145,13 @@ void buttonSetup()
 
 void buttonLoop()
 {
-    for (uint8_t i = 0; i < buttonCount(); i++) {
-        if (uint8_t event = _buttons[i].button->loop()) {
-            uint8_t count = _buttons[i].button->getEventCount();
-            unsigned long length = _buttons[i].button->getEventLength();
+    for (uint8_t i = 0; i < BUTTON_MAX_ITEMS; i++) {
+        uint8_t event = button_module_items[i].button->loop();
+        uint8_t count = button_module_items[i].button->getEventCount();
+        unsigned long length = button_module_items[i].button->getEventLength();
 
-            uint8_t mapped = _buttonMapEvent(event, count, length);
+        uint8_t mapped = _buttonMapEvent(event, count, length);
 
-            _buttonEvent(i, mapped);
-        }
+        _buttonEvent(i, mapped);
     }
 }
-
-#endif // BUTTON_SUPPORT

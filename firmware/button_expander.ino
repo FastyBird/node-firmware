@@ -3,7 +3,7 @@
 
 BUTTON EXPANDER MODULE
 
-Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
+Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 */
 
@@ -91,12 +91,15 @@ uint8_t _expanderButtonMapEvent(
     const uint8_t count,
     const uint16_t length
 ) {
-    if (event == BUTTON_EVENT_RELEASED) {
+    if (event == BUTTON_EVENT_PRESSED) {
+        return BUTTON_EVENT_PRESSED;
+
+    } else if (event == BUTTON_EVENT_RELEASED) {
         if (count == 1) {
-            if (length > BUTTON_LNGLNGCLICK_DELAY) {
+            if (length >= BUTTON_LNGLNGCLICK_DELAY) {
                 return BUTTON_EVENT_LNGLNGCLICK;
 
-            } else if (length > BUTTON_LNGCLICK_DELAY) {
+            } else if (length >= BUTTON_LNGCLICK_DELAY) {
                 return BUTTON_EVENT_LNGCLICK;
             }
 
@@ -107,47 +110,13 @@ uint8_t _expanderButtonMapEvent(
 
         } else if (count == 3) {
             return BUTTON_EVENT_TRIPLECLICK;
+
+        } else {
+            return BUTTON_EVENT_RELEASED;
         }
     }
 
-    return event;
-}
-
-// -----------------------------------------------------------------------------
-
-uint8_t _expanderButtonMapEventForCommunication(
-    uint8_t event
-) {
-    switch (event)
-    {
-        case BUTTON_EVENT_PRESSED:
-            return COMMUNICATION_BUTTON_EVENT_PRESSED;
-            break;
-
-        case BUTTON_EVENT_CLICK:
-            return COMMUNICATION_BUTTON_EVENT_CLICK;
-            break;
-
-        case BUTTON_EVENT_DBLCLICK:
-            return COMMUNICATION_BUTTON_EVENT_DBLCLICK;
-            break;
-
-        case BUTTON_EVENT_TRIPLECLICK:
-            return COMMUNICATION_BUTTON_EVENT_TRIPLECLICK;
-            break;
-
-        case BUTTON_EVENT_LNGCLICK:
-            return COMMUNICATION_BUTTON_EVENT_LNGCLICK;
-            break;
-
-        case BUTTON_EVENT_LNGLNGCLICK:
-            return COMMUNICATION_BUTTON_EVENT_LNGLNGCLICK;
-            break;
-    
-        default:
-            return COMMUNICATION_BUTTON_EVENT_NONE;
-            break;
-    }
+    return BUTTON_EVENT_NONE;
 }
 
 // -----------------------------------------------------------------------------
@@ -169,10 +138,10 @@ void _expanderButtonEvent(
         DPRINTLN(mapped_event);
     #endif
 
-    uint8_t communication_mapped_event = _expanderButtonMapEventForCommunication(event);
+    uint8_t communication_mapped_event = event;
 
     // Store state into communication register
-    communicationWriteEventInput(_expander_communication_register_address[id], communication_mapped_event);
+    communicationWriteAnalogInput(_expander_communication_register_address[id], communication_mapped_event);
 }
 
 // -----------------------------------------------------------------------------
@@ -201,7 +170,7 @@ void expanderSetup()
         _expander_reset_count[i] = true;
 
         // Reserve address in register
-        _expander_communication_register_address[i] = communicationRegisterEventInput();
+        _expander_communication_register_address[i] = 0;
     }
 
     #if DEBUG_SUPPORT

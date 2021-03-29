@@ -2,37 +2,11 @@
 
 RELAY MODULE
 
-Copyright (C) 2018 FastyBird Ltd. <info@fastybird.com>
+Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 */
 
 #if RELAY_PROVIDER != RELAY_PROVIDER_NONE
-
-#include <Vector.h>
-#include <EEPROM.h>
-
-typedef struct {
-    // Configuration variables
-    uint8_t pin;                // GPIO pin for the relay
-    uint8_t type;               // RELAY_TYPE_NORMAL, RELAY_TYPE_INVERSE, RELAY_TYPE_LATCHED or RELAY_TYPE_LATCHED_INVERSE
-    uint8_t reset_pin;          // GPIO to reset the relay if RELAY_TYPE_LATCHED
-
-    uint8_t register_address;   // Address in communication register to store state
-    uint8_t memory_address;     // Address in flash memory to store state
-
-    unsigned long delay_on;     // Delay to turn relay ON
-    unsigned long delay_off;    // Delay to turn relay OFF
-
-    // Status variables
-    bool current_status;        // Holds the current (physical) status of the relay
-    bool target_status;         // Holds the target status
-    unsigned long fw_start;     // Flood window start time
-    uint8_t fw_count;           // Number of changes within the current flood window
-    unsigned long change_time;  // Scheduled time to change
-
-} relay_t;
-
-Vector<relay_t> _relays;
 
 bool _relayRecursive = false;
 
@@ -42,20 +16,20 @@ bool _relayRecursive = false;
 
 void _relayConfigure()
 {
-    for (uint8_t i = 0; i < relayCount(); i++) {
-        if (_relays[i].pin == GPIO_NONE) {
+    for (uint8_t i = 0; i < RELAY_MAX_ITEMS; i++) {
+        if (relay_module_items[i].pin == GPIO_NONE) {
             continue;
         }
 
-        pinMode(_relays[i].pin, OUTPUT);
+        pinMode(relay_module_items[i].pin, OUTPUT);
 
-        if (_relays[i].reset_pin != GPIO_NONE) {
-            pinMode(_relays[i].reset_pin, OUTPUT);
+        if (relay_module_items[i].reset_pin != GPIO_NONE) {
+            pinMode(relay_module_items[i].reset_pin, OUTPUT);
         }
 
-        if (_relays[i].type == RELAY_TYPE_INVERSE) {
+        if (relay_module_items[i].type == RELAY_TYPE_INVERSE) {
             // Set to high to block short opening of relay
-            digitalWrite(_relays[i].pin, HIGH);
+            digitalWrite(relay_module_items[i].pin, HIGH);
         }
     }
 }
@@ -69,8 +43,8 @@ void _relayBoot()
     // Walk the relays
     bool status;
 
-    for (uint8_t i = 0; i < relayCount(); i++) {
-        uint8_t boot_mode = (bool) EEPROM.read(_relays[i].memory_address);
+    for (uint8_t i = 0; i < RELAY_MAX_ITEMS; i++) {
+        uint8_t boot_mode = (bool) EEPROM.read(relay_module_items[i].memory_address);
 
         #if DEBUG_SUPPORT
             DPRINT(F("[RELAY] Relay #"));
@@ -91,13 +65,13 @@ void _relayBoot()
                 break;
         }
 
-        _relays[i].current_status = !status;
-        _relays[i].target_status = status;
+        relay_module_items[i].current_status = !status;
+        relay_module_items[i].target_status = status;
 
-        _relays[i].change_time = millis();
+        relay_module_items[i].change_time = millis();
 
         // Store state into communication register
-        communicationWriteDigitalOutput(_relays[i].register_address, status);
+        communicationWriteDigitalOutput(relay_module_items[i].register_address, status);
     }
 
     _relayRecursive = false;
@@ -112,44 +86,44 @@ void _relayProviderStatus(
     const bool status
 ) {
     // Check relay ID
-    if (id >= relayCount()) {
+    if (id >= RELAY_MAX_ITEMS) {
         return;
     }
 
     // Store new current status
-    _relays[id].current_status = status;
+    relay_module_items[id].current_status = status;
 
     #if RELAY_PROVIDER == RELAY_PROVIDER_RELAY
         // If this is a light, all dummy relays have already been processed above
         // we reach here if the user has toggled a physical relay
-        if (_relays[id].type == RELAY_TYPE_NORMAL) {
-            digitalWrite(_relays[id].pin, status);
+        if (relay_module_items[id].type == RELAY_TYPE_NORMAL) {
+            digitalWrite(relay_module_items[id].pin, status);
 
-        } else if (_relays[id].type == RELAY_TYPE_INVERSE) {
-            digitalWrite(_relays[id].pin, !status);
+        } else if (relay_module_items[id].type == RELAY_TYPE_INVERSE) {
+            digitalWrite(relay_module_items[id].pin, !status);
 
-        } else if (_relays[id].type == RELAY_TYPE_LATCHED || _relays[id].type == RELAY_TYPE_LATCHED_INVERSE) {
+        } else if (relay_module_items[id].type == RELAY_TYPE_LATCHED || relay_module_items[id].type == RELAY_TYPE_LATCHED_INVERSE) {
             bool pulse = RELAY_TYPE_LATCHED ? HIGH : LOW;
 
-            digitalWrite(_relays[id].pin, !pulse);
+            digitalWrite(relay_module_items[id].pin, !pulse);
 
-            if (_relays[id].reset_pin != GPIO_NONE) {
-                digitalWrite(_relays[id].reset_pin, !pulse);
+            if (relay_module_items[id].reset_pin != GPIO_NONE) {
+                digitalWrite(relay_module_items[id].reset_pin, !pulse);
             }
 
-            if (status || (_relays[id].reset_pin == GPIO_NONE)) {
-                digitalWrite(_relays[id].pin, pulse);
+            if (status || (relay_module_items[id].reset_pin == GPIO_NONE)) {
+                digitalWrite(relay_module_items[id].pin, pulse);
 
             } else {
-                digitalWrite(_relays[id].reset_pin, pulse);
+                digitalWrite(relay_module_items[id].reset_pin, pulse);
             }
 
             niceDelay(RELAY_LATCHING_PULSE);
 
-            digitalWrite(_relays[id].pin, !pulse);
+            digitalWrite(relay_module_items[id].pin, !pulse);
 
-            if (_relays[id].reset_pin != GPIO_NONE) {
-                digitalWrite(_relays[id].reset_pin, !pulse);
+            if (relay_module_items[id].reset_pin != GPIO_NONE) {
+                digitalWrite(relay_module_items[id].reset_pin, !pulse);
             }
         }
     #endif
@@ -167,19 +141,19 @@ void _relayProcess(
 ) {
     unsigned long current_time = millis();
 
-    for (uint8_t id = 0; id < relayCount(); id++) {
+    for (uint8_t id = 0; id < RELAY_MAX_ITEMS; id++) {
         // Only process the relays we have to change
-        if (_relays[id].target_status == _relays[id].current_status) {
+        if (relay_module_items[id].target_status == relay_module_items[id].current_status) {
             continue;
         }
 
         // Only process the relays we have to change to the requested mode
-        if (_relays[id].target_status != mode) {
+        if (relay_module_items[id].target_status != mode) {
             continue;
         }
 
         // Only process if the change_time has arrived
-        if (current_time < _relays[id].change_time) {
+        if (current_time < relay_module_items[id].change_time) {
             continue;
         }
 
@@ -187,14 +161,14 @@ void _relayProcess(
             DPRINT(F("[RELAY] #"));
             DPRINT(id);
             DPRINT(F(" set to "));
-            DPRINTLN(_relays[id].target_status ? F("ON") : F("OFF"));
+            DPRINTLN(relay_module_items[id].target_status ? F("ON") : F("OFF"));
         #endif
 
         // Call the provider to perform the action
-        _relayProviderStatus(id, _relays[id].target_status);
+        _relayProviderStatus(id, relay_module_items[id].target_status);
 
         // Store state into communication register
-        communicationWriteDigitalOutput(_relays[id].register_address, _relays[id].target_status);
+        communicationWriteDigitalOutput(relay_module_items[id].register_address, relay_module_items[id].target_status);
     }
 }
 
@@ -202,23 +176,16 @@ void _relayProcess(
 // MODULE API
 // -----------------------------------------------------------------------------
 
-uint8_t relayCount()
-{
-    return _relays.size();
-}
-
-// -----------------------------------------------------------------------------
-
 bool relayStatus(
     const uint8_t id
 ) {
     // Check relay ID
-    if (id >= relayCount()) {
+    if (id >= RELAY_MAX_ITEMS) {
         return false;
     }
 
     // Get status from storage
-    return _relays[id].current_status;
+    return relay_module_items[id].current_status;
 }
 
 // -----------------------------------------------------------------------------
@@ -227,49 +194,49 @@ bool relayStatus(
     const uint8_t id,
     const bool status
 ) {
-    if (id >= relayCount()) {
+    if (id >= RELAY_MAX_ITEMS) {
         return false;
     }
 
     bool changed = false;
 
-    if (_relays[id].current_status == status) {
-        if (_relays[id].target_status != status) {
+    if (relay_module_items[id].current_status == status) {
+        if (relay_module_items[id].target_status != status) {
             #if DEBUG_SUPPORT
                 DPRINT(F("[RELAY] #"));
                 DPRINT(id);
                 DPRINT(F(" scheduled change cancelled\n"));
             #endif
 
-            _relays[id].target_status = status;
+            relay_module_items[id].target_status = status;
 
             changed = true;
         }
 
     } else {
         unsigned long current_time = millis();
-        unsigned long fw_end = _relays[id].fw_start + 1000 * RELAY_FLOOD_WINDOW;
-        unsigned long delay = status ? _relays[id].delay_on : _relays[id].delay_off;
+        unsigned long fw_end = relay_module_items[id].fw_start + 1000 * RELAY_FLOOD_WINDOW;
+        unsigned long delay = status ? relay_module_items[id].delay_on : relay_module_items[id].delay_off;
 
-        _relays[id].fw_count++;
-        _relays[id].change_time = current_time + delay;
+        relay_module_items[id].fw_count++;
+        relay_module_items[id].change_time = current_time + delay;
 
         // If current_time is off-limits the floodWindow...
-        if (current_time < _relays[id].fw_start || fw_end <= current_time) {
+        if (current_time < relay_module_items[id].fw_start || fw_end <= current_time) {
             // We reset the floodWindow
-            _relays[id].fw_start = current_time;
-            _relays[id].fw_count = 1;
+            relay_module_items[id].fw_start = current_time;
+            relay_module_items[id].fw_count = 1;
 
         // If current_time is in the floodWindow and there have been too many requests...
-        } else if (_relays[id].fw_count >= RELAY_FLOOD_CHANGES) {
+        } else if (relay_module_items[id].fw_count >= RELAY_FLOOD_CHANGES) {
             // We schedule the changes to the end of the floodWindow
             // unless it's already delayed beyond that point
             if (fw_end - delay > current_time) {
-                _relays[id].change_time = fw_end;
+                relay_module_items[id].change_time = fw_end;
             }
         }
 
-        _relays[id].target_status = status;
+        relay_module_items[id].target_status = status;
 
         relaySync(id);
 
@@ -279,13 +246,13 @@ bool relayStatus(
             DPRINT(F(" scheduled "));
             DPRINT(status ? F("ON") : F("OFF"));
             DPRINT(F(" in "));
-            DPRINT(_relays[id].change_time - current_time);
+            DPRINT(relay_module_items[id].change_time - current_time);
             DPRINT(F(" ms\n"));
         #endif
 
         changed = true;
 
-        EEPROM.update(_relays[id].memory_address, status);
+        EEPROM.update(relay_module_items[id].memory_address, status);
     }
 
     return changed;
@@ -296,7 +263,7 @@ bool relayStatus(
 void relayToggle(
     const uint8_t id
 ) {
-    if (id >= relayCount()) {
+    if (id >= RELAY_MAX_ITEMS) {
         return;
     }
 
@@ -309,7 +276,7 @@ void relaySync(
     const uint8_t id
 ) {
     // No sync if none or only one relay
-    if (relayCount() < 2) {
+    if (RELAY_MAX_ITEMS < 2) {
         return;
     }
 
@@ -322,11 +289,11 @@ void relaySync(
     _relayRecursive = true;
 
     uint8_t relaySync = RELAY_SYNC;
-    bool status = _relays[id].target_status;
+    bool status = relay_module_items[id].target_status;
 
     // If RELAY_SYNC_SAME all relays should have the same state
     if (relaySync == RELAY_SYNC_SAME) {
-        for (uint8_t i = 0; i < relayCount(); i++) {
+        for (uint8_t i = 0; i < RELAY_MAX_ITEMS; i++) {
             if (i != id) {
                 relayStatus(i, status);
             }
@@ -335,7 +302,7 @@ void relaySync(
     // If NONE_OR_ONE or ONE and setting ON we should set OFF all the others
     } else if (status) {
         if (relaySync != RELAY_SYNC_ANY) {
-            for (uint8_t i = 0; i < relayCount(); i++) {
+            for (uint8_t i = 0; i < RELAY_MAX_ITEMS; i++) {
                 if (i != id) {
                     relayStatus(i, false);
                 }
@@ -345,7 +312,7 @@ void relaySync(
     // If ONLY_ONE and setting OFF we should set ON the other one
     } else {
         if (relaySync == RELAY_SYNC_ONE) {
-            uint8_t i = (id + 1) % relayCount();
+            uint8_t i = (id + 1) % RELAY_MAX_ITEMS;
             relayStatus(i, true);
         }
     }
@@ -360,50 +327,6 @@ void relaySync(
 
 void relaySetup()
 {
-    uint8_t register_address;
-
-    // Ad-hoc relays
-    #if RELAY1_PIN != GPIO_NONE
-        register_address = communicationRegisterDigitalOutput();
-
-        _relays.push_back((relay_t) { RELAY1_PIN, RELAY1_TYPE, RELAY1_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_01, RELAY1_DELAY_ON, RELAY1_DELAY_OFF });
-    #endif
-    #if RELAY2_PIN != GPIO_NONE
-        register_address = communicationRegisterDigitalOutput();
-
-        _relays.push_back((relay_t) { RELAY2_PIN, RELAY2_TYPE, RELAY2_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_02, RELAY2_DELAY_ON, RELAY2_DELAY_OFF });
-    #endif
-    #if RELAY3_PIN != GPIO_NONE
-        register_address = communicationRegisterDigitalOutput();
-
-        _relays.push_back((relay_t) { RELAY3_PIN, RELAY3_TYPE, RELAY3_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_03, RELAY3_DELAY_ON, RELAY3_DELAY_OFF });
-    #endif
-    #if RELAY4_PIN != GPIO_NONE
-        register_address = communicationRegisterDigitalOutput();
-
-        _relays.push_back((relay_t) { RELAY4_PIN, RELAY4_TYPE, RELAY4_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_04, RELAY4_DELAY_ON, RELAY4_DELAY_OFF });
-    #endif
-    #if RELAY5_PIN != GPIO_NONE
-        register_address = communicationRegisterDigitalOutput();
-
-        _relays.push_back((relay_t) { RELAY5_PIN, RELAY5_TYPE, RELAY5_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_05, RELAY5_DELAY_ON, RELAY5_DELAY_OFF });
-    #endif
-    #if RELAY6_PIN != GPIO_NONE
-        register_address = communicationRegisterDigitalOutput();
-
-        _relays.push_back((relay_t) { RELAY6_PIN, RELAY6_TYPE, RELAY6_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_06, RELAY6_DELAY_ON, RELAY6_DELAY_OFF });
-    #endif
-    #if RELAY7_PIN != GPIO_NONE
-        register_address = communicationRegisterDigitalOutput();
-
-        _relays.push_back((relay_t) { RELAY7_PIN, RELAY7_TYPE, RELAY7_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_07, RELAY7_DELAY_ON, RELAY7_DELAY_OFF });
-    #endif
-    #if RELAY8_PIN != GPIO_NONE
-        register_address = communicationRegisterDigitalOutput();
-
-        _relays.push_back((relay_t) { RELAY8_PIN, RELAY8_TYPE, RELAY8_RESET_PIN, register_address, FLASH_ADDRESS_RELAY_08, RELAY8_DELAY_ON, RELAY8_DELAY_OFF });
-    #endif
-
     _relayConfigure();
     _relayBoot();
 
@@ -411,7 +334,7 @@ void relaySetup()
 
     #if DEBUG_SUPPORT
         DPRINT(F("[RELAY] Number of relays: "));
-        DPRINTLN(relayCount());
+        DPRINTLN(RELAY_MAX_ITEMS);
     #endif
 }
 
@@ -419,9 +342,14 @@ void relaySetup()
 
 void relayLoop()
 {
-    for (uint8_t i = 0; i < relayCount(); i++) {
-        if (communicationReadDigitalOutput(_relays[i].register_address) != relayStatus(i)) {
-            relayStatus(i, communicationReadDigitalOutput(_relays[i].register_address));
+    // Process request only if device is in running mode
+    if (firmwareIsRunning()) {
+        for (uint8_t i = 0; i < RELAY_MAX_ITEMS; i++) {
+            bool register_value = communicationReadDigitalOutput(relay_module_items[i].register_address);
+
+            if (register_value != relayStatus(i)) {
+                relayStatus(i, register_value);
+            }
         }
     }
 
