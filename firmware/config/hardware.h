@@ -31,8 +31,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
     #define BUTTON1_PIN                                 4
     #define BUTTON2_PIN                                 5
-    #define BUTTON3_PIN                                 7
-    #define BUTTON4_PIN                                 8
+    #define BUTTON3_PIN                                 6
+    #define BUTTON4_PIN                                 7
 
     button_t button_module_items[BUTTON_MAX_ITEMS] = {
         // Debounce instance                                                                                                  AI register address
@@ -70,8 +70,6 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     
     #define COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE      0
     #define COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE   4
-
-    #define COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS     4
 
     communication_digital_register_t communication_module_di_registers[COMMUNICATION_MAX_DI_REGISTER_SIZE];
     communication_digital_register_t communication_module_do_registers[COMMUNICATION_MAX_DO_REGISTER_SIZE] = {
@@ -128,8 +126,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
     #define BUTTON1_PIN                                 4
     #define BUTTON2_PIN                                 5
-    #define BUTTON3_PIN                                 7
-    #define BUTTON4_PIN                                 8
+    #define BUTTON3_PIN                                 6
+    #define BUTTON4_PIN                                 7
 
     button_t button_module_items[BUTTON_MAX_ITEMS] = {
         // Debounce instance                                                                                                  AI register address

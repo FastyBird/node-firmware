@@ -11,11 +11,11 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 // =============================================================================
 
 #ifndef DEBUG_SUPPORT
-#define DEBUG_SUPPORT                               0               // Enable serial debug log
+#define DEBUG_SUPPORT                               1               // Enable serial debug log
 #endif
 
 #ifndef DEBUG_COMMUNICATION_SUPPORT
-#define DEBUG_COMMUNICATION_SUPPORT                 0               // Enable communication serial debug log
+#define DEBUG_COMMUNICATION_SUPPORT                 1               // Enable communication serial debug log
 #endif
 
 #ifndef SERIAL_BAUDRATE
