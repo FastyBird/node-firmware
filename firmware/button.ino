@@ -115,6 +115,10 @@ void _buttonEvent(
                     }
 
                     communicationEnablePairingMode();
+
+                    if (firmwareGetDeviceState() != DEVICE_STATE_RUNNING) {
+                        firmwareSetDeviceState(DEVICE_STATE_RUNNING);
+                    }
                     break;
 
                 case BUTTON_EVENT_LNGLNGCLICK:

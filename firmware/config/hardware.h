@@ -29,10 +29,10 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     // Buttons
     #define BUTTON_MAX_ITEMS                            4
 
-    #define BUTTON1_PIN                                 4
-    #define BUTTON2_PIN                                 5
-    #define BUTTON3_PIN                                 6
-    #define BUTTON4_PIN                                 7
+    #define BUTTON1_PIN                                 6
+    #define BUTTON2_PIN                                 7
+    #define BUTTON3_PIN                                 8
+    #define BUTTON4_PIN                                 9
 
     button_t button_module_items[BUTTON_MAX_ITEMS] = {
         // Debounce instance                                                                                                  AI register address

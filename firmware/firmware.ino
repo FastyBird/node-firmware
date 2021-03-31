@@ -129,6 +129,10 @@ void setup()
     #endif
 
     ledSetup();
+
+    #if SYSTEM_DEVICE_STATE_LED != INDEX_NONE
+        _firmwareUpdateLedState();
+    #endif
 }
 
 // -----------------------------------------------------------------------------
