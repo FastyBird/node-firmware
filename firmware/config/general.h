@@ -97,12 +97,16 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define COMMUNICATION_MAX_AO_REGISTER_SIZE          0               // Define maximum size of AO registers
 #endif
 
-#ifndef COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE
-#define COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE      0               // Define maximum size of AO registers
+#ifndef COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE
+#define COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE      0               // Define maximum size of device settings
 #endif
 
-#ifndef COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE
-#define COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE   0               // Define maximum size of settings registers
+#ifndef COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE
+#define COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE    0               // Define maximum size of device attributes
+#endif
+
+#ifndef COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE
+#define COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE   0               // Define maximum size of registers settings
 #endif
 
 #ifndef COMMUNICATION_NOTIFY_STATE_DELAY

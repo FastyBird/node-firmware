@@ -6,12 +6,11 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 */
 
-#include "version.h"
+#include "firmware.h"
 #include "types.h"
 #include "prototypes.h"
 #include "hardware.h"
 #include "general.h"
-#include "progmem.h"
 #include "dependencies.h"
 
 #if DEBUG_SUPPORT
@@ -20,8 +19,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #endif
 
 // =============================================================================
-// NODE GLOBAL DESCRIPTION
+// DEVICE GLOBAL DESCRIPTION
 // =============================================================================
 
 #define DEVICE_SERIAL_NO     "0124004A"   // Serial number generated during compilation process
-#define DEVICE_VERSION       "0.0.1"      // Hardware version (PCB revision)
+#define DEVICE_VERSION       "0.0.1"      // Hardware revision

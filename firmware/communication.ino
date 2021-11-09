@@ -42,57 +42,6 @@ char _communication_output_buffer[PJON_PACKET_MAX_LENGTH];
 // MODULE PRIVATE
 // -----------------------------------------------------------------------------
 
-#if DEBUG_COMMUNICATION_SUPPORT
-bool _communicationIsPacketInGroup(
-    const uint8_t packetId
-) {
-    for (uint8_t i = 0; i < COMMUNICATION_PACKET_MAX; i++) {
-        if ((uint8_t) pgm_read_byte(communication_packets[i]) == packetId) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-// -----------------------------------------------------------------------------
-
-uint8_t _communicationGetPacketIndexInGroup(
-    const uint8_t packetId
-) {
-    for (uint8_t i = 0; i < COMMUNICATION_PACKET_MAX; i++) {
-        if ((uint8_t) pgm_read_byte(communication_packets[i]) == packetId) {
-            return i;
-        }
-    }
-
-    return 0;
-}
-
-// -----------------------------------------------------------------------------
-
-void _communicationDebugLogPacket(
-    const uint8_t packetId
-) {
-    DPRINT(packetId);
-    DPRINT(F(" => ("));
-
-    char buffer[80];
-
-    if (_communicationIsPacketInGroup(packetId)) {
-        strcpy_P(buffer, (char *) pgm_read_word(&communication_packets_string[_communicationGetPacketIndexInGroup(packetId)]));
-
-    } else {
-        strncpy_P(buffer, "unknown", sizeof(buffer));
-    }
-
-    DPRINT(buffer);
-    DPRINTLN(F(")"));
-}
-#endif
-
-// -----------------------------------------------------------------------------
-
 void _communicationReplyWithException(
     uint8_t * payload
 ) {
@@ -121,25 +70,37 @@ void _communicationReplyWithException(
 
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE
+#if COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE
 /**
  * Get device settings buffer size
-    */
+ */
 uint8_t _communicationGetDeviceSettingsBufferSize()
 {
-    return COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE;
+    return COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE;
 }
 #endif
 
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE
+#if COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE
+/**
+ * Get device attributes buffer size
+ */
+uint8_t _communicationGetDeviceAttributesBufferSize()
+{
+    return COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE;
+}
+#endif
+
+// -----------------------------------------------------------------------------
+
+#if COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE
 /**
  * Get registers settings buffer size
-    */
+ */
 uint8_t _communicationGetRegistersSettingsBufferSize()
 {
-    return COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE;
+    return COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE;
 }
 #endif
 
@@ -148,7 +109,7 @@ uint8_t _communicationGetRegistersSettingsBufferSize()
 #if COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_DI_REGISTER_SIZE
 /**
  * Get DI or DO buffer size
-    */
+ */
 uint8_t _communicationGetDigitalBufferSize(
     const bool output
 ) {
@@ -165,7 +126,7 @@ uint8_t _communicationGetDigitalBufferSize(
 #if COMMUNICATION_MAX_AO_REGISTER_SIZE || COMMUNICATION_MAX_AI_REGISTER_SIZE
 /**
  * Get AI or AO buffer size
-    */
+ */
 uint8_t _communicationGetAnalogBufferSize(
     const bool output
 ) {
@@ -184,7 +145,7 @@ uint8_t _communicationGetAnalogBufferSize(
 #if COMMUNICATION_MAX_AO_REGISTER_SIZE || COMMUNICATION_MAX_AI_REGISTER_SIZE
 /**
  * Read value from analog register & transform it to 4 bytes
-    */
+ */
 void _communicationReadAnalogForTransfer(
     const bool output,
     const uint8_t dataType,
@@ -326,7 +287,7 @@ void _communicationReadAnalogForTransfer(
 #if COMMUNICATION_MAX_AO_REGISTER_SIZE
 /**
  * Transform received 4 bytes value into register value
-    */
+ */
 void _communicationWriteAnalogFromTransfer(
     const uint8_t dataType,
     const uint8_t address,
@@ -708,15 +669,15 @@ void _communicationWriteMultipleAnalogRegisters(
 #if COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE
 /**
  * Parse received payload - Requesting writing multiple registers
-    *
-    * 0    => Received packet identifier       => COMMUNICATION_PACKET_WRITE_MULTIPLE_REGISTERS
-    * 1    => Register type
-    * 2    => High byte of register address
-    * 3    => Low byte of register address
-    * 4    => High byte of registers length
-    * 5    => Low byte of registers length
-    * 6-n  => Data to write into registers
-    */
+ *
+ * 0    => Received packet identifier       => COMMUNICATION_PACKET_WRITE_MULTIPLE_REGISTERS
+ * 1    => Register type
+ * 2    => High byte of register address
+ * 3    => Low byte of register address
+ * 4    => High byte of registers length
+ * 5    => Low byte of registers length
+ * 6-n  => Data to write into registers
+ */
 void _communicationWriteMultipleOutputRegistersHandler(
     uint8_t * payload
 ) {
@@ -991,7 +952,7 @@ void _communicationReplyMultipleDigitalRegister(
         // 1    => Register type
         // 2    => High byte of register address
         // 3    => Low byte of register address
-        // 4    => Count of data bytes
+        // 4    => Count of registers
         // 5-n  => Packet data
         _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_READ_MULTIPLE_REGISTERS;
         _communication_output_buffer[1] = (char) output ? COMMUNICATION_REGISTER_TYPE_DO : COMMUNICATION_REGISTER_TYPE_DI;
@@ -1001,8 +962,9 @@ void _communicationReplyMultipleDigitalRegister(
 
         uint8_t byte_pointer = 5;
         uint8_t bit_counter = 0;
-        uint8_t byte_counter = 0;
+        uint8_t byte_counter = 5;
         uint8_t write_byte = 0;
+        uint8_t registers_counter = 0;
 
         bool byte_buffer[8];
 
@@ -1048,6 +1010,8 @@ void _communicationReplyMultipleDigitalRegister(
                     byte_buffer[j] = 0;
                 }
             }
+
+            registers_counter++;
         }
 
         if (readLength % 8 != 0) {
@@ -1065,12 +1029,12 @@ void _communicationReplyMultipleDigitalRegister(
             byte_pointer++;
         }
 
-        // Update data bytes length
-        _communication_output_buffer[4] = (char) byte_counter;
+        // Update data registers length
+        _communication_output_buffer[4] = (char) registers_counter;
 
         #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to master
-            if (_communicationReplyToPacket(_communication_output_buffer, (byte_counter + 5)) == false) {
+            if (_communicationReplyToPacket(_communication_output_buffer, byte_counter) == false) {
                 DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive multiple digital registers reading"));
 
             } else {
@@ -1078,7 +1042,7 @@ void _communicationReplyMultipleDigitalRegister(
             }
         #else
             // Reply to master
-            _communicationReplyToPacket(_communication_output_buffer, (byte_counter + 5));
+            _communicationReplyToPacket(_communication_output_buffer, byte_counter);
         #endif
 
     } else {
@@ -1124,7 +1088,7 @@ void _communicationReplyMultipleAnalogRegister(
         // 0    => Packet identifier
         // 1    => High byte of register address
         // 2    => Low byte of register address
-        // 3    => Count of data bytes
+        // 3    => Count of registers
         // 4-n  => Packet data
         _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_READ_MULTIPLE_REGISTERS;
         _communication_output_buffer[1] = (char) output ? COMMUNICATION_REGISTER_TYPE_AO : COMMUNICATION_REGISTER_TYPE_AI;
@@ -1132,8 +1096,9 @@ void _communicationReplyMultipleAnalogRegister(
         _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
         _communication_output_buffer[4] = (char) 0; // Temporary value, will be updated after collecting all
 
-        uint8_t byte_counter = 0;
+        uint8_t byte_counter = 5;
         uint8_t byte_pointer = 5;
+        uint8_t registers_counter = 0;
 
         char read_value[4] = { 0, 0, 0, 0 };
 
@@ -1160,14 +1125,16 @@ void _communicationReplyMultipleAnalogRegister(
             byte_pointer++;
 
             byte_counter = byte_counter + 4;
+
+            registers_counter++;
         }
 
-        // Update data bytes length
-        _communication_output_buffer[4] = (char) byte_counter;
+        // Update registers length
+        _communication_output_buffer[4] = (char) registers_counter;
 
         #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to master
-            if (_communicationReplyToPacket(_communication_output_buffer, (byte_counter + 5)) == false) {
+            if (_communicationReplyToPacket(_communication_output_buffer, byte_counter) == false) {
                 DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive multiple analog registers reading"));
 
             } else {
@@ -1175,7 +1142,7 @@ void _communicationReplyMultipleAnalogRegister(
             }
         #else
             // Reply to master
-            _communicationReplyToPacket(_communication_output_buffer, (byte_counter + 5));
+            _communicationReplyToPacket(_communication_output_buffer, byte_counter);
         #endif
 
     } else {
@@ -1434,13 +1401,13 @@ void _communicationReadSingleRegisterHandler(
                 break;
         #endif
 
-        #if COMMUNICATION_MAX_AO_REGISTER_SIZE
+        #if COMMUNICATION_MAX_AI_REGISTER_SIZE
             case COMMUNICATION_REGISTER_TYPE_AI:
                 _communicationReplySingleAnalogRegister(payload, register_address, false);
                 break;
         #endif
 
-        #if COMMUNICATION_MAX_AI_REGISTER_SIZE
+        #if COMMUNICATION_MAX_AO_REGISTER_SIZE
             case COMMUNICATION_REGISTER_TYPE_AO:
                 _communicationReplySingleAnalogRegister(payload, register_address, true);
                 break;
@@ -1461,73 +1428,33 @@ void _communicationReadSingleRegisterHandler(
 // -----------------------------------------------------------------------------
 
 /**
- * Parse received payload - Requesting address info
- * 
- * 0 => Received packet identifier  => COMMUNICATION_PACKET_PAIR_DEVICE
- * 1 => Pairing command             => COMMUNICATION_PAIRING_CMD_PROVIDE_ADDRESS
- */
-void _communicationPairDeviceProvideAddress(
-    uint8_t * payload
-) {
-    memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
-
-    // 0    => Packet identifier
-    // 1    => Command response content type
-    // 2    => Device current bus address
-    // 3-n  => Device parsed SN
-    _communication_output_buffer[0] = (uint8_t) COMMUNICATION_PACKET_PAIR_DEVICE;
-    _communication_output_buffer[1] = (uint8_t) COMMUNICATION_PAIRING_RESPONSE_DEVICE_ADDRESS;
-    _communication_output_buffer[2] = _communication_bus.device_id();
-
-    uint8_t byte_pointer = 3;
-    uint8_t byte_counter = 0;
-
-    for (uint8_t i = 0; i < strlen((char *) DEVICE_SERIAL_NO); i++) {
-        _communication_output_buffer[byte_pointer] = ((char *) DEVICE_SERIAL_NO)[i];
-
-        byte_pointer++;
-        byte_counter++;
-    }
-
-    #if DEBUG_COMMUNICATION_SUPPORT
-        // Reply to master
-        if (_communicationReplyToPacket(_communication_output_buffer, (byte_counter + 3)) == false) {
-            DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive device actual address"));
-
-        } else {
-            DPRINTLN(F("[COMMUNICATION] Replied to master with device actual address"));
-        }
-    #else
-        // Reply to master
-        _communicationReplyToPacket(_communication_output_buffer, (byte_counter + 3));
-    #endif
-}
-
-// -----------------------------------------------------------------------------
-
-/**
  * Parse received payload - Confirming address
  * 
  * 0    => Received packet identifier       => COMMUNICATION_PACKET_PAIR_DEVICE
- * 1    => Pairing command                  => COMMUNICATION_PAIRING_CMD_SET_ADDRESS
- * 2    => Master assigned address
- * 3-n  => Device SN
+ * 1    => Pairing command                  => COMMUNICATION_PAIRING_CMD_WRITE_ADDRESS
+ * 2    => Master assigned address          => 1-254
+ * 3    => Device SN length                 => 1-255
+ * 4-n  => Device SN                        => (a,b,c,...)
  */
-void _communicationPairDeviceSetAddress(
-    uint8_t * payload
+void _communicationPairDeviceWriteAddress(
+    uint8_t * payload,
+    uint16_t length
 ) {
     // Extract address assigned by master
     const uint8_t address = (uint8_t) payload[2];
 
-    uint8_t device_sn_length = (uint8_t) sizeof(payload) - 3;
+    uint8_t device_sn_length = (uint8_t) payload[3];
+
+    // TODO: Validate packet lenght
 
     // Initialize serial number buffer
     char device_sn[device_sn_length];
     memset(device_sn, 0, device_sn_length);
 
     // Extract serial number from payload
-    for (uint8_t i = 0; i <= (uint8_t) payload[3]; i++) {
+    for (uint8_t i = 0; i < device_sn_length; i++) {
         device_sn[i] = (char) payload[i + 4];
+        device_sn[i + 1] = 0x00; // Add a NULL after each character
     }
 
     // Check if received packet is for this device
@@ -1549,11 +1476,12 @@ void _communicationPairDeviceSetAddress(
     // 0    => Packet identifier
     // 1    => Command response content type
     // 2-n  => Device SN
-    _communication_output_buffer[0] = (uint8_t) COMMUNICATION_PACKET_PAIR_DEVICE;
-    _communication_output_buffer[1] = (uint8_t) COMMUNICATION_PAIRING_RESPONSE_ADDRESS_ACCEPTED;
+    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
+    _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_WRITE_ADDRESS;
+    _communication_output_buffer[2] = strlen((char *) DEVICE_SERIAL_NO);
 
-    uint8_t byte_pointer = 2;
-    uint8_t byte_counter = 0;
+    uint8_t byte_pointer = 3;
+    uint8_t byte_counter = 3;
 
     for (uint8_t i = 0; i < strlen((char *) DEVICE_SERIAL_NO); i++) {
         _communication_output_buffer[byte_pointer] = ((char *) DEVICE_SERIAL_NO)[i];
@@ -1563,7 +1491,7 @@ void _communicationPairDeviceSetAddress(
     }
 
     // Reply to master
-    if (_communicationReplyToPacket(_communication_output_buffer, (byte_counter + 2)) == true) {
+    if (_communicationReplyToPacket(_communication_output_buffer, byte_counter) == true) {
         // Set device address to address received from master
         _communication_bus.set_id(address);
 
@@ -1595,49 +1523,40 @@ void _communicationPairDeviceSetAddress(
  * Parse received payload - Requesting about device info
  * 
  * 0 => Received packet identifier  => COMMUNICATION_PACKET_PAIR_DEVICE
- * 1 => Pairing command             => COMMUNICATION_PAIRING_CMD_PROVIDE_ABOUT_INFO
+ * 1 => Pairing command             => COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_INFO
  */
-void _communicationPairDeviceProvideAboutInfo(
-    uint8_t * payload
+void _communicationPairDeviceProvideDeviceInfo(
+    uint8_t * payload,
+    uint16_t length
 ) {
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
     // 0  => Packet identifier
     // 1  => Command response content type
-    // 2  => High byte of max packet length
-    // 3  => Low byte of max packet length
-    // 4  => High byte of Device description support
-    // 5  => Low byte of Device description support
-    // 6  => High byte of Device configuration support
-    // 7  => Low byte of Device configuration support
-    // 8  => Supported key length
-    // 9  => High byte of PubSub - PUB support
-    // 10 => Low byte of PubSub - PUB support
-    // 11 => High byte of PubSub - SUB support
-    // 12 => Low byte of PubSub - SUB support
-    // 13 => Maximum supported subscriptions count
-    // 14 => Maximum supported conditions count per subscriptions
-    // 15 => Maximum supported actions count per subscriptions
-    _communication_output_buffer[0] = (uint8_t) COMMUNICATION_PACKET_PAIR_DEVICE;
-    _communication_output_buffer[1] = (uint8_t) COMMUNICATION_PAIRING_RESPONSE_ABOUT_INFO;
-    _communication_output_buffer[2] = (char) (PJON_PACKET_MAX_LENGTH >> 8);
-    _communication_output_buffer[3] = (char) (PJON_PACKET_MAX_LENGTH & 0xFF);
-    _communication_output_buffer[4] = (char) ((COMMUNICATION_DESCRIPTION_SUPPORT ? 0xFF00 : 0x0000) >> 8);
-    _communication_output_buffer[5] = (char) ((COMMUNICATION_DESCRIPTION_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
-    _communication_output_buffer[6] = (char) ((COMMUNICATION_SETTINGS_SUPPORT ? 0xFF00 : 0x0000) >> 8);
-    _communication_output_buffer[7] = (char) ((COMMUNICATION_SETTINGS_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
-    _communication_output_buffer[8] = (char) COMMUNICATION_REGISTER_KEY_LENGTH;
-    _communication_output_buffer[9] = (char) ((COMMUNICATION_PUB_SUB_PUB_SUPPORT ? 0xFF00 : 0x0000) >> 8);
-    _communication_output_buffer[10] = (char) ((COMMUNICATION_PUB_SUB_PUB_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
-    _communication_output_buffer[11] = (char) ((COMMUNICATION_PUB_SUB_SUB_SUPPORT ? 0xFF00 : 0x0000) >> 8);
-    _communication_output_buffer[12] = (char) ((COMMUNICATION_PUB_SUB_SUB_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
-    _communication_output_buffer[13] = (char) COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS : 0;
-    _communication_output_buffer[14] = (char) COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_PUB_SUB_MAX_CONDITIONS : 0;
-    _communication_output_buffer[15] = (char) COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_PUB_SUB_MAX_ACTIONS : 0;
+    // 2  => Max packet length
+    // 3  => Max key length
+    // 4  => High byte of PubSub - PUB support
+    // 5  => Low byte of PubSub - PUB support
+    // 6  => High byte of PubSub - SUB support
+    // 7  => Low byte of PubSub - SUB support
+    // 8  => Maximum supported subscriptions count
+    // 9  => Maximum supported conditions count per subscriptions
+    // 10 => Maximum supported actions count per subscriptions
+    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
+    _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_PROVIDE_DEVICE_INFO;
+    _communication_output_buffer[2] = (char) PJON_PACKET_MAX_LENGTH;
+    _communication_output_buffer[3] = (char) COMMUNICATION_REGISTER_KEY_LENGTH;
+    _communication_output_buffer[4] = (char) ((COMMUNICATION_PUB_SUB_PUB_SUPPORT ? 0xFF00 : 0x0000) >> 8);
+    _communication_output_buffer[5] = (char) ((COMMUNICATION_PUB_SUB_PUB_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
+    _communication_output_buffer[6] = (char) ((COMMUNICATION_PUB_SUB_SUB_SUPPORT ? 0xFF00 : 0x0000) >> 8);
+    _communication_output_buffer[7] = (char) ((COMMUNICATION_PUB_SUB_SUB_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
+    _communication_output_buffer[8] = (char) COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS : 0;
+    _communication_output_buffer[9] = (char) COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_PUB_SUB_MAX_CONDITIONS : 0;
+    _communication_output_buffer[10] = (char) COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_PUB_SUB_MAX_ACTIONS : 0;
 
     #if DEBUG_COMMUNICATION_SUPPORT
         // Reply to master
-        if (_communicationReplyToPacket(_communication_output_buffer, 16) == false) {
+        if (_communicationReplyToPacket(_communication_output_buffer, 11) == false) {
             DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive maximum packet size"));
 
         } else {
@@ -1645,7 +1564,7 @@ void _communicationPairDeviceProvideAboutInfo(
         }
     #else
         // Reply to master
-        _communicationReplyToPacket(_communication_output_buffer, 16);
+        _communicationReplyToPacket(_communication_output_buffer, 11);
     #endif
 }
 
@@ -1655,64 +1574,66 @@ void _communicationPairDeviceProvideAboutInfo(
  * Parse received payload - Device description
  * 
  * 0 => Received packet identifier  => COMMUNICATION_PACKET_PAIR_DEVICE
- * 1 => Pairing command             => COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_MODEL | COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_MANUFACTURER | COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_VERSION | COMMUNICATION_PAIRING_CMD_PROVIDE_FIRMWARE_MANUFACTURER | COMMUNICATION_PAIRING_CMD_PROVIDE_FIRMWARE_VERSION
+ * 1 => Pairing command             => COMMUNICATION_PAIRING_CMD_PROVIDE_DESCRIPTION
+ * 2 => Description type            => COMMUNICATION_DESCRIPTION_DEVICE_MODEL | COMMUNICATION_DESCRIPTION_DEVICE_HW_MANUFACTURER | COMMUNICATION_DESCRIPTION_DEVICE_HW_REVISION | COMMUNICATION_DESCRIPTION_DEVICE_FW_MANUFACTURER | COMMUNICATION_DESCRIPTION_DEVICE_FW_VERSION
  */
-void _communicationPairDeviceReportDescription(
+void _communicationPairDeviceProvideDescription(
     uint8_t * payload,
-    const uint8_t commandType,
-    const char * descriptionContent
+    uint16_t length
 ) {
+    uint8_t description_type = (uint8_t) payload[2];
+
+    char * description_content;
+
+    if (description_type == COMMUNICATION_DESCRIPTION_DEVICE_MODEL) {
+        description_content = (char *) DEVICE_NAME;
+
+    } else if (description_type == COMMUNICATION_DESCRIPTION_DEVICE_HW_MANUFACTURER) {
+        description_content = (char *) DEVICE_MANUFACTURER;
+
+    } else if (description_type == COMMUNICATION_DESCRIPTION_DEVICE_HW_REVISION) {
+        description_content = (char *) DEVICE_VERSION;
+
+    } else if (description_type == COMMUNICATION_DESCRIPTION_DEVICE_FW_MANUFACTURER) {
+        description_content = (char *) FIRMWARE_MANUFACTURER;
+
+    } else if (description_type == COMMUNICATION_DESCRIPTION_DEVICE_FW_VERSION) {
+        description_content = (char *) FIRMWARE_VERSION;
+
+    } else {
+        #if DEBUG_COMMUNICATION_SUPPORT
+            DPRINTLN(F("[COMMUNICATION][ERR] Requested description type is not supported"));
+        #endif
+
+        _communicationReplyWithException(payload);
+
+        return;
+    }
+
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
     // 0    => Packet identifier
     // 1    => Command response content type
-    // 2-n  => String content
+    // 2    => Description type
+    // 3-n  => Description content
     _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
-    _communication_output_buffer[1] = (char) 0; // Temporary value, will be updated after
+    _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_PROVIDE_DESCRIPTION;
+    _communication_output_buffer[2] = (char) description_type;
+    _communication_output_buffer[3] = strlen(description_content);
 
-    uint8_t byte_pointer = 2;
-    uint8_t byte_counter = 0;
+    uint8_t byte_pointer = 4;
+    uint8_t byte_counter = 4;
 
-    for (uint8_t i = 0; i < strlen(descriptionContent); i++) {
-        _communication_output_buffer[byte_pointer] = descriptionContent[i];
+    for (uint8_t i = 0; i < strlen(description_content); i++) {
+        _communication_output_buffer[byte_pointer] = description_content[i];
 
         byte_pointer++;
         byte_counter++;
     }
 
-    switch (commandType)
-    {
-
-        case COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_MODEL:
-            _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_DEVICE_MODEL;
-            break;
-
-        case COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_MANUFACTURER:
-            _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_DEVICE_MANUFACTURER;
-            break;
-
-        case COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_VERSION:
-            _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_DEVICE_VERSION;
-            break;
-
-        case COMMUNICATION_PAIRING_CMD_PROVIDE_FIRMWARE_MANUFACTURER:
-            _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_FIRMWARE_MANUFACTURER;
-            break;
-
-        case COMMUNICATION_PAIRING_CMD_PROVIDE_FIRMWARE_VERSION:
-            _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_FIRMWARE_VERSION;
-            break;
-
-        default:
-            _communicationReplyWithException(payload);
-
-            return;
-
-    }
-
     #if DEBUG_COMMUNICATION_SUPPORT
         // Reply to master
-        if (_communicationReplyToPacket(_communication_output_buffer, (byte_counter + 2)) == false) {
+        if (_communicationReplyToPacket(_communication_output_buffer, byte_counter) == false) {
             DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive device description"));
 
         } else {
@@ -1720,7 +1641,7 @@ void _communicationPairDeviceReportDescription(
         }
     #else
         // Reply to master
-        _communicationReplyToPacket(_communication_output_buffer, (byte_counter + 2));
+        _communicationReplyToPacket(_communication_output_buffer, byte_counter);
     #endif
 }
 
@@ -1732,8 +1653,9 @@ void _communicationPairDeviceReportDescription(
  * 0 => Received packet identifier  => COMMUNICATION_PACKET_PAIR_DEVICE
  * 1 => Pairing command             => COMMUNICATION_PAIRING_CMD_PROVIDE_REGISTERS_SIZE
  */
-void _communicationPairDeviceReportRegistersSize(
-    uint8_t * payload
+void _communicationPairDeviceProvideRegistersSize(
+    uint8_t * payload,
+    uint16_t length
 ) {
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
@@ -1744,7 +1666,7 @@ void _communicationPairDeviceReportRegistersSize(
     // 4 => AI buffer size
     // 5 => AO buffer size
     _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
-    _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_REGISTERS_SIZE;
+    _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_PROVIDE_REGISTERS_SIZE;
     _communication_output_buffer[2] = (char) COMMUNICATION_MAX_DI_REGISTER_SIZE;
     _communication_output_buffer[3] = (char) COMMUNICATION_MAX_DO_REGISTER_SIZE;
     _communication_output_buffer[4] = (char) COMMUNICATION_MAX_AI_REGISTER_SIZE;
@@ -1766,20 +1688,19 @@ void _communicationPairDeviceReportRegistersSize(
 
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_AO_REGISTER_SIZE || COMMUNICATION_MAX_AI_REGISTER_SIZE
+#if COMMUNICATION_MAX_DI_REGISTER_SIZE || COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AI_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE
 /**
  * Parse received payload - Registers structure
-    * 
-    * 0 => Received packet identifier      => COMMUNICATION_PACKET_PAIR_DEVICE
-    * 1 => Pairing command                 => COMMUNICATION_PAIRING_CMD_PROVIDE_REGISTERS_STRUCTURE
-    * 2 => Registers type
-    * 3 => High byte of register address
-    * 4 => Low byte of register address
-    * 5 => High byte of registers length
-    * 6 => Low byte of registers length
-    */
-void _communicationPairDeviceReportRegistersStructure(
-    uint8_t * payload
+ * 
+ * 0 => Received packet identifier       => COMMUNICATION_PACKET_PAIR_DEVICE
+ * 1 => Pairing command                  => COMMUNICATION_PAIRING_CMD_PROVIDE_REGISTERS_STRUCTURE
+ * 2 => Registers type                   => COMMUNICATION_REGISTER_TYPE_DI | COMMUNICATION_REGISTER_TYPE_DO | COMMUNICATION_REGISTER_TYPE_AI | COMMUNICATION_REGISTER_TYPE_AO
+ * 3 => High byte of register address
+ * 4 => Low byte of register address
+ */
+void _communicationPairDeviceProvideRegistersStructure(
+    uint8_t * payload,
+    uint16_t length
 ) {
     uint8_t register_type = (uint8_t) payload[2];
 
@@ -1799,68 +1720,78 @@ void _communicationPairDeviceReportRegistersStructure(
     // Register read start address
     word register_address = (word) payload[3] << 8 | (word) payload[4];
 
-    // Number of registers to read
-    word read_length = (word) payload[5] << 8 | (word) payload[6];
-
     uint8_t registers_size = 0;
 
-    // Get total registers count
-    if (register_type == COMMUNICATION_REGISTER_TYPE_AO) {
-        registers_size = _communicationGetAnalogBufferSize(true);
+    #if COMMUNICATION_MAX_DI_REGISTER_SIZE
+        // Get total registers count
+        if (register_type == COMMUNICATION_REGISTER_TYPE_DI) {
+            registers_size = _communicationGetDigitalBufferSize(false);
+        }
+    #endif
 
-    } else {
-        registers_size = _communicationGetAnalogBufferSize(false);
-    }
+    #if COMMUNICATION_MAX_DO_REGISTER_SIZE
+        // Get total registers count
+        if (register_type == COMMUNICATION_REGISTER_TYPE_DO) {
+            registers_size = _communicationGetDigitalBufferSize(true);
+        }
+    #endif
+
+    #if COMMUNICATION_MAX_AI_REGISTER_SIZE
+        // Get total registers count
+        if (register_type == COMMUNICATION_REGISTER_TYPE_AI) {
+            registers_size = _communicationGetAnalogBufferSize(false);
+        }
+    #endif
+
+    #if COMMUNICATION_MAX_AO_REGISTER_SIZE
+        // Get total registers count
+        if (register_type == COMMUNICATION_REGISTER_TYPE_AO) {
+            registers_size = _communicationGetAnalogBufferSize(true);
+        }
+    #endif
 
     if (
         // Read start address mus be between <0, buffer.size()>
         register_address < registers_size
-        // Read length have to be same or smaller as registers size
-        && (register_address + read_length) <= registers_size
     ) {
         memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
-        // 0    => Packet identifier
-        // 1    => Command response content type
-        // 2    => Registers type
-        // 3    => High byte of register address
-        // 4    => Low byte of register address
-        // 5    => Register length
-        // 6-n  => Register data type
+        // 0 => Packet identifier
+        // 1 => Command response content type
+        // 2 => Registers type
+        // 3 => High byte of register address
+        // 4 => Low byte of register address
+        // 5 => Register data type
         _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
-        _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_REGISTERS_STRUCTURE;
+        _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_PROVIDE_REGISTERS_STRUCTURE;
         _communication_output_buffer[2] = (char) register_type;
         _communication_output_buffer[3] = (char) (register_address >> 8);
         _communication_output_buffer[4] = (char) (register_address & 0xFF);
-        _communication_output_buffer[5] = (char) (read_length >> 8);
-        _communication_output_buffer[6] = (char) (read_length & 0xFF);
 
-        uint8_t byte_pointer = 7;
-        uint8_t byte_counter = 0;
+        if (register_type == COMMUNICATION_REGISTER_TYPE_DI) {
+            _communication_output_buffer[5] = COMMUNICATION_DATA_TYPE_BOOLEAN;
 
-        for (uint8_t i = register_address; i < (register_address + read_length) && i < registers_size; i++) {
-            if (register_type == COMMUNICATION_REGISTER_TYPE_AO) {
-                _communication_output_buffer[byte_pointer] = communication_module_ao_registers[i].data_type;
+        } else if (register_type == COMMUNICATION_REGISTER_TYPE_DO) {
+            _communication_output_buffer[5] = COMMUNICATION_DATA_TYPE_BOOLEAN;
 
-            } else {
-                _communication_output_buffer[byte_pointer] = communication_module_ai_registers[i].data_type;
-            }
+        } else if (register_type == COMMUNICATION_REGISTER_TYPE_AI) {
+            _communication_output_buffer[5] = communication_module_ai_registers[register_address].data_type;
 
-            byte_pointer++;
-            byte_counter++;
+        } else if (register_type == COMMUNICATION_REGISTER_TYPE_AO) {
+            _communication_output_buffer[5] = communication_module_ao_registers[register_address].data_type;
         }
 
         #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to master
-            if (_communicationReplyToPacket(_communication_output_buffer, (byte_counter + 7)) == false) {
-                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive device registers structure"));
+            if (_communicationReplyToPacket(_communication_output_buffer, 6) == false) {
+                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive device register structure"));
 
             } else {
-                DPRINTLN(F("[COMMUNICATION] Replied to master with registers structure"));
+                DPRINTLN(F("[COMMUNICATION] Replied to master with register structure"));
             }
         #else
             // Reply to master
-            _communicationReplyToPacket(_communication_output_buffer, (byte_counter + 7));
+            _communicationReplyToPacket(_communication_output_buffer, 6);
         #endif
 
     } else {
@@ -1875,19 +1806,219 @@ void _communicationPairDeviceReportRegistersStructure(
 
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_PUB_SUB_PUB_SUPPORT
+/**
+ * Parse received payload - Settings sizes
+ * 
+ * 0 => Received packet identifier  => COMMUNICATION_PACKET_PAIR_DEVICE
+ * 1 => Pairing command             => COMMUNICATION_PAIRING_CMD_PROVIDE_ATTRIBUTES_SIZE
+ */
+void _communicationPairDeviceProvideAttributesSize(
+    uint8_t * payload,
+    uint16_t length
+) {
+    memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
+
+    // 0 => Packet identifier
+    // 1 => Command response content type
+    // 2 => Device settings buffer size
+    // 3 => Device attributes buffer size
+    // 4 => Registers settings buffer size
+    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
+    _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_PROVIDE_ATTRIBUTES_SIZE;
+    _communication_output_buffer[2] = (char) COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE;
+    _communication_output_buffer[3] = (char) COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE;
+    _communication_output_buffer[4] = (char) COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE;
+
+    #if DEBUG_COMMUNICATION_SUPPORT
+        // Reply to master
+        if (_communicationReplyToPacket(_communication_output_buffer, 5) == false) {
+            DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive device settings sizes"));
+
+        } else {
+            DPRINTLN(F("[COMMUNICATION] Replied to master with settings sizes"));
+        }
+    #else
+        // Reply to master
+        _communicationReplyToPacket(_communication_output_buffer, 5);
+    #endif
+}
+
+// -----------------------------------------------------------------------------
+
+#if COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE || COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE || COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE
+/**
+ * Parse received payload - Settubgs structure
+ * 
+ * 0    => Received packet identifier       => COMMUNICATION_PACKET_PAIR_DEVICE
+ * 1    => Pairing command                  => COMMUNICATION_PAIRING_CMD_PROVIDE_ATTRIBUTES_STRUCTURE
+ * 2    => Attribute type
+ * 3    => High byte of attribute address
+ * 4    => Low byte of attribute address
+ */
+void _communicationPairDeviceProvideAttributesStructure(
+    uint8_t * payload,
+    uint16_t length
+) {
+    uint8_t attribute_type = (uint8_t) payload[2];
+
+    if (
+        attribute_type != COMMUNICATION_DEVICE_SETTING_TYPE
+        && attribute_type != COMMUNICATION_DEVICE_ATTRIBUTE_TYPE
+        && attribute_type != COMMUNICATION_REGISTER_SETTING_TYPE
+    ) {
+        #if DEBUG_COMMUNICATION_SUPPORT
+            DPRINTLN(F("[COMMUNICATION][ERR] Requested settings type structure is not supported"));
+        #endif
+
+        _communicationReplyWithException(payload);
+
+        return;
+    }
+
+    // Register read start address
+    word attribute_address = (word) payload[3] << 8 | (word) payload[4];
+
+    uint8_t attributes_size = 0;
+
+    #if COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE
+        // Get total device settings count
+        if (attribute_type == COMMUNICATION_DEVICE_SETTING_TYPE) {
+            attributes_size = _communicationGetDeviceSettingsBufferSize();
+        }
+    #endif
+    
+    #if COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE
+        // Get total device attributes count
+        if (attribute_type == COMMUNICATION_DEVICE_ATTRIBUTE_TYPE) {    
+            attributes_size = _communicationGetDeviceAttributesBufferSize();
+        }
+    #endif
+
+    #if COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE
+        // Get total registers settings count
+        if (attribute_type == COMMUNICATION_REGISTER_SETTING_TYPE) {
+            attributes_size = _communicationGetRegistersSettingsBufferSize();
+        }
+    #endif
+
+    if (
+        // Read start address mus be between <0, buffer.size()>
+        attribute_address < attributes_size
+    ) {
+        memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
+
+        // 0   => Packet identifier
+        // 1   => Command response content type
+        // 2   => Attribute type
+        // 3   => High byte of attributes address
+        // 4   => Low byte of attributes address
+        // 5-n => Attributes configuration
+        _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
+        _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_PROVIDE_ATTRIBUTES_STRUCTURE;
+        _communication_output_buffer[2] = (char) attribute_type;
+        _communication_output_buffer[3] = (char) (attribute_address >> 8);
+        _communication_output_buffer[4] = (char) (attribute_address & 0xFF);
+
+        uint8_t byte_pointer = 0;
+        uint8_t byte_counter = 0;
+
+        if (attribute_type == COMMUNICATION_DEVICE_SETTING_TYPE) {
+            _communication_output_buffer[5] = (char) communication_module_settings_device[attribute_address].data_type;
+            _communication_output_buffer[6] = (char) (0xFF00 >> 8);
+            _communication_output_buffer[7] = (char) (0xFF00 & 0xFF);
+            _communication_output_buffer[8] = strlen(communication_module_settings_device[attribute_address].name);
+
+            byte_pointer = 9;
+            byte_counter = 9;
+            
+            for (uint8_t char_pos = 0; char_pos < strlen(communication_module_settings_device[attribute_address].name); char_pos++) {
+                _communication_output_buffer[byte_pointer] = (char) communication_module_settings_device[attribute_address].name[char_pos];
+
+                byte_pointer++;
+                byte_counter++;
+            }
+
+        } else if (attribute_type == COMMUNICATION_DEVICE_ATTRIBUTE_TYPE) {
+            _communication_output_buffer[5] = (char) communication_module_attributes_device[attribute_address].data_type;
+            _communication_output_buffer[6] = (char) (0xFF00 >> 8);
+            _communication_output_buffer[7] = (char) (0xFF00 & 0xFF);
+            _communication_output_buffer[8] = strlen(communication_module_attributes_device[attribute_address].name);
+
+            byte_pointer = 9;
+            byte_counter = 9;
+
+            for (uint8_t char_pos = 0; char_pos < strlen(communication_module_attributes_device[attribute_address].name); char_pos++) {
+                _communication_output_buffer[byte_pointer] = (char) communication_module_attributes_device[attribute_address].name[char_pos];
+
+                byte_pointer++;
+                byte_counter++;
+            }
+
+        } else if (attribute_type == COMMUNICATION_REGISTER_SETTING_TYPE) {
+            _communication_output_buffer[5] = (char) communication_module_settings_registers[attribute_address].data_type;
+            _communication_output_buffer[6] = (char) (0xFF00 >> 8);
+            _communication_output_buffer[7] = (char) (0xFF00 & 0xFF);
+
+            _communication_output_buffer[8] = (char) communication_module_settings_registers[attribute_address].register_type;
+            _communication_output_buffer[9] = (char) (communication_module_settings_registers[attribute_address].register_address >> 8);
+            _communication_output_buffer[10] = (char) (communication_module_settings_registers[attribute_address].register_address & 0xFF);
+            _communication_output_buffer[11] = strlen(communication_module_settings_registers[attribute_address].name);
+
+            byte_pointer = 12;
+            byte_counter = 12;
+
+            for (uint8_t char_pos = 0; char_pos < strlen(communication_module_settings_registers[attribute_address].name); char_pos++) {
+                _communication_output_buffer[byte_pointer] = (char) communication_module_settings_registers[attribute_address].name[char_pos];
+
+                byte_pointer++;
+                byte_counter++;
+            }
+
+        } else {
+            return;
+        }
+
+        #if DEBUG_COMMUNICATION_SUPPORT
+            // Reply to master
+            if (_communicationReplyToPacket(_communication_output_buffer, byte_counter) == false) {
+                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive settings structure"));
+
+            } else {
+                DPRINTLN(F("[COMMUNICATION] Replied to master with settings structure"));
+            }
+        #else
+            // Reply to master
+            _communicationReplyToPacket(_communication_output_buffer, byte_counter);
+        #endif
+
+    } else {
+        #if DEBUG_COMMUNICATION_SUPPORT
+            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read structure for undefined settings range"));
+        #endif
+
+        _communicationReplyWithException(payload);
+    }
+}
+#endif
+
+// -----------------------------------------------------------------------------
+
+#if (COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && (COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE)) || COMMUNICATION_PUB_SUB_PUB_SUPPORT
 /**
  * Parse received payload - Write generated register key for PUB_SUB
-    * 
-    * 0    => Received packet identifier       => COMMUNICATION_PACKET_PAIR_DEVICE
-    * 1    => Pairing command                  => COMMUNICATION_PAIRING_CMD_WRITE_REGISTER_KEY
-    * 2    => Registers type
-    * 3    => High byte of register address
-    * 4    => Low byte of register address
-    * 5-n  => Key bytes                        => (a-Z0-9)
-    */
+ * 
+ * 0    => Received packet identifier        => COMMUNICATION_PACKET_PAIR_DEVICE
+ * 1    => Pairing command                   => COMMUNICATION_PAIRING_CMD_WRITE_REGISTER_KEY
+ * 2    => Registers type                    => COMMUNICATION_REGISTER_TYPE_DI | COMMUNICATION_REGISTER_TYPE_DO | COMMUNICATION_REGISTER_TYPE_AI | COMMUNICATION_REGISTER_TYPE_AO
+ * 3    => High byte of register address
+ * 4    => Low byte of register address
+ * 5    => Key lenght                        => 1-255
+ * 6-n  => Key bytes                         => (a,b,c,...)
+ */
+
 void _communicationPairDeviceWriteRegisterKey(
-    uint8_t * payload
+    uint8_t * payload,
+    uint16_t length
 ) {
     uint8_t register_type = (uint8_t) payload[2];
 
@@ -1911,288 +2042,129 @@ void _communicationPairDeviceWriteRegisterKey(
 
     uint8_t registers_size = 0;
 
-    // Get total registers count
-    if (register_type == COMMUNICATION_REGISTER_TYPE_DO) {
-        #if COMMUNICATION_MAX_DO_REGISTER_SIZE
+    #if COMMUNICATION_MAX_DO_REGISTER_SIZE
+        // Get total registers count
+        if (register_type == COMMUNICATION_REGISTER_TYPE_DO) {
             registers_size = _communicationGetDigitalBufferSize(true);
-        #endif
+        }
+    #endif
 
-    } else if (register_type == COMMUNICATION_REGISTER_TYPE_DI) {
-        #if COMMUNICATION_MAX_DI_REGISTER_SIZE
+    #if COMMUNICATION_MAX_DI_REGISTER_SIZE
+        // Get total registers count
+        if (register_type == COMMUNICATION_REGISTER_TYPE_DI) {
             registers_size = _communicationGetDigitalBufferSize(false);
-        #endif
+        }
+    #endif
 
-    } else if (register_type == COMMUNICATION_REGISTER_TYPE_AO) {
-        #if COMMUNICATION_MAX_AO_REGISTER_SIZE
+    #if COMMUNICATION_MAX_AO_REGISTER_SIZE
+        // Get total registers count
+        if (register_type == COMMUNICATION_REGISTER_TYPE_AO) {
             registers_size = _communicationGetAnalogBufferSize(true);
-        #endif
+        }
+    #endif
 
-    } else {
-        #if COMMUNICATION_MAX_AI_REGISTER_SIZE
+    #if COMMUNICATION_MAX_AI_REGISTER_SIZE
+        // Get total registers count
+        if (register_type == COMMUNICATION_REGISTER_TYPE_AI) {
             registers_size = _communicationGetAnalogBufferSize(false);
-        #endif
-    }
+        }
+    #endif
 
     if (
         // Write address mus be between <0, buffer.size()>
         register_address < registers_size
     ) {
-        char register_key[COMMUNICATION_REGISTER_KEY_LENGTH];
+        uint8_t register_key_length = (uint8_t) payload[5];
 
-        for (uint8_t i = 0; i < COMMUNICATION_REGISTER_KEY_LENGTH; i++) {
-            register_key[i] = payload[i + 5];
-        }
+        if (register_key_length <= COMMUNICATION_REGISTER_KEY_LENGTH) {
+            // Initialize register key buffer
+            char register_key[COMMUNICATION_REGISTER_KEY_LENGTH + 1];
+            memset(register_key, 0, COMMUNICATION_REGISTER_KEY_LENGTH + 1);
 
-        if (register_type == COMMUNICATION_REGISTER_TYPE_DO) {
+            // Extract register key from payload
+            for (uint8_t i = 0; i < register_key_length; i++) {
+                register_key[i] = (char) payload[i + 5];
+                register_key[i + 1] = 0x00; // Add a NULL after each character
+            }
+            
             #if COMMUNICATION_MAX_DO_REGISTER_SIZE
-                if (register_address <= _communicationGetDigitalBufferSize(true)) {
-                    memcpy(communication_module_do_registers[register_address].key, register_key, COMMUNICATION_REGISTER_KEY_LENGTH);
-                    communication_module_do_registers[register_address].publish_as_event = true;
+                if (register_type == COMMUNICATION_REGISTER_TYPE_DO) {
+                    if (register_address <= _communicationGetDigitalBufferSize(true)) {
+                        memcpy(communication_module_do_registers[register_address].key, register_key, register_key_length + 1);
+                        communication_module_do_registers[register_address].publish_as_event = true;
+                    }
                 }
             #endif
 
-        } else if (register_type == COMMUNICATION_REGISTER_TYPE_DI) {
             #if COMMUNICATION_MAX_DI_REGISTER_SIZE
-                if (register_address <= _communicationGetDigitalBufferSize(false)) {
-                    memcpy(communication_module_di_registers[register_address].key, register_key, COMMUNICATION_REGISTER_KEY_LENGTH);
-                    communication_module_di_registers[register_address].publish_as_event = true;
+                if (register_type == COMMUNICATION_REGISTER_TYPE_DI) {
+                    if (register_address <= _communicationGetDigitalBufferSize(false)) {
+                        memcpy(communication_module_di_registers[register_address].key, register_key, register_key_length + 1);
+                        communication_module_di_registers[register_address].publish_as_event = true;
+                    }
                 }
             #endif
 
-        } else if (register_type == COMMUNICATION_REGISTER_TYPE_AO) {
             #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-                if (register_address <= _communicationGetAnalogBufferSize(true)) {
-                    memcpy(communication_module_ao_registers[register_address].key, register_key, COMMUNICATION_REGISTER_KEY_LENGTH);
-                    communication_module_ao_registers[register_address].publish_as_event = true;
+                if (register_type == COMMUNICATION_REGISTER_TYPE_AO) {
+                    if (register_address <= _communicationGetAnalogBufferSize(true)) {
+                        memcpy(communication_module_ao_registers[register_address].key, register_key, register_key_length + 1);
+                        communication_module_ao_registers[register_address].publish_as_event = true;
+                    }
                 }
+            #endif
+
+            #if COMMUNICATION_MAX_AI_REGISTER_SIZE
+                if (register_type == COMMUNICATION_REGISTER_TYPE_AI) {
+                    if (register_address <= _communicationGetAnalogBufferSize(false)) {
+                        memcpy(communication_module_ai_registers[register_address].key, register_key, register_key_length + 1);
+                        communication_module_ai_registers[register_address].publish_as_event = true;
+                    }
+                }
+            #endif
+
+            memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
+
+            // 0 => Packet identifier
+            // 1 => Command response content type
+            // 2 => Registers type
+            // 3 => High byte of register address
+            // 4 => Low byte of register address
+            _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
+            _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_WRITE_REGISTER_KEY;
+            _communication_output_buffer[2] = (char) register_type;
+            _communication_output_buffer[3] = (char) (register_address >> 8);
+            _communication_output_buffer[4] = (char) (register_address & 0xFF);
+
+            #if DEBUG_COMMUNICATION_SUPPORT
+                // Reply to master
+                if (_communicationReplyToPacket(_communication_output_buffer, 5) == false) {
+                    DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive register key confirmation"));
+
+                } else {
+                    DPRINTLN(F("[COMMUNICATION] Replied to master with register key confirmation"));
+                }
+            #else
+                // Reply to master
+                _communicationReplyToPacket(_communication_output_buffer, 5);
             #endif
 
         } else {
-            #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-                if (register_address <= _communicationGetAnalogBufferSize(false)) {
-                    memcpy(communication_module_ai_registers[register_address].key, register_key, COMMUNICATION_REGISTER_KEY_LENGTH);
-                    communication_module_ai_registers[register_address].publish_as_event = true;
-                }
+            #if DEBUG_COMMUNICATION_SUPPORT
+                DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to write key which is too long"));
+                DPRINT(F("[COMMUNICATION][ERR] Expected length: "));
+                DPRINT(COMMUNICATION_REGISTER_KEY_LENGTH);
+                DPRINT(F(" but received key with length: "));
+                DPRINTLN(register_key_length);
+                DPRINTLN(length);
             #endif
+
+            _communicationReplyWithException(payload);
         }
-
-        memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
-
-        // 0 => Packet identifier
-        // 1 => Command response content type
-        // 2 => Device settings buffer size
-        // 3 => Registers settings buffer size
-        _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
-        _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_WRITE_REGISTER_KEY;
-        _communication_output_buffer[2] = (char) register_type;
-        _communication_output_buffer[3] = (char) (register_address >> 8);
-        _communication_output_buffer[4] = (char) (register_address & 0xFF);
-
-        #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to master
-            if (_communicationReplyToPacket(_communication_output_buffer, 5) == false) {
-                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive register key confirmation"));
-
-            } else {
-                DPRINTLN(F("[COMMUNICATION] Replied to master with register key confirmation"));
-            }
-        #else
-            // Reply to master
-            _communicationReplyToPacket(_communication_output_buffer, 5);
-        #endif
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
             DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to write key for undefined register"));
-        #endif
-
-        _communicationReplyWithException(payload);
-    }
-}
-#endif
-
-// -----------------------------------------------------------------------------
-
-/**
- * Parse received payload - Settings sizes
- * 
- * 0 => Received packet identifier  => COMMUNICATION_PACKET_PAIR_DEVICE
- * 1 => Pairing command             => COMMUNICATION_PAIRING_CMD_PROVIDE_SETTINGS_SIZE
- */
-void _communicationPairDeviceReportSettingsSize(
-    uint8_t * payload
-) {
-    memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
-
-    // 0 => Packet identifier
-    // 1 => Command response content type
-    // 2 => Device settings buffer size
-    // 3 => Registers settings buffer size
-    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
-    _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_SETTINGS_SIZE;
-    _communication_output_buffer[2] = (char) COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE;
-    _communication_output_buffer[3] = (char) COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE;
-
-    #if DEBUG_COMMUNICATION_SUPPORT
-        // Reply to master
-        if (_communicationReplyToPacket(_communication_output_buffer, 4) == false) {
-            DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive device settings sizes"));
-
-        } else {
-            DPRINTLN(F("[COMMUNICATION] Replied to master with settings sizes"));
-        }
-    #else
-        // Reply to master
-        _communicationReplyToPacket(_communication_output_buffer, 4);
-    #endif
-}
-
-// -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE || COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE
-/**
- * Parse received payload - Settubgs structure
-    * 
-    * 0    => Received packet identifier       => COMMUNICATION_PACKET_PAIR_DEVICE
-    * 1    => Pairing command                  => COMMUNICATION_PAIRING_CMD_PROVIDE_SETTINGS_STRUCTURE
-    * 2    => Settings type
-    * 3    => High byte of register address
-    * 4    => Low byte of register address
-    * 5    => High byte of settings length
-    * 6    => Low byte of settings length
-    */
-void _communicationPairDeviceReportSettingsStructure(
-    uint8_t * payload
-) {
-    uint8_t settings_type = (uint8_t) payload[2];
-
-    if (
-        settings_type != COMMUNICATION_SETTINGS_TYPE_DEVICE
-        && settings_type != COMMUNICATION_SETTINGS_TYPE_REGISTER
-    ) {
-        #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][ERR] Requested settings type structure is not supported"));
-        #endif
-
-        _communicationReplyWithException(payload);
-
-        return;
-    }
-
-    // Register read start address
-    word settings_address = (word) payload[3] << 8 | (word) payload[4];
-
-    // Number of settings to read
-    word read_length = (word) payload[5] << 8 | (word) payload[6];
-
-    uint8_t settings_size = 0;
-
-    // Get total settings count
-    if (settings_type == COMMUNICATION_SETTINGS_TYPE_DEVICE) {
-        #if COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE
-            settings_size = _communicationGetDeviceSettingsBufferSize();
-        #endif
-
-    } else {
-        #if COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE
-            settings_size = _communicationGetRegistersSettingsBufferSize();
-        #endif
-    }
-
-    if (
-        // Read start address mus be between <0, buffer.size()>
-        settings_address < settings_size
-        // Read length have to be same or smaller as settings size
-        && (settings_address + read_length) <= settings_size
-    ) {
-        memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
-
-        // 0    => Packet identifier
-        // 1    => Command response content type
-        // 2    => Settings type
-        // 3    => High byte of settings address
-        // 4    => Low byte of settings address
-        // 5    => High byte of settings length
-        // 6    => Low byte of settings length
-        // 7-n  => Settings configuration
-        _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
-        _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_SETTINGS_STRUCTURE;
-        _communication_output_buffer[2] = (char) settings_type;
-        _communication_output_buffer[3] = (char) (settings_address >> 8);
-        _communication_output_buffer[4] = (char) (settings_address & 0xFF);
-        _communication_output_buffer[5] = (char) (read_length >> 8);
-        _communication_output_buffer[6] = (char) (read_length & 0xFF);
-
-        uint8_t byte_pointer = 7;
-        uint8_t byte_counter = 0;
-
-        for (uint8_t i = settings_address; i < (settings_address + read_length) && i < settings_size; i++) {
-            if (settings_type == COMMUNICATION_SETTINGS_TYPE_DEVICE) {
-                _communication_output_buffer[byte_pointer] = (char) communication_module_settings_device[i].data_type;
-
-                byte_pointer++;
-                byte_counter++;
-
-                for (uint8_t char_pos = 0; char_pos < strlen(communication_module_settings_device[i].name); char_pos++) {
-                    _communication_output_buffer[byte_pointer] = (char) communication_module_settings_device[i].name[char_pos];
-
-                    byte_pointer++;
-                    byte_counter++;
-                }
-
-                _communication_output_buffer[byte_pointer] = COMMUNICATION_PACKET_DATA_SPACE;
-
-            } else {
-                _communication_output_buffer[byte_pointer] = (char) (communication_module_settings_registers[i].register_address >> 8);
-
-                byte_pointer++;
-                byte_counter++;
-
-                _communication_output_buffer[byte_pointer] = (char) (communication_module_settings_registers[i].register_address & 0xFF);
-
-                byte_pointer++;
-                byte_counter++;
-
-                _communication_output_buffer[byte_pointer] = (char) communication_module_settings_registers[i].register_type;
-
-                byte_pointer++;
-                byte_counter++;
-
-                _communication_output_buffer[byte_pointer] = (char) communication_module_settings_registers[i].data_type;
-
-                byte_pointer++;
-                byte_counter++;
-
-                for (uint8_t char_pos = 0; char_pos < strlen(communication_module_settings_registers[i].name); char_pos++) {
-                    _communication_output_buffer[byte_pointer] = (char) communication_module_settings_registers[i].name[char_pos];
-
-                    byte_pointer++;
-                    byte_counter++;
-                }
-
-                _communication_output_buffer[byte_pointer] = (char) COMMUNICATION_PACKET_DATA_SPACE;
-            }
-
-            byte_pointer++;
-            byte_counter++;
-        }
-
-        #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to master
-            if (_communicationReplyToPacket(_communication_output_buffer, (byte_counter + 7)) == false) {
-                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive settings structure"));
-
-            } else {
-                DPRINTLN(F("[COMMUNICATION] Replied to master with settings structure"));
-            }
-        #else
-            // Reply to master
-            _communicationReplyToPacket(_communication_output_buffer, (byte_counter + 7));
-        #endif
-
-    } else {
-        #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read structure for undefined settings range"));
         #endif
 
         _communicationReplyWithException(payload);
@@ -2209,7 +2181,8 @@ void _communicationPairDeviceReportSettingsStructure(
  * 1 => Pairing command
  */
 void _communicationPairDeviceFinishPairing(
-    uint8_t * payload
+    uint8_t * payload,
+    uint16_t length
 ) {
     communicationDisablePairingMode();
 
@@ -2219,7 +2192,7 @@ void _communicationPairDeviceFinishPairing(
     // 1 => Command response content type
     // 2 => Device actual state
     _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
-    _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_FINISHED;
+    _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_PAIRING_FINISHED;
     _communication_output_buffer[2] = (char) firmwareGetDeviceState() == DEVICE_STATE_STOPPED_BY_OPERATOR ? DEVICE_STATE_STOPPED : firmwareGetDeviceState();
 
     #if DEBUG_COMMUNICATION_SUPPORT
@@ -2246,11 +2219,12 @@ void _communicationPairDeviceFinishPairing(
  * 1 => Pairing command
  */
 void _communicationPairDeviceHandler(
-    uint8_t * payload
+    uint8_t * payload,
+    uint16_t length
 ) {
     if (_communication_pairing_enabled == false) {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][WARN] Device is not in pairing mode"));
+            DPRINTLN(F("[COMMUNICATION][INFO] Device is not in pairing mode"));
         #endif
 
         return;
@@ -2262,66 +2236,46 @@ void _communicationPairDeviceHandler(
     switch (pairing_command)
     {
 
-        case COMMUNICATION_PAIRING_CMD_PROVIDE_ADDRESS:
-            _communicationPairDeviceProvideAddress(payload);
+        case COMMUNICATION_PAIRING_CMD_WRITE_ADDRESS:
+            _communicationPairDeviceWriteAddress(payload, length);
             break;
 
-        case COMMUNICATION_PAIRING_CMD_SET_ADDRESS:
-            _communicationPairDeviceSetAddress(payload);
+        case COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_INFO:
+            _communicationPairDeviceProvideDeviceInfo(payload, length);
             break;
 
-        case COMMUNICATION_PAIRING_CMD_PROVIDE_ABOUT_INFO:
-            _communicationPairDeviceProvideAboutInfo(payload);
-            break;
-
-        case COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_MODEL:
-            _communicationPairDeviceReportDescription(payload, COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_MODEL, (char *) DEVICE_NAME);
-            break;
-
-        case COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_MANUFACTURER:
-            _communicationPairDeviceReportDescription(payload, COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_MANUFACTURER, (char *) DEVICE_MANUFACTURER);
-            break;
-
-        case COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_VERSION:
-            _communicationPairDeviceReportDescription(payload, COMMUNICATION_PAIRING_CMD_PROVIDE_DEVICE_VERSION, (char *) DEVICE_VERSION);
-            break;
-
-        case COMMUNICATION_PAIRING_CMD_PROVIDE_FIRMWARE_MANUFACTURER:
-            _communicationPairDeviceReportDescription(payload, COMMUNICATION_PAIRING_CMD_PROVIDE_FIRMWARE_MANUFACTURER, (char *) FIRMWARE_MANUFACTURER);
-            break;
-
-        case COMMUNICATION_PAIRING_CMD_PROVIDE_FIRMWARE_VERSION:
-            _communicationPairDeviceReportDescription(payload, COMMUNICATION_PAIRING_CMD_PROVIDE_FIRMWARE_VERSION, (char *) FIRMWARE_VERSION);
+        case COMMUNICATION_PAIRING_CMD_PROVIDE_DESCRIPTION:
+            _communicationPairDeviceProvideDescription(payload, length);
             break;
 
         case COMMUNICATION_PAIRING_CMD_PROVIDE_REGISTERS_SIZE:
-            _communicationPairDeviceReportRegistersSize(payload);
+            _communicationPairDeviceProvideRegistersSize(payload, length);
             break;
 
-        #if COMMUNICATION_MAX_AO_REGISTER_SIZE || COMMUNICATION_MAX_AI_REGISTER_SIZE
+        #if COMMUNICATION_MAX_DI_REGISTER_SIZE || COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AI_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE
             case COMMUNICATION_PAIRING_CMD_PROVIDE_REGISTERS_STRUCTURE:
-                _communicationPairDeviceReportRegistersStructure(payload);
+                _communicationPairDeviceProvideRegistersStructure(payload, length);
                 break;
         #endif
 
-        #if COMMUNICATION_PUB_SUB_PUB_SUPPORT
-            case COMMUNICATION_PAIRING_CMD_WRITE_REGISTER_KEY:
-                _communicationPairDeviceWriteRegisterKey(payload);
-                break;
-        #endif
-
-        case COMMUNICATION_PAIRING_CMD_PROVIDE_SETTINGS_SIZE:
-            _communicationPairDeviceReportSettingsSize(payload);
+        case COMMUNICATION_PAIRING_CMD_PROVIDE_ATTRIBUTES_SIZE:
+            _communicationPairDeviceProvideAttributesSize(payload, length);
             break;
 
-        #if COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE || COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE
-            case COMMUNICATION_PAIRING_CMD_PROVIDE_SETTINGS_STRUCTURE:
-                _communicationPairDeviceReportSettingsStructure(payload);
+        #if COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE || COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE || COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE
+            case COMMUNICATION_PAIRING_CMD_PROVIDE_ATTRIBUTES_STRUCTURE:
+                _communicationPairDeviceProvideAttributesStructure(payload, length);
                 break;
         #endif
 
-        case COMMUNICATION_PAIRING_CMD_FINISHED:
-            _communicationPairDeviceFinishPairing(payload);
+        #if (COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && (COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE)) || COMMUNICATION_PUB_SUB_PUB_SUPPORT
+            case COMMUNICATION_PAIRING_CMD_WRITE_REGISTER_KEY:
+                _communicationPairDeviceWriteRegisterKey(payload, length);
+                break;
+        #endif
+
+        case COMMUNICATION_PAIRING_CMD_PAIRING_FINISHED:
+            _communicationPairDeviceFinishPairing(payload, length);
             break;
 
         default:
@@ -2333,13 +2287,59 @@ void _communicationPairDeviceHandler(
 // -----------------------------------------------------------------------------
 
 /**
+ * Parse received payload - Provide device info
+ * 
+ * 0 => Received packet identifier  => COMMUNICATION_PACKET_SEARCH_DEVICES
+ */
+void _communicationSearchDevices(
+    uint8_t * payload,
+    uint16_t length
+) {
+    memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
+
+    // 0    => Packet identifier
+    // 1    => Command response content type
+    // 2    => Device current bus address
+    // 3-n  => Device parsed SN
+    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_SEARCH_DEVICES;
+    _communication_output_buffer[1] = _communication_bus.device_id();
+    _communication_output_buffer[2] = strlen((char *) DEVICE_SERIAL_NO);
+
+    uint8_t byte_pointer = 3;
+    uint8_t byte_counter = 3;
+
+    for (uint8_t i = 0; i < strlen((char *) DEVICE_SERIAL_NO); i++) {
+        _communication_output_buffer[byte_pointer] = ((char *) DEVICE_SERIAL_NO)[i];
+
+        byte_pointer++;
+        byte_counter++;
+    }
+
+    #if DEBUG_COMMUNICATION_SUPPORT
+        // Reply to master
+        if (_communicationReplyToPacket(_communication_output_buffer, byte_counter) == false) {
+            DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive device pairing request"));
+
+        } else {
+            DPRINTLN(F("[COMMUNICATION] Replied to master with device pairing request"));
+        }
+    #else
+        // Reply to master
+        _communicationReplyToPacket(_communication_output_buffer, byte_counter);
+    #endif
+}
+
+// -----------------------------------------------------------------------------
+
+/**
  * Parse received payload - Master hello
  * 
- * 0 => Received packet identifier  => COMMUNICATION_PACKET_GET_STATE
+ * 0 => Received packet identifier  => COMMUNICATION_PACKET_WRITE_STATE
  * 1 => Device new state
  */
-void _communicationSetStateHandler(
-    uint8_t * payload
+void _communicationWriteStateHandler(
+    uint8_t * payload,
+    uint16_t length
 ) {
     // Device is stopped by operator and state can not be changed by gateway
     if (firmwareGetDeviceState() == DEVICE_STATE_STOPPED_BY_OPERATOR) {
@@ -2381,7 +2381,7 @@ void _communicationSetStateHandler(
 
     // 0 => Packet identifier
     // 1 => Device actual state
-    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_SET_STATE;
+    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_READ_STATE;
     _communication_output_buffer[1] = (char) firmwareGetDeviceState() == DEVICE_STATE_STOPPED_BY_OPERATOR ? DEVICE_STATE_STOPPED : firmwareGetDeviceState();
 
     #if DEBUG_COMMUNICATION_SUPPORT
@@ -2404,16 +2404,17 @@ void _communicationSetStateHandler(
 /**
  * Parse received payload - Master hello
  * 
- * 0 => Received packet identifier  => COMMUNICATION_PACKET_GET_STATE
+ * 0 => Received packet identifier  => COMMUNICATION_PACKET_WRITE_STATE
  */
-void _communicationGetStateHandler(
-    uint8_t * payload
+void _communicationReadStateHandler(
+    uint8_t * payload,
+    uint16_t length
 ) {
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
     // 0 => Packet identifier
     // 1 => Device actual state
-    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_GET_STATE;
+    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_WRITE_STATE;
     _communication_output_buffer[1] = (char) firmwareGetDeviceState() == DEVICE_STATE_STOPPED_BY_OPERATOR ? DEVICE_STATE_STOPPED : firmwareGetDeviceState();
 
     #if DEBUG_COMMUNICATION_SUPPORT
@@ -2439,7 +2440,8 @@ void _communicationGetStateHandler(
  * 0 => Received packet identifier  => COMMUNICATION_PACKET_HELLO
  */
 void _communicationHelloHandler(
-    uint8_t * payload
+    uint8_t * payload,
+    uint16_t length
 ) {
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
@@ -2447,10 +2449,10 @@ void _communicationHelloHandler(
     // 2    => Device SN length
     // 3-n  => Device SN
     _communication_output_buffer[0] = (uint8_t) COMMUNICATION_PACKET_HELLO;
-    _communication_output_buffer[1] = (uint8_t) strlen((char *) DEVICE_SERIAL_NO);
+    _communication_output_buffer[1] = strlen((char *) DEVICE_SERIAL_NO);
 
     uint8_t byte_pointer = 2;
-    uint8_t byte_counter = 0;
+    uint8_t byte_counter = 2;
 
     for (uint8_t i = 0; i < strlen((char *) DEVICE_SERIAL_NO); i++) {
         _communication_output_buffer[byte_pointer] = ((char *) DEVICE_SERIAL_NO)[i];
@@ -2461,7 +2463,7 @@ void _communicationHelloHandler(
 
     #if DEBUG_COMMUNICATION_SUPPORT
         // Reply to master
-        if (_communicationReplyToPacket(_communication_output_buffer, (byte_counter + 2)) == false) {
+        if (_communicationReplyToPacket(_communication_output_buffer, byte_counter) == false) {
             // Device was not able to notify master about its address
             DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive device hello reply"));
 
@@ -2470,7 +2472,7 @@ void _communicationHelloHandler(
         }
     #else
         // Reply to master
-        _communicationReplyToPacket(_communication_output_buffer, (byte_counter + 2));
+        _communicationReplyToPacket(_communication_output_buffer, byte_counter);
     #endif
 }
 
@@ -2482,7 +2484,8 @@ void _communicationHelloHandler(
  * 0 => Received packet identifier  => COMMUNICATION_PACKET_PING
  */
 void _communicationPingHandler(
-    uint8_t * payload
+    uint8_t * payload,
+    uint16_t length
 ) {
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
@@ -2504,19 +2507,20 @@ void _communicationPingHandler(
     #endif
 }
 
+#if COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && (COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE)
+
 // -----------------------------------------------------------------------------
 // DEVICE PUB SUB
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && (COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE)
 /**
  * Parse received payload - Process received broadcast
-    * 
-    * 0        => Received packet identifier       => COMMUNICATION_PACKET_PUBSUB_BROADCAST
-    * 1-n      => Message key                      => (a-Z0-9)
-    * n+1      => Message data type
-    * n+2-n+3  => Message value
-    */
+ * 
+ * 0        => Received packet identifier       => COMMUNICATION_PACKET_PUB_SUB_BROADCAST
+ * 1-n      => Message key                      => (a-Z0-9)
+ * n+1      => Message data type
+ * n+2-n+3  => Message value
+ */
 void _communicationCheckPublishedMessageHandler(
     uint8_t * payload
 ) {
@@ -2548,8 +2552,8 @@ void _communicationCheckPublishedMessageHandler(
 
     uint8_t subscription_index = INDEX_NONE;
 
-    for (uint8_t i = 0; i < sizeof(_communication_pub_sub_subscriptions) / sizeof(* _communication_pub_sub_subscriptions); i++) {
-        for (uint8_t j = 0; j < sizeof(_communication_pub_sub_subscriptions[i].conditions) / sizeof(* _communication_pub_sub_subscriptions[i].conditions); j++) {
+    for (uint8_t i = 0; i < sizeof(_communication_pub_sub_subscriptions) / sizeof(communication_pub_sub_subscription_t); i++) {
+        for (uint8_t j = 0; j < sizeof(_communication_pub_sub_subscriptions[i].conditions) / sizeof(uint8_t); j++) {
             uint8_t condition_index = _communication_pub_sub_subscriptions[i].conditions[j];
 
             if (
@@ -2600,7 +2604,7 @@ void _communicationCheckPublishedMessageHandler(
 
         bool is_fullfiled = true;
 
-        for (uint8_t i = 0; i < sizeof(subscription.conditions) / sizeof(* subscription.conditions); i++) {
+        for (uint8_t i = 0; i < sizeof(subscription.conditions) / sizeof(uint8_t); i++) {
             uint8_t condition_index = subscription.conditions[i];
 
             if (_communication_pub_sub_conditions[condition_index].fullfiled == false) {
@@ -2613,7 +2617,7 @@ void _communicationCheckPublishedMessageHandler(
                 DPRINTLN(F("[COMMUNICATION] All conditions for subscription were met"));
             #endif
 
-            for (uint8_t i = 0; i < sizeof(subscription.actions) / sizeof(* subscription.actions); i++) {
+            for (uint8_t i = 0; i < sizeof(subscription.actions) / sizeof(uint8_t); i++) {
                 uint8_t action_index = subscription.actions[i];
 
                 switch (_communication_pub_sub_actions[action_index].register_type)
@@ -2669,20 +2673,20 @@ void _communicationCheckPublishedMessageHandler(
 
 /**
  * Parse received payload - Subscribe to condition
-    * 
-    * 0            => Received packet identifier       => COMMUNICATION_PACKET_PUBSUB_SUBSCRIBE
-    * 1-n          => Key bytes                        => (a-Z0-9)
-    * n+1          => Num of conditions                => 1-255
-    * n+2          => Num of actions                   => 1-255
-    * n+3-m        => Condition key                    => (a-Z0-9)
-    * m+1          => Condition data type
-    * m+2-m+2/4    => Condition value
-    *              => n Condition
-    *              => Action register type
-    *              => Action register address
-    *              => Action value
-    *              => n Action
-    */
+ * 
+ * 0            => Received packet identifier       => COMMUNICATION_PACKET_PUB_SUB_SUBSCRIBE
+ * 1-n          => Key bytes                        => (a-Z0-9)
+ * n+1          => Num of conditions                => 1-255
+ * n+2          => Num of actions                   => 1-255
+ * n+3-m        => Condition key                    => (a-Z0-9)
+ * m+1          => Condition data type
+ * m+2-m+2/4    => Condition value
+ *              => n Condition
+ *              => Action register type
+ *              => Action register address
+ *              => Action value
+ *              => n Action
+ */
 void _communicationSubscribePubSubHandler(
     uint8_t * payload
 ) {
@@ -2706,7 +2710,7 @@ void _communicationSubscribePubSubHandler(
         subscription_key[i] = payload[i + 1];
     }
 
-    for (uint8_t i = 0; i < (sizeof(_communication_pub_sub_subscriptions) / sizeof(* _communication_pub_sub_subscriptions)); i++) {
+    for (uint8_t i = 0; i < (sizeof(_communication_pub_sub_subscriptions) / sizeof(communication_pub_sub_subscription_t)); i++) {
         if (strcmp(_communication_pub_sub_subscriptions[i].key, subscription_key) == 0) {
             #if DEBUG_COMMUNICATION_SUPPORT
                 DPRINTLN(F("[COMMUNICATION][WARN] Subscription with same key is stored"));
@@ -2778,11 +2782,11 @@ void _communicationSubscribePubSubHandler(
         condition.value[3] = condition_value[3];
         condition.fullfiled = false;
 
-        _communication_pub_sub_conditions[sizeof(_communication_pub_sub_conditions) / sizeof(* _communication_pub_sub_conditions)] = condition;
+        _communication_pub_sub_conditions[sizeof(_communication_pub_sub_conditions) / sizeof(communication_pub_sub_condition_t)] = condition;
 
-        uint8_t condition_index = sizeof(_communication_pub_sub_conditions) / sizeof(* _communication_pub_sub_conditions);
+        uint8_t condition_index = sizeof(_communication_pub_sub_conditions) / sizeof(communication_pub_sub_condition_t);
 
-        subscription.conditions[sizeof(subscription.conditions) / sizeof(* subscription.conditions)] = condition_index;
+        subscription.conditions[sizeof(subscription.conditions) / sizeof(uint8_t)] = condition_index;
     }
 
     for (uint8_t i = 0; i < actions_count; i++) {
@@ -2899,19 +2903,19 @@ void _communicationSubscribePubSubHandler(
         action.value[2] = action_value[2];
         action.value[3] = action_value[3];
 
-        _communication_pub_sub_actions[sizeof(_communication_pub_sub_actions) / sizeof(* _communication_pub_sub_actions)] = action;
+        _communication_pub_sub_actions[sizeof(_communication_pub_sub_actions) / sizeof(communication_pub_sub_action_t)] = action;
 
-        uint8_t action_index = sizeof(_communication_pub_sub_actions) / sizeof(* _communication_pub_sub_actions);
+        uint8_t action_index = sizeof(_communication_pub_sub_actions) / sizeof(communication_pub_sub_action_t);
 
-        subscription.actions[sizeof(subscription.actions) / sizeof(* subscription.actions)] = action_index;
+        subscription.actions[sizeof(subscription.actions) / sizeof(uint8_t))] = action_index;
     }
 
-    _communication_pub_sub_subscriptions[sizeof(_communication_pub_sub_subscriptions) / sizeof(* _communication_pub_sub_subscriptions)] = subscription;
+    _communication_pub_sub_subscriptions[sizeof(_communication_pub_sub_subscriptions) / sizeof(communication_pub_sub_subscription_t)] = subscription;
 
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
     // 0 => Packet identifier
-    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PUBSUB_SUBSCRIBE;
+    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PUB_SUB_SUBSCRIBE;
 
     #if DEBUG_COMMUNICATION_SUPPORT
         // Reply to master
@@ -2932,10 +2936,10 @@ void _communicationSubscribePubSubHandler(
 
 /**
  * Parse received payload - Unsubscribe from condition
-    * 
-    * 0    => Received packet identifier       => COMMUNICATION_PACKET_PUBSUB_UNSUBSCRIBE
-    * 1-n  => Key bytes                        => (a-Z0-9)
-    */
+ * 
+ * 0    => Received packet identifier       => COMMUNICATION_PACKET_PUB_SUB_UNSUBSCRIBE
+ * 1-n  => Key bytes                        => (a-Z0-9)
+ */
 void _communicationUnsubscribePubSubHandler(
     uint8_t * payload
 ) {
@@ -2947,7 +2951,7 @@ void _communicationUnsubscribePubSubHandler(
 
     uint8_t subscription_index = INDEX_NONE;
 
-    for (uint8_t i = 0; i < (sizeof(_communication_pub_sub_subscriptions) / sizeof(* _communication_pub_sub_subscriptions)); i++) {
+    for (uint8_t i = 0; i < (sizeof(_communication_pub_sub_subscriptions) / sizeof(communication_pub_sub_subscription_t)); i++) {
         if (strcmp(_communication_pub_sub_subscriptions[i].key, subscription_key) == 0) {
             subscription_index = i;
         }
@@ -3071,7 +3075,7 @@ void _communicationReceiverHandler(
 
     #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Received packet: "));
-        _communicationDebugLogPacket(packet_id);
+        DPRINTLN(packet_id);
     #endif
 
     uint8_t sender_address = PJON_NOT_ASSIGNED;
@@ -3099,23 +3103,27 @@ void _communicationReceiverHandler(
     {
 
         case COMMUNICATION_PACKET_PING:
-            _communicationPingHandler(data_payload);
+            _communicationPingHandler(data_payload, data_length);
             break;
 
         case COMMUNICATION_PACKET_HELLO:
-            _communicationHelloHandler(data_payload);
+            _communicationHelloHandler(data_payload, data_length);
             break;
 
-        case COMMUNICATION_PACKET_GET_STATE:
-            _communicationGetStateHandler(data_payload);
+        case COMMUNICATION_PACKET_WRITE_STATE:
+            _communicationReadStateHandler(data_payload, data_length);
             break;
 
-        case COMMUNICATION_PACKET_SET_STATE:
-            _communicationSetStateHandler(data_payload);
+        case COMMUNICATION_PACKET_READ_STATE:
+            _communicationWriteStateHandler(data_payload, data_length);
+            break;
+
+        case COMMUNICATION_PACKET_SEARCH_DEVICES:
+            _communicationSearchDevices(data_payload, data_length);
             break;
 
         case COMMUNICATION_PACKET_PAIR_DEVICE:
-            _communicationPairDeviceHandler(data_payload);
+            _communicationPairDeviceHandler(data_payload, data_length);
             break;
 
     /**
@@ -3141,19 +3149,31 @@ void _communicationReceiverHandler(
         #endif
 
     /**
+     * ATTRIBUTES
+     */
+
+        #if COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE || COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE || COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE
+            case COMMUNICATION_PACKET_READ_SINGLE_ATTRIBUTE:
+                break;
+
+            case COMMUNICATION_PACKET_WRITE_SINGLE_ATTRIBUTE:
+                break;
+        #endif
+
+    /**
      * PUB/SUB
      */
 
         #if COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && (COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE)
-            case COMMUNICATION_PACKET_PUBSUB_BROADCAST:
+            case COMMUNICATION_PACKET_PUB_SUB_BROADCAST:
                 _communicationCheckPublishedMessageHandler(data_payload);
                 break;
 
-            case COMMUNICATION_PACKET_PUBSUB_SUBSCRIBE:
+            case COMMUNICATION_PACKET_PUB_SUB_SUBSCRIBE:
                 _communicationSubscribePubSubHandler(data_payload);
                 break;
 
-            case COMMUNICATION_PACKET_PUBSUB_UNSUBSCRIBE:
+            case COMMUNICATION_PACKET_PUB_SUB_UNSUBSCRIBE:
                 _communicationUnsubscribePubSubHandler(data_payload);
                 break;
         #endif
@@ -3241,15 +3261,15 @@ uint16_t _communicationFinalizeAndSendPacket(
 
     if (isReply) {
         return _communication_bus.reply(
-            final_payload,          // Content
-            sizeof(final_payload)   // Content length
+            final_payload,      // Content
+            final_length        // Content length
         );
 
     } else {
         return _communication_bus.send_packet(
-            address,                // Recepient address
-            final_payload,          // Content
-            sizeof(final_payload)   // Content length
+            address,            // Recepient address
+            final_payload,      // Content
+            final_length        // Content length
         );
     }
 }
@@ -3289,7 +3309,7 @@ bool _communicationSendPacket(
                 DPRINT(F("[COMMUNICATION][ERR] Sending packet to address: "));
                 DPRINT(address);
                 DPRINT(F(" failed, bus is busy, packet: "));
-                _communicationDebugLogPacket((uint8_t) payload[0]);
+                DPRINTLN((uint8_t) payload[0]);
             #endif
 
         } else if (result == PJON_FAIL) {
@@ -3297,7 +3317,7 @@ bool _communicationSendPacket(
                 DPRINT(F("[COMMUNICATION][ERR] Sending packet to address: "));
                 DPRINT(address);
                 DPRINT(F(" failed, packet: "));
-                _communicationDebugLogPacket((uint8_t) payload[0]);
+                DPRINTLN((uint8_t) payload[0]);
             #endif
 
         } else {
@@ -3305,7 +3325,7 @@ bool _communicationSendPacket(
                 DPRINT(F("[COMMUNICATION][ERR] Sending packet to address: "));
                 DPRINT(address);
                 DPRINT(F(" failed, unknonw error, packet: "));
-                _communicationDebugLogPacket((uint8_t) payload[0]);
+                DPRINTLN((uint8_t) payload[0]);
             #endif
         }
 
@@ -3315,7 +3335,7 @@ bool _communicationSendPacket(
     if (address == PJON_BROADCAST) {
         #if DEBUG_COMMUNICATION_SUPPORT
             DPRINT(F("[COMMUNICATION] Successfully sent broadcast packet "));
-            _communicationDebugLogPacket((uint8_t) payload[0]);
+            DPRINTLN((uint8_t) payload[0]);
         #endif
 
     } else {
@@ -3323,7 +3343,7 @@ bool _communicationSendPacket(
             DPRINT(F("[COMMUNICATION] Successfully sent packet to address: "));
             DPRINT(address);
             DPRINT(F(" "));
-            _communicationDebugLogPacket((uint8_t) payload[0]);
+            DPRINTLN((uint8_t) payload[0]);
         #endif
     }
 
@@ -3338,7 +3358,7 @@ bool _communicationReplyToPacket(
 ) {
     #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Preparing reply packet: "));
-        _communicationDebugLogPacket((uint8_t) payload[0]);
+        DPRINTLN((uint8_t) payload[0]);
     #endif
 
     uint16_t result =_communicationFinalizeAndSendPacket(payload, length, true);
@@ -3362,7 +3382,7 @@ bool _communicationBroadcastPacket(
 ) {
     #if DEBUG_COMMUNICATION_SUPPORT
         DPRINT(F("[COMMUNICATION] Preparing broadcast packet: "));
-        _communicationDebugLogPacket((uint8_t) payload[0]);
+        DPRINTLN((uint8_t) payload[0]);
     #endif
 
     uint8_t address = PJON_BROADCAST;
@@ -3436,13 +3456,7 @@ bool communicationReportDeviceState()
     _communication_output_buffer[0] = COMMUNICATION_PACKET_REPORT_STATE;
     _communication_output_buffer[1] = (char) firmwareGetDeviceState() == DEVICE_STATE_STOPPED_BY_OPERATOR ? DEVICE_STATE_STOPPED : firmwareGetDeviceState();
 
-    if (
-        _communicationSendPacket(
-            COMMUNICATION_BUS_MASTER_ADDR,
-            _communication_output_buffer,
-            2
-        ) == true
-    ) {
+    if (_communicationSendPacket(COMMUNICATION_BUS_MASTER_ADDR, _communication_output_buffer, 2) == true) {
         #if DEBUG_COMMUNICATION_SUPPORT
             DPRINTLN(F("[COMMUNICATION] Device state was successfully sent"));
         #endif
@@ -3504,13 +3518,7 @@ bool communicationReportDigitalRegister(
     _communication_output_buffer[4] = (char) (read_value >> 8);
     _communication_output_buffer[5] = (char) (read_value & 0xFF);
 
-    if (
-        _communicationSendPacket(
-            COMMUNICATION_BUS_MASTER_ADDR,
-            _communication_output_buffer,
-            6
-        ) == true
-    ) {
+    if (_communicationSendPacket(COMMUNICATION_BUS_MASTER_ADDR, _communication_output_buffer, 6) == true) {
         #if DEBUG_COMMUNICATION_SUPPORT
             DPRINTLN(F("[COMMUNICATION] Register value was successfully sent"));
         #endif
@@ -3557,11 +3565,12 @@ bool communicationBroadcastDigitalRegister(
     // 0        => Packet identifier
     // 1-n      => Register key
     // n+1      => Register data type
-    // n+2-n+3  => Register value
-    _communication_output_buffer[0] = COMMUNICATION_PACKET_PUBSUB_BROADCAST;
+    // n+2-m    => Register value
+    _communication_output_buffer[0] = COMMUNICATION_PACKET_PUB_SUB_BROADCAST;
+    _communication_output_buffer[1] = COMMUNICATION_REGISTER_KEY_LENGTH;
 
-    uint8_t byte_pointer = 1;
-    uint8_t byte_counter = 1;
+    uint8_t byte_pointer = 2;
+    uint8_t byte_counter = 2;
 
     for (uint8_t i = 0; i < COMMUNICATION_REGISTER_KEY_LENGTH; i++) {
         _communication_output_buffer[byte_pointer] = register_key[i];
@@ -3577,13 +3586,10 @@ bool communicationBroadcastDigitalRegister(
     byte_pointer++;
     byte_counter++;
     _communication_output_buffer[byte_pointer] = (char) (read_value & 0xFF);
+    byte_pointer++;
+    byte_counter++;
 
-    if (
-        _communicationBroadcastPacket(
-            _communication_output_buffer,
-            byte_counter
-        ) == true
-    ) {
+    if (_communicationBroadcastPacket(_communication_output_buffer, byte_counter) == true) {
         #if DEBUG_COMMUNICATION_SUPPORT
             DPRINTLN(F("[COMMUNICATION] Register value was successfully broadcasted"));
         #endif
@@ -3611,7 +3617,7 @@ bool communicationWriteDigitalInput(
     if (communication_module_di_registers[registerAddress].value != value) {
         communication_module_di_registers[registerAddress].value = value;
 
-        if (sizeof(communication_module_di_registers[registerAddress].key) / sizeof(* communication_module_di_registers[registerAddress].key) > 0) {
+        if (strlen(communication_module_di_registers[registerAddress].key) > 0) {
             communicationBroadcastDigitalRegister(false, registerAddress);
 
         } else if (communication_module_di_registers[registerAddress].publish_as_event) {
@@ -3652,7 +3658,7 @@ bool communicationWriteDigitalOutput(
         communication_module_do_registers[registerAddress].value = value;
 
         if (communication_module_do_registers[registerAddress].publish_as_event) {
-            if (sizeof(communication_module_do_registers[registerAddress].key) / sizeof(* communication_module_do_registers[registerAddress].key) > 0) {
+            if (strlen(communication_module_do_registers[registerAddress].key) > 0) {
                 communicationBroadcastDigitalRegister(true, registerAddress);
 
             } else if (communication_module_do_registers[registerAddress].publish_as_event) {
@@ -3720,13 +3726,7 @@ bool communicationReportAnalogRegister(
     _communication_output_buffer[6] = read_value[2];
     _communication_output_buffer[7] = read_value[3];
 
-    if (
-        _communicationSendPacket(
-            COMMUNICATION_BUS_MASTER_ADDR,
-            _communication_output_buffer,
-            8
-        ) == true
-    ) {
+    if (_communicationSendPacket(COMMUNICATION_BUS_MASTER_ADDR, _communication_output_buffer, 8) == true) {
         #if DEBUG_COMMUNICATION_SUPPORT
             DPRINTLN(F("[COMMUNICATION] Register value was successfully sent"));
         #endif
@@ -3776,10 +3776,11 @@ bool communicationBroadcastAnalogRegister(
     // 1-n      => Register key
     // n+1      => Register data type
     // n+2-n+3  => Register value
-    _communication_output_buffer[0] = COMMUNICATION_PACKET_PUBSUB_BROADCAST;
+    _communication_output_buffer[0] = COMMUNICATION_PACKET_PUB_SUB_BROADCAST;
+    _communication_output_buffer[1] = COMMUNICATION_REGISTER_KEY_LENGTH;
 
-    uint8_t byte_pointer = 1;
-    uint8_t byte_counter = 1;
+    uint8_t byte_pointer = 2;
+    uint8_t byte_counter = 2;
 
     for (uint8_t i = 0; i < COMMUNICATION_REGISTER_KEY_LENGTH; i++) {
         _communication_output_buffer[byte_pointer] = register_key[i];
@@ -3805,13 +3806,10 @@ bool communicationBroadcastAnalogRegister(
     byte_pointer++;
     byte_counter++;
     _communication_output_buffer[byte_pointer] = (char) read_value[3];
+    byte_pointer++;
+    byte_counter++;
 
-    if (
-        _communicationBroadcastPacket(
-            _communication_output_buffer,
-            byte_counter
-        ) == true
-    ) {
+    if (_communicationBroadcastPacket(_communication_output_buffer, byte_counter) == true) {
         #if DEBUG_COMMUNICATION_SUPPORT
             DPRINTLN(F("[COMMUNICATION] Register value was successfully broadcasted"));
         #endif
@@ -3877,7 +3875,7 @@ bool communicationWriteAnalogRegister(
             memcpy(communication_module_ao_registers[registerAddress].value, value, size);
 
             if (memcmp((const void *) stored_value, (const void *) value, sizeof(stored_value)) != 0) {
-                if (sizeof(communication_module_ao_registers[registerAddress].key) / sizeof(* communication_module_ao_registers[registerAddress].key) > 0) {
+                if (strlen(communication_module_ao_registers[registerAddress].key) > 0) {
                     communicationBroadcastAnalogRegister(output, registerAddress);
 
                 } else if (communication_module_ao_registers[registerAddress].publish_as_event) {
@@ -3899,7 +3897,7 @@ bool communicationWriteAnalogRegister(
             memcpy(communication_module_ai_registers[registerAddress].value, value, size);
 
             if (memcmp((const void *) stored_value, (const void *) value, sizeof(stored_value)) != 0) {
-                if (sizeof(communication_module_ai_registers[registerAddress].key) / sizeof(* communication_module_ai_registers[registerAddress].key) > 0) {
+                if (strlen(communication_module_ai_registers[registerAddress].key) > 0) {
                     communicationBroadcastAnalogRegister(output, registerAddress);
 
                 } else if (communication_module_ai_registers[registerAddress].publish_as_event) {

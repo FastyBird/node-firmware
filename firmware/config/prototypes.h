@@ -72,6 +72,13 @@ typedef struct {
 
 typedef struct {
     char name[10];
+    uint8_t data_type;
+    uint8_t size;
+    char value[4];
+} communication_attributes_device_t;
+
+typedef struct {
+    char name[10];
     uint8_t register_address;
     uint8_t register_type;
     uint8_t data_type;

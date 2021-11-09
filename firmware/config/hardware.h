@@ -68,8 +68,9 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #define COMMUNICATION_MAX_AI_REGISTER_SIZE          4
     #define COMMUNICATION_MAX_AO_REGISTER_SIZE          0
     
-    #define COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE      0
-    #define COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE   4
+    #define COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE      0
+    #define COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE    0
+    #define COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE   4
 
     communication_digital_register_t communication_module_di_registers[COMMUNICATION_MAX_DI_REGISTER_SIZE];
     communication_digital_register_t communication_module_do_registers[COMMUNICATION_MAX_DO_REGISTER_SIZE] = {
@@ -87,8 +88,9 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     };
     communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE];
 
-    communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE];
-    communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE] = {
+    communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
+    communication_attributes_device_t communication_module_attributes_device[COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE];
+    communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE] = {
         {"DblDelay", 0, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
         {"DblDelay", 1, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
         {"DblDelay", 2, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
@@ -162,8 +164,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #define COMMUNICATION_MAX_AI_REGISTER_SIZE          4
     #define COMMUNICATION_MAX_AO_REGISTER_SIZE          0
     
-    #define COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE      0
-    #define COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE   4
+    #define COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE      0
+    #define COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE   4
 
     #define COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS     4
 
@@ -183,8 +185,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     };
     communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE];
 
-    communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE];
-    communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE] = {
+    communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
+    communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE] = {
         {"DblDelay", 0, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
         {"DblDelay", 1, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
         {"DblDelay", 2, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
@@ -284,11 +286,11 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #endif
     #define COMMUNICATION_MAX_AO_REGISTER_SIZE              0
 
-    #define COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE          0
+    #define COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE          0
     #if defined(FASTYBIRD_8CH_BUTTONS)
-        #define COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE   8
+        #define COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE   8
     #else
-        #define COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE   16
+        #define COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE   16
     #endif
 
     communication_digital_register_t communication_module_di_registers[COMMUNICATION_MAX_DI_REGISTER_SIZE];
@@ -317,8 +319,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     };
     communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE];
 
-    communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE];
-    communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE] = {
+    communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
+    communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE] = {
         {"DblDelay", 0, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
         {"DblDelay", 1, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
         {"DblDelay", 2, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
@@ -443,8 +445,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #define COMMUNICATION_MAX_AI_REGISTER_SIZE              0
     #define COMMUNICATION_MAX_AO_REGISTER_SIZE              0
 
-    #define COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE          0
-    #define COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE       0
+    #define COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE          0
+    #define COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE       0
 
     #if defined(FASTYBIRD_8CH_DO)
         #define COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS     8
@@ -478,8 +480,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     communication_analog_register_t communication_module_ai_registers[COMMUNICATION_MAX_AI_REGISTER_SIZE];
     communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE];
 
-    communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_SETTINGS_DEVICE_SIZE];
-    communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_SETTINGS_REGISTERS_SIZE];
+    communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
+    communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE];
 
     // GENERAL
     #define SYSTEM_CONFIGURE_DEVICE_BUTTON              0
