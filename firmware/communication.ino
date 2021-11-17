@@ -1322,7 +1322,7 @@ void _communicationReplySingleAnalogRegister(
         // 3    => Low byte of register address
         // 4-7  => Register value
         _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_READ_SINGLE_REGISTER;
-        _communication_output_buffer[1] = (char) output ? COMMUNICATION_REGISTER_TYPE_DO : COMMUNICATION_REGISTER_TYPE_DI;
+        _communication_output_buffer[1] = (char) output ? COMMUNICATION_REGISTER_TYPE_AO : COMMUNICATION_REGISTER_TYPE_AI;
         _communication_output_buffer[2] = (char) (registerAddress >> 8);
         _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
 
@@ -2083,7 +2083,7 @@ void _communicationPairDeviceWriteRegisterKey(
 
             // Extract register key from payload
             for (uint8_t i = 0; i < register_key_length; i++) {
-                register_key[i] = (char) payload[i + 5];
+                register_key[i] = (char) payload[i + 6];
                 register_key[i + 1] = 0x00; // Add a NULL after each character
             }
             
@@ -2295,6 +2295,14 @@ void _communicationSearchDevices(
     uint8_t * payload,
     uint16_t length
 ) {
+    if (_communication_pairing_enabled == false) {
+        #if DEBUG_COMMUNICATION_SUPPORT
+            DPRINTLN(F("[COMMUNICATION][INFO] Device is not in pairing mode"));
+        #endif
+
+        return;
+    }
+
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
     // 0    => Packet identifier
@@ -3475,7 +3483,7 @@ bool communicationReportDeviceState()
 /**
  * Report value of digital register to master
     */
-bool communicationReportDigitalRegister(
+bool _communicationReportDigitalRegister(
     const bool output,
     const uint8_t registerAddress
 ) {
@@ -3534,7 +3542,7 @@ bool communicationReportDigitalRegister(
 /**
  * Broadcast value of digital register to all devices
     */
-bool communicationBroadcastDigitalRegister(
+bool _communicationBroadcastDigitalRegister(
     const bool output,
     const uint8_t registerAddress
 ) {
@@ -3617,11 +3625,13 @@ bool communicationWriteDigitalInput(
     if (communication_module_di_registers[registerAddress].value != value) {
         communication_module_di_registers[registerAddress].value = value;
 
-        if (strlen(communication_module_di_registers[registerAddress].key) > 0) {
-            communicationBroadcastDigitalRegister(false, registerAddress);
+        if (communication_module_di_registers[registerAddress].publish_as_event) {
+            if (strlen(communication_module_di_registers[registerAddress].key) > 0) {
+                _communicationBroadcastDigitalRegister(false, registerAddress);
 
-        } else if (communication_module_di_registers[registerAddress].publish_as_event) {
-            communicationReportDigitalRegister(false, registerAddress);
+            } else {
+                _communicationReportDigitalRegister(false, registerAddress);
+            }
         }
     }
 
@@ -3659,10 +3669,10 @@ bool communicationWriteDigitalOutput(
 
         if (communication_module_do_registers[registerAddress].publish_as_event) {
             if (strlen(communication_module_do_registers[registerAddress].key) > 0) {
-                communicationBroadcastDigitalRegister(true, registerAddress);
+                _communicationBroadcastDigitalRegister(true, registerAddress);
 
-            } else if (communication_module_do_registers[registerAddress].publish_as_event) {
-                communicationReportDigitalRegister(true, registerAddress);
+            } else {
+                _communicationReportDigitalRegister(true, registerAddress);
             }
         }
     }
@@ -3691,7 +3701,7 @@ bool communicationReadDigitalOutput(
 /**
  * Report value of analog register to master
     */
-bool communicationReportAnalogRegister(
+bool _communicationReportAnalogRegister(
     const bool output,
     const uint8_t registerAddress
 ) {
@@ -3742,7 +3752,7 @@ bool communicationReportAnalogRegister(
 /**
  * Broadcast value of analog register to all devices
     */
-bool communicationBroadcastAnalogRegister(
+bool _communicationBroadcastAnalogRegister(
     const bool output,
     const uint8_t registerAddress
 ) {
@@ -3756,7 +3766,7 @@ bool communicationBroadcastAnalogRegister(
 
     #if COMMUNICATION_MAX_AO_REGISTER_SIZE
         if (output) {
-            _communicationReadAnalogForTransfer(true, communication_module_ao_registers[registerAddress].data_type, registerAddress, read_value);
+            _communicationReadAnalogForTransfer(output, communication_module_ao_registers[registerAddress].data_type, registerAddress, read_value);
 
             memcpy(register_key, communication_module_ao_registers[registerAddress].key, COMMUNICATION_REGISTER_KEY_LENGTH);
         }
@@ -3764,7 +3774,7 @@ bool communicationBroadcastAnalogRegister(
 
     #if COMMUNICATION_MAX_AI_REGISTER_SIZE
         if (!output) {
-            _communicationReadAnalogForTransfer(false, communication_module_ai_registers[registerAddress].data_type, registerAddress, read_value);
+            _communicationReadAnalogForTransfer(output, communication_module_ai_registers[registerAddress].data_type, registerAddress, read_value);
 
             memcpy(register_key, communication_module_ai_registers[registerAddress].key, COMMUNICATION_REGISTER_KEY_LENGTH);
         }
@@ -3773,7 +3783,8 @@ bool communicationBroadcastAnalogRegister(
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
     // 0        => Packet identifier
-    // 1-n      => Register key
+    // 1        => Register key lenght
+    // 2-n      => Register key
     // n+1      => Register data type
     // n+2-n+3  => Register value
     _communication_output_buffer[0] = COMMUNICATION_PACKET_PUB_SUB_BROADCAST;
@@ -3874,12 +3885,12 @@ bool communicationWriteAnalogRegister(
 
             memcpy(communication_module_ao_registers[registerAddress].value, value, size);
 
-            if (memcmp((const void *) stored_value, (const void *) value, sizeof(stored_value)) != 0) {
+            if (memcmp((const void *) stored_value, (const void *) value, sizeof(stored_value)) != 0 && communication_module_ao_registers[registerAddress].publish_as_event) {
                 if (strlen(communication_module_ao_registers[registerAddress].key) > 0) {
-                    communicationBroadcastAnalogRegister(output, registerAddress);
+                    _communicationBroadcastAnalogRegister(output, registerAddress);
 
-                } else if (communication_module_ao_registers[registerAddress].publish_as_event) {
-                    communicationReportAnalogRegister(output, registerAddress);
+                } else {
+                    _communicationReportAnalogRegister(output, registerAddress);
                 }
             }
         }
@@ -3896,12 +3907,12 @@ bool communicationWriteAnalogRegister(
 
             memcpy(communication_module_ai_registers[registerAddress].value, value, size);
 
-            if (memcmp((const void *) stored_value, (const void *) value, sizeof(stored_value)) != 0) {
+            if (memcmp((const void *) stored_value, (const void *) value, sizeof(stored_value)) != 0 && communication_module_ai_registers[registerAddress].publish_as_event) {
                 if (strlen(communication_module_ai_registers[registerAddress].key) > 0) {
-                    communicationBroadcastAnalogRegister(output, registerAddress);
+                    _communicationBroadcastAnalogRegister(output, registerAddress);
 
-                } else if (communication_module_ai_registers[registerAddress].publish_as_event) {
-                    communicationReportAnalogRegister(output, registerAddress);
+                } else {
+                    _communicationReportAnalogRegister(output, registerAddress);
                 }
             }
         }

@@ -101,6 +101,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define COMMUNICATION_DATA_TYPE_DATE                                0x0A
 #define COMMUNICATION_DATA_TYPE_DATETIME                            0x0B
 #define COMMUNICATION_DATA_TYPE_STRING                              0x0C
+#define COMMUNICATION_DATA_TYPE_BUTTON                              0x0D
+#define COMMUNICATION_DATA_TYPE_SWITCH                              0x0E
 
 // =============================================================================
 // COMMUNICATION PAIRING COMMANDS

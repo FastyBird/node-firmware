@@ -74,10 +74,10 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
     communication_digital_register_t communication_module_di_registers[COMMUNICATION_MAX_DI_REGISTER_SIZE];
     communication_digital_register_t communication_module_do_registers[COMMUNICATION_MAX_DO_REGISTER_SIZE] = {
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
+        {false, true, ""},
+        {false, true, ""},
+        {false, true, ""},
+        {false, true, ""},
     };
 
     communication_analog_register_t communication_module_ai_registers[COMMUNICATION_MAX_AI_REGISTER_SIZE] = {
