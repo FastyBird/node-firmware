@@ -71,7 +71,7 @@ void _relayBoot()
         relay_module_items[i].change_time = millis();
 
         // Store state into communication register
-        communicationWriteDigitalOutput(relay_module_items[i].register_address, status);
+        communicationWriteAnalogOutput(relay_module_items[i].register_address, (status ? 0xFF00 : 0x0000));
     }
 
     _relayRecursive = false;
@@ -168,7 +168,7 @@ void _relayProcess(
         _relayProviderStatus(id, relay_module_items[id].target_status);
 
         // Store state into communication register
-        communicationWriteDigitalOutput(relay_module_items[id].register_address, relay_module_items[id].target_status);
+        communicationWriteAnalogOutput(relay_module_items[id].register_address, (relay_module_items[id].target_status ? 0xFF00 : 0x0000));
     }
 }
 
@@ -345,10 +345,14 @@ void relayLoop()
     // Process request only if device is in running mode
     if (firmwareIsRunning()) {
         for (uint8_t i = 0; i < RELAY_MAX_ITEMS; i++) {
-            bool register_value = communicationReadDigitalOutput(relay_module_items[i].register_address);
+            uint16_t register_value;
 
-            if (register_value != relayStatus(i)) {
-                relayStatus(i, register_value);
+            communicationReadAnalogOutput(relay_module_items[i].register_address, register_value);
+
+            bool expected_value = register_value == 0xFF00;
+
+            if (expected_value != relayStatus(i)) {
+                relayStatus(i, expected_value);
             }
         }
     }

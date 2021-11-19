@@ -64,21 +64,16 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #define COMMUNICATION_BUS_RX_PIN                    2
 
     #define COMMUNICATION_MAX_DI_REGISTER_SIZE          0
-    #define COMMUNICATION_MAX_DO_REGISTER_SIZE          4
+    #define COMMUNICATION_MAX_DO_REGISTER_SIZE          0
     #define COMMUNICATION_MAX_AI_REGISTER_SIZE          4
-    #define COMMUNICATION_MAX_AO_REGISTER_SIZE          0
+    #define COMMUNICATION_MAX_AO_REGISTER_SIZE          4
     
     #define COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE      0
     #define COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE    0
     #define COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE   4
 
     communication_digital_register_t communication_module_di_registers[COMMUNICATION_MAX_DI_REGISTER_SIZE];
-    communication_digital_register_t communication_module_do_registers[COMMUNICATION_MAX_DO_REGISTER_SIZE] = {
-        {false, true, ""},
-        {false, true, ""},
-        {false, true, ""},
-        {false, true, ""},
-    };
+    communication_digital_register_t communication_module_do_registers[COMMUNICATION_MAX_DO_REGISTER_SIZE];
 
     communication_analog_register_t communication_module_ai_registers[COMMUNICATION_MAX_AI_REGISTER_SIZE] = {
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
@@ -86,7 +81,12 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
     };
-    communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE];
+    communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE] = {
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+    };
 
     communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
     communication_attributes_device_t communication_module_attributes_device[COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE];
@@ -160,9 +160,9 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #define COMMUNICATION_BUS_HARDWARE_SERIAL           1
 
     #define COMMUNICATION_MAX_DI_REGISTER_SIZE          0
-    #define COMMUNICATION_MAX_DO_REGISTER_SIZE          4
+    #define COMMUNICATION_MAX_DO_REGISTER_SIZE          0
     #define COMMUNICATION_MAX_AI_REGISTER_SIZE          4
-    #define COMMUNICATION_MAX_AO_REGISTER_SIZE          0
+    #define COMMUNICATION_MAX_AO_REGISTER_SIZE          4
     
     #define COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE      0
     #define COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE   4
@@ -170,12 +170,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #define COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS     4
 
     communication_digital_register_t communication_module_di_registers[COMMUNICATION_MAX_DI_REGISTER_SIZE];
-    communication_digital_register_t communication_module_do_registers[COMMUNICATION_MAX_DO_REGISTER_SIZE] = {
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-    };
+    communication_digital_register_t communication_module_do_registers[COMMUNICATION_MAX_DO_REGISTER_SIZE];
 
     communication_analog_register_t communication_module_ai_registers[COMMUNICATION_MAX_AI_REGISTER_SIZE] = {
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
@@ -183,7 +178,12 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
     };
-    communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE];
+    communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE] = {
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+    };
 
     communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
     communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE] = {
@@ -437,13 +437,13 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #define COMMUNICATION_BUS_RX_PIN                        2
 
     #define COMMUNICATION_MAX_DI_REGISTER_SIZE              0
-    #if defined(FASTYBIRD_8CH_DO)
-        #define COMMUNICATION_MAX_DO_REGISTER_SIZE          8
-    #else
-        #define COMMUNICATION_MAX_DO_REGISTER_SIZE          16
-    #endif
+    #define COMMUNICATION_MAX_DO_REGISTER_SIZE              0
     #define COMMUNICATION_MAX_AI_REGISTER_SIZE              0
-    #define COMMUNICATION_MAX_AO_REGISTER_SIZE              0
+    #if defined(FASTYBIRD_8CH_DO)
+        #define COMMUNICATION_MAX_AO_REGISTER_SIZE          8
+    #else
+        #define COMMUNICATION_MAX_AO_REGISTER_SIZE          16
+    #endif
 
     #define COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE          0
     #define COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE       0
@@ -455,30 +455,30 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #endif
 
     communication_digital_register_t communication_module_di_registers[COMMUNICATION_MAX_DI_REGISTER_SIZE];
-    communication_digital_register_t communication_module_do_registers[COMMUNICATION_MAX_DO_REGISTER_SIZE] = {
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-
-        #if defined(FASTYBIRD_16CH_DO)
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-        {false, false, ""},
-        #endif
-    };
+    communication_digital_register_t communication_module_do_registers[COMMUNICATION_MAX_DO_REGISTER_SIZE];
 
     communication_analog_register_t communication_module_ai_registers[COMMUNICATION_MAX_AI_REGISTER_SIZE];
-    communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE];
+    communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE] = {
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+
+        #if defined(FASTYBIRD_16CH_DO)
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
+        #endif
+    };
 
     communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
     communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE];

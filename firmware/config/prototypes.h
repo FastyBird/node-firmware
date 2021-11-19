@@ -45,6 +45,11 @@ typedef union {
     uint8_t     bytes[4];
 } FLOAT32_UNION_t;
 
+typedef union {
+    uint16_t    number;
+    uint8_t     bytes[4];
+} BOOLEAN_UNION_t;
+
 // =============================================================================
 // COMMUNICATION MODULE
 // =============================================================================

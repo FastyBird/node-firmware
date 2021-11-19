@@ -272,6 +272,23 @@ void _communicationReadAnalogForTransfer(
 
             memcpy(value, float_read_value.bytes, 4);
             break;
+
+        case COMMUNICATION_DATA_TYPE_BOOLEAN:
+            BOOLEAN_UNION_t bool_read_value;
+
+            if (output) {
+                #if COMMUNICATION_MAX_AO_REGISTER_SIZE
+                    communicationReadAnalogOutput(address, bool_read_value.number);
+                #endif
+
+            } else {
+                #if COMMUNICATION_MAX_AI_REGISTER_SIZE
+                    communicationReadAnalogInput(address, bool_read_value.number);
+                #endif
+            }
+
+            memcpy(value, bool_read_value.bytes, 2);
+            break;
     
         default:
             char buffer[4] = { 0, 0, 0, 0 };
@@ -440,6 +457,28 @@ void _communicationWriteAnalogFromTransfer(
 
             if (float_stored_value != float_write_value.number) {
                 communicationWriteAnalogOutput(address, float_write_value.number);
+            #if DEBUG_COMMUNICATION_SUPPORT
+                DPRINTLN(F("[COMMUNICATION] Value was written into AO register"));
+
+            } else {
+                DPRINTLN(F("[COMMUNICATION] Value to write into AO register is same as stored. Write skipped"));
+            #endif
+            }
+            break;
+
+        case COMMUNICATION_DATA_TYPE_BOOLEAN:
+            uint16_t bool_stored_value;
+            BOOLEAN_UNION_t bool_write_value;
+
+            bool_write_value.bytes[0] = value[0];
+            bool_write_value.bytes[1] = value[1];
+            bool_write_value.bytes[2] = 0;
+            bool_write_value.bytes[3] = 0;
+
+            communicationReadAnalogOutput(address, bool_stored_value);
+
+            if (bool_stored_value != bool_write_value.number) {
+                communicationWriteAnalogOutput(address, bool_write_value.number);
             #if DEBUG_COMMUNICATION_SUPPORT
                 DPRINTLN(F("[COMMUNICATION] Value was written into AO register"));
 
@@ -891,7 +930,7 @@ void _communicationWriteSingleOutputRegisterHandler(
         #endif
 
         #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-            case COMMUNICATION_REGISTER_TYPE_AI:
+            case COMMUNICATION_REGISTER_TYPE_AO:
             {
                 char write_analog_value[4] = { 0, 0, 0, 0 };
 
@@ -901,6 +940,10 @@ void _communicationWriteSingleOutputRegisterHandler(
                 write_analog_value[3] = payload[7];
 
                 _communicationWriteSingleAnalogRegister(payload, register_address, write_analog_value);
+
+                bool register_value;
+
+                communicationReadAnalogOutput(register_address, register_value);
                 break;
             }
         #endif
@@ -3935,6 +3978,7 @@ bool communicationWriteAnalogInput(const uint8_t registerAddress, const int8_t v
 bool communicationWriteAnalogInput(const uint8_t registerAddress, const int16_t value) { return communicationWriteAnalogRegister(false, registerAddress, &value, 2); }
 bool communicationWriteAnalogInput(const uint8_t registerAddress, const int32_t value) { return communicationWriteAnalogRegister(false, registerAddress, &value, 4); }
 bool communicationWriteAnalogInput(const uint8_t registerAddress, const float value) { return communicationWriteAnalogRegister(false, registerAddress, &value, 4); }
+bool communicationWriteAnalogInput(const uint8_t registerAddress, const bool value) { return communicationWriteAnalogRegister(false, registerAddress, &value, 2); }
 
 // -----------------------------------------------------------------------------
 
@@ -3946,6 +3990,7 @@ void communicationReadAnalogInput(const uint8_t registerAddress, int8_t &value) 
 void communicationReadAnalogInput(const uint8_t registerAddress, int16_t &value) { communicationReadAnalogRegister(false, registerAddress, &value, 2); }
 void communicationReadAnalogInput(const uint8_t registerAddress, int32_t &value) { communicationReadAnalogRegister(false, registerAddress, &value, 4); }
 void communicationReadAnalogInput(const uint8_t registerAddress, float &value) { communicationReadAnalogRegister(false, registerAddress, &value, 4); }
+void communicationReadAnalogInput(const uint8_t registerAddress, bool &value) { communicationReadAnalogRegister(false, registerAddress, &value, 2); }
 #endif
 
 // -----------------------------------------------------------------------------
@@ -3961,6 +4006,7 @@ bool communicationWriteAnalogOutput(const uint8_t registerAddress, const int8_t 
 bool communicationWriteAnalogOutput(const uint8_t registerAddress, const int16_t value) { return communicationWriteAnalogRegister(true, registerAddress, &value, 2); }
 bool communicationWriteAnalogOutput(const uint8_t registerAddress, const int32_t value) { return communicationWriteAnalogRegister(true, registerAddress, &value, 4); }
 bool communicationWriteAnalogOutput(const uint8_t registerAddress, const float value) { return communicationWriteAnalogRegister(true, registerAddress, &value, 4); }
+bool communicationWriteAnalogOutput(const uint8_t registerAddress, const bool value) { return communicationWriteAnalogRegister(true, registerAddress, &value, 2); }
 
 // -----------------------------------------------------------------------------
 
@@ -3972,6 +4018,7 @@ void communicationReadAnalogOutput(const uint8_t registerAddress, int8_t &value)
 void communicationReadAnalogOutput(const uint8_t registerAddress, int16_t &value) { communicationReadAnalogRegister(true, registerAddress, &value, 2); }
 void communicationReadAnalogOutput(const uint8_t registerAddress, int32_t &value) { communicationReadAnalogRegister(true, registerAddress, &value, 4); }
 void communicationReadAnalogOutput(const uint8_t registerAddress, float &value) { communicationReadAnalogRegister(true, registerAddress, &value, 4); }
+void communicationReadAnalogOutput(const uint8_t registerAddress, bool &value) { communicationReadAnalogRegister(true, registerAddress, &value, 2); }
 #endif
 
 // -----------------------------------------------------------------------------
