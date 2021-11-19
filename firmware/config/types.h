@@ -136,10 +136,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 // COMMUNICATION REGISTERS TYPES
 // =============================================================================
 
-#define COMMUNICATION_REGISTER_TYPE_DI                              0x01
-#define COMMUNICATION_REGISTER_TYPE_DO                              0x02
-#define COMMUNICATION_REGISTER_TYPE_AI                              0x03
-#define COMMUNICATION_REGISTER_TYPE_AO                              0x04
+#define COMMUNICATION_REGISTER_TYPE_INPUT                           0x01
+#define COMMUNICATION_REGISTER_TYPE_OUTPUT                          0x02
 
 // =============================================================================
 // COMMUNICATION ATTRIBUTES TYPES
@@ -158,6 +156,13 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define COMMUNICATION_DESCRIPTION_DEVICE_HW_REVISION                0x03
 #define COMMUNICATION_DESCRIPTION_DEVICE_FW_MANUFACTURER            0x04
 #define COMMUNICATION_DESCRIPTION_DEVICE_FW_VERSION                 0x05
+
+// =============================================================================
+// COMMUNICATION VALUES CONSTANTS
+// =============================================================================
+
+#define COMMUNICATION_BOOLEAN_VALUE_TRUE                            0xFF00
+#define COMMUNICATION_BOOLEAN_VALUE_FALSE                           0x0000
 
 // =============================================================================
 // LED MODES
@@ -191,6 +196,10 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 // =============================================================================
 // RELAY
 // =============================================================================
+
+#define RELAY_TURN_OFF                                              0
+#define RELAY_TURN_ON                                               1
+#define RELAY_TURN_TOGGLE                                           2
 
 #define RELAY_BOOT_OFF                                              0
 #define RELAY_BOOT_ON                                               1

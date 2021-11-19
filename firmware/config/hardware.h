@@ -43,7 +43,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {new DebounceEvent(BUTTON4_PIN, BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), 3, BUTTON_EVENT_NONE},
     };
 
-    // Digital outputs
+    // Relay outputs
     #define RELAY_PROVIDER                              RELAY_PROVIDER_RELAY
     #define RELAY_MAX_ITEMS                             4
 
@@ -63,38 +63,33 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #define COMMUNICATION_BUS_TX_PIN                    3
     #define COMMUNICATION_BUS_RX_PIN                    2
 
-    #define COMMUNICATION_MAX_DI_REGISTER_SIZE          0
-    #define COMMUNICATION_MAX_DO_REGISTER_SIZE          0
-    #define COMMUNICATION_MAX_AI_REGISTER_SIZE          4
-    #define COMMUNICATION_MAX_AO_REGISTER_SIZE          4
+    #define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE      4
+    #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE     4
     
     #define COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE      0
     #define COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE    0
     #define COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE   4
 
-    communication_digital_register_t communication_module_di_registers[COMMUNICATION_MAX_DI_REGISTER_SIZE];
-    communication_digital_register_t communication_module_do_registers[COMMUNICATION_MAX_DO_REGISTER_SIZE];
-
-    communication_analog_register_t communication_module_ai_registers[COMMUNICATION_MAX_AI_REGISTER_SIZE] = {
+    communication_register_t communication_module_input_registers[COMMUNICATION_MAX_INPUT_REGISTERS_SIZE] = {
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
     };
-    communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE] = {
+    communication_register_t communication_module_output_registers[COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE] = {
         {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
     };
 
-    communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
-    communication_attributes_device_t communication_module_attributes_device[COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE];
-    communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE] = {
-        {"DblDelay", 0, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
-        {"DblDelay", 1, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
-        {"DblDelay", 2, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
-        {"DblDelay", 3, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
+    communication_device_setting_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
+    communication_device_attribute_t communication_module_attributes_device[COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE];
+    communication_register_setting_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE] = {
+        {"DblDelay", 0, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
+        {"DblDelay", 1, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
+        {"DblDelay", 2, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
+        {"DblDelay", 3, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
     };
 
     // GENERAL
@@ -140,7 +135,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {new DebounceEvent(BUTTON4_PIN, BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), 3, BUTTON_EVENT_NONE},
     };
 
-    // Digital outputs
+    // Relay outputs
     #define RELAY_PROVIDER                              RELAY_PROVIDER_RELAY
     #define RELAY_MAX_ITEMS                             4
 
@@ -159,38 +154,33 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     // BUS
     #define COMMUNICATION_BUS_HARDWARE_SERIAL           1
 
-    #define COMMUNICATION_MAX_DI_REGISTER_SIZE          0
-    #define COMMUNICATION_MAX_DO_REGISTER_SIZE          0
-    #define COMMUNICATION_MAX_AI_REGISTER_SIZE          4
-    #define COMMUNICATION_MAX_AO_REGISTER_SIZE          4
+    #define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE      4
+    #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE     4
     
     #define COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE      0
     #define COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE   4
 
     #define COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS     4
 
-    communication_digital_register_t communication_module_di_registers[COMMUNICATION_MAX_DI_REGISTER_SIZE];
-    communication_digital_register_t communication_module_do_registers[COMMUNICATION_MAX_DO_REGISTER_SIZE];
-
-    communication_analog_register_t communication_module_ai_registers[COMMUNICATION_MAX_AI_REGISTER_SIZE] = {
+    communication_register_t communication_module_input_registers[COMMUNICATION_MAX_INPUT_REGISTERS_SIZE] = {
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
     };
-    communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE] = {
+    communication_register_t communication_module_output_registers[COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE] = {
         {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
     };
 
-    communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
-    communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE] = {
-        {"DblDelay", 0, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
-        {"DblDelay", 1, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
-        {"DblDelay", 2, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
-        {"DblDelay", 3, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
+    communication_device_setting_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
+    communication_register_setting_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE] = {
+        {"DblDelay", 0, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
+        {"DblDelay", 1, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
+        {"DblDelay", 2, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
+        {"DblDelay", 3, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
     };
 
     // GENERAL
@@ -277,14 +267,12 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #define COMMUNICATION_BUS_TX_PIN                        3
     #define COMMUNICATION_BUS_RX_PIN                        2
 
-    #define COMMUNICATION_MAX_DI_REGISTER_SIZE              0
-    #define COMMUNICATION_MAX_DO_REGISTER_SIZE              0
     #if defined(FASTYBIRD_8CH_BUTTONS)
-        #define COMMUNICATION_MAX_AI_REGISTER_SIZE          8
+        #define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE      8
     #else
-        #define COMMUNICATION_MAX_AI_REGISTER_SIZE          16
+        #define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE      16
     #endif
-    #define COMMUNICATION_MAX_AO_REGISTER_SIZE              0
+    #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE         0
 
     #define COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE          0
     #if defined(FASTYBIRD_8CH_BUTTONS)
@@ -293,10 +281,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         #define COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE   16
     #endif
 
-    communication_digital_register_t communication_module_di_registers[COMMUNICATION_MAX_DI_REGISTER_SIZE];
-    communication_digital_register_t communication_module_do_registers[COMMUNICATION_MAX_DO_REGISTER_SIZE];
-
-    communication_analog_register_t communication_module_ai_registers[COMMUNICATION_MAX_AI_REGISTER_SIZE] = {
+    communication_register_t communication_module_input_registers[COMMUNICATION_MAX_INPUT_REGISTERS_SIZE] = {
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
@@ -317,28 +302,28 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {COMMUNICATION_DATA_TYPE_UINT8, true, 1, {0, 0, 0, 0}, ""},
         #endif
     };
-    communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE];
+    communication_register_t communication_module_output_registers[COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE];
 
-    communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
-    communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE] = {
-        {"DblDelay", 0, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 1, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 2, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 3, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 4, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 5, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 6, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 7, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+    communication_device_setting_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
+    communication_register_setting_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE] = {
+        {"DblDelay", 0, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 1, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 2, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 3, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 4, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 5, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 6, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 7, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
 
         #if defined(FASTYBIRD_16CH_BUTTONS)
-        {"DblDelay", 8, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 9, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 10, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 11, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 12, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 13, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 14, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay", 15, COMMUNICATION_REGISTER_TYPE_AI, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 8, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 9, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 10, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 11, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 12, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 13, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 14, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay", 15, COMMUNICATION_REGISTER_TYPE_INPUT, COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
         #endif
     };
 
@@ -383,7 +368,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {new DebounceEvent(BUTTON1_PIN, BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), INDEX_NONE, BUTTON_EVENT_NONE},
     };
 
-    // Digital outputs
+    // Relay outputs
     #define RELAY_PROVIDER                              RELAY_PROVIDER_RELAY
     #if defined(FASTYBIRD_8CH_DO)
         #define RELAY_MAX_ITEMS                         8
@@ -436,13 +421,11 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #define COMMUNICATION_BUS_TX_PIN                        3
     #define COMMUNICATION_BUS_RX_PIN                        2
 
-    #define COMMUNICATION_MAX_DI_REGISTER_SIZE              0
-    #define COMMUNICATION_MAX_DO_REGISTER_SIZE              0
-    #define COMMUNICATION_MAX_AI_REGISTER_SIZE              0
+    #define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE          0
     #if defined(FASTYBIRD_8CH_DO)
-        #define COMMUNICATION_MAX_AO_REGISTER_SIZE          8
+        #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE     8
     #else
-        #define COMMUNICATION_MAX_AO_REGISTER_SIZE          16
+        #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE     16
     #endif
 
     #define COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE          0
@@ -454,11 +437,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         #define COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS     16
     #endif
 
-    communication_digital_register_t communication_module_di_registers[COMMUNICATION_MAX_DI_REGISTER_SIZE];
-    communication_digital_register_t communication_module_do_registers[COMMUNICATION_MAX_DO_REGISTER_SIZE];
-
-    communication_analog_register_t communication_module_ai_registers[COMMUNICATION_MAX_AI_REGISTER_SIZE];
-    communication_analog_register_t communication_module_ao_registers[COMMUNICATION_MAX_AO_REGISTER_SIZE] = {
+    communication_register_t communication_module_input_registers[COMMUNICATION_MAX_INPUT_REGISTERS_SIZE];
+    communication_register_t communication_module_output_registers[COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE] = {
         {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
         {COMMUNICATION_DATA_TYPE_BOOLEAN, true, 2, {0, 0, 0, 0}, ""},
@@ -480,8 +460,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         #endif
     };
 
-    communication_settings_device_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
-    communication_settings_register_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE];
+    communication_device_setting_t communication_module_settings_device[COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE];
+    communication_register_setting_t communication_module_settings_registers[COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE];
 
     // GENERAL
     #define SYSTEM_CONFIGURE_DEVICE_BUTTON              0

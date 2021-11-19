@@ -73,10 +73,10 @@ void _buttonEvent(
         DPRINTLN(event);
     #endif
 
-    #if COMMUNICATION_MAX_AI_REGISTER_SIZE
+    #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
         // Store state into communication register only if device is in running mode and address is defined
         if (button_module_items[id].register_address != INDEX_NONE /*&& firmwareIsRunning()*/) {
-            communicationWriteAnalogInput(button_module_items[id].register_address, event);
+            communicationWriteInputRegister(button_module_items[id].register_address, event);
         }
     #endif
 

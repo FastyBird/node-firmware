@@ -70,7 +70,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #endif
 
 #ifndef COMMUNICATION_MASTER_PING_TIMEOUT
-#define COMMUNICATION_MASTER_PING_TIMEOUT           15000           // 
+#define COMMUNICATION_MASTER_PING_TIMEOUT           15000
 #endif
 
 #ifndef COMMUNICATION_PROTOCOL_VERSION
@@ -78,23 +78,15 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #endif
 
 #ifndef COMMUNICATION_DISABLE_ADDRESS_STORING
-#define COMMUNICATION_DISABLE_ADDRESS_STORING       1               // Define maximum size of AO registers
+#define COMMUNICATION_DISABLE_ADDRESS_STORING       1
 #endif
 
-#ifndef COMMUNICATION_MAX_DI_REGISTER_SIZE
-#define COMMUNICATION_MAX_DI_REGISTER_SIZE          0               // Define maximum size of DI registers
+#ifndef COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+#define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE      0               // Define maximum size of input registers
 #endif
 
-#ifndef COMMUNICATION_MAX_DO_REGISTER_SIZE
-#define COMMUNICATION_MAX_DO_REGISTER_SIZE          0               // Define maximum size of DO registers
-#endif
-
-#ifndef COMMUNICATION_MAX_AI_REGISTER_SIZE
-#define COMMUNICATION_MAX_AI_REGISTER_SIZE          0               // Define maximum size of AI registers
-#endif
-
-#ifndef COMMUNICATION_MAX_AO_REGISTER_SIZE
-#define COMMUNICATION_MAX_AO_REGISTER_SIZE          0               // Define maximum size of AO registers
+#ifndef COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+#define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE     0               // Define maximum size of output registers
 #endif
 
 #ifndef COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE

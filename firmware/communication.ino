@@ -31,7 +31,7 @@ bool _communication_initial_state_to_master = false;
 
 char _communication_output_buffer[PJON_PACKET_MAX_LENGTH];
 
-#if COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && (COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE)
+#if COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
     communication_pub_sub_subscription_t _communication_pub_sub_subscriptions[COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS];
 
     communication_pub_sub_condition_t _communication_pub_sub_conditions[COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS * COMMUNICATION_PUB_SUB_MAX_CONDITIONS];
@@ -69,84 +69,14 @@ void _communicationReplyWithException(
 }
 
 // -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE
-/**
- * Get device settings buffer size
- */
-uint8_t _communicationGetDeviceSettingsBufferSize()
-{
-    return COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE;
-}
-#endif
-
+// REGISTERS HELPERS
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE
+#if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE || COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
 /**
- * Get device attributes buffer size
+ * Read value from register & transform it to 4 bytes
  */
-uint8_t _communicationGetDeviceAttributesBufferSize()
-{
-    return COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE;
-}
-#endif
-
-// -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE
-/**
- * Get registers settings buffer size
- */
-uint8_t _communicationGetRegistersSettingsBufferSize()
-{
-    return COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE;
-}
-#endif
-
-// -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_DI_REGISTER_SIZE
-/**
- * Get DI or DO buffer size
- */
-uint8_t _communicationGetDigitalBufferSize(
-    const bool output
-) {
-    if (output) {
-        return COMMUNICATION_MAX_DO_REGISTER_SIZE;
-    }
-
-    return COMMUNICATION_MAX_DI_REGISTER_SIZE;
-}
-#endif
-
-// -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_AO_REGISTER_SIZE || COMMUNICATION_MAX_AI_REGISTER_SIZE
-/**
- * Get AI or AO buffer size
- */
-uint8_t _communicationGetAnalogBufferSize(
-    const bool output
-) {
-    if (output) {
-        return COMMUNICATION_MAX_AO_REGISTER_SIZE;
-    }
-
-    return COMMUNICATION_MAX_AI_REGISTER_SIZE;
-}
-#endif
-
-// -----------------------------------------------------------------------------
-// ANALOG REGISTERS HELPERS
-// -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_AO_REGISTER_SIZE || COMMUNICATION_MAX_AI_REGISTER_SIZE
-/**
- * Read value from analog register & transform it to 4 bytes
- */
-void _communicationReadAnalogForTransfer(
+void _communicationReadValueForTransfer(
     const bool output,
     const uint8_t dataType,
     const uint8_t address,
@@ -158,13 +88,13 @@ void _communicationReadAnalogForTransfer(
             UINT8_UNION_t uint8_read_value;
 
             if (output) {
-                #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-                    communicationReadAnalogOutput(address, uint8_read_value.number);
+                #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+                    communicationReadOutputRegister(address, uint8_read_value.number);
                 #endif
 
             } else {
-                #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-                    communicationReadAnalogInput(address, uint8_read_value.number);
+                #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+                    communicationReadInputRegister(address, uint8_read_value.number);
                 #endif
             }
 
@@ -175,13 +105,13 @@ void _communicationReadAnalogForTransfer(
             UINT16_UNION_t uint16_read_value;
 
             if (output) {
-                #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-                    communicationReadAnalogOutput(address, uint16_read_value.number);
+                #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+                    communicationReadOutputRegister(address, uint16_read_value.number);
                 #endif
 
             } else {
-                #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-                    communicationReadAnalogInput(address, uint16_read_value.number);
+                #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+                    communicationReadInputRegister(address, uint16_read_value.number);
                 #endif
             }
 
@@ -192,13 +122,13 @@ void _communicationReadAnalogForTransfer(
             UINT32_UNION_t uint32_read_value;
 
             if (output) {
-                #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-                    communicationReadAnalogOutput(address, uint32_read_value.number);
+                #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+                    communicationReadOutputRegister(address, uint32_read_value.number);
                 #endif
 
             } else {
-                #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-                    communicationReadAnalogInput(address, uint32_read_value.number);
+                #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+                    communicationReadInputRegister(address, uint32_read_value.number);
                 #endif
             }
 
@@ -209,13 +139,13 @@ void _communicationReadAnalogForTransfer(
             INT8_UNION_t int8_read_value;
 
             if (output) {
-                #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-                    communicationReadAnalogOutput(address, int8_read_value.number);
+                #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+                    communicationReadOutputRegister(address, int8_read_value.number);
                 #endif
 
             } else {
-                #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-                    communicationReadAnalogInput(address, int8_read_value.number);
+                #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+                    communicationReadInputRegister(address, int8_read_value.number);
                 #endif
             }
 
@@ -226,13 +156,13 @@ void _communicationReadAnalogForTransfer(
             INT16_UNION_t int16_read_value;
 
             if (output) {
-                #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-                    communicationReadAnalogOutput(address, int16_read_value.number);
+                #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+                    communicationReadOutputRegister(address, int16_read_value.number);
                 #endif
 
             } else {
-                #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-                    communicationReadAnalogInput(address, int16_read_value.number);
+                #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+                    communicationReadInputRegister(address, int16_read_value.number);
                 #endif
             }
 
@@ -243,13 +173,13 @@ void _communicationReadAnalogForTransfer(
             INT32_UNION_t int32_read_value;
 
             if (output) {
-                #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-                    communicationReadAnalogOutput(address, int32_read_value.number);
+                #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+                    communicationReadOutputRegister(address, int32_read_value.number);
                 #endif
 
             } else {
-                #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-                    communicationReadAnalogInput(address, int32_read_value.number);
+                #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+                    communicationReadInputRegister(address, int32_read_value.number);
                 #endif
             }
 
@@ -260,13 +190,13 @@ void _communicationReadAnalogForTransfer(
             FLOAT32_UNION_t float_read_value;
 
             if (output) {
-                #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-                    communicationReadAnalogOutput(address, float_read_value.number);
+                #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+                    communicationReadOutputRegister(address, float_read_value.number);
                 #endif
 
             } else {
-                #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-                    communicationReadAnalogInput(address, float_read_value.number);
+                #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+                    communicationReadInputRegister(address, float_read_value.number);
                 #endif
             }
 
@@ -277,13 +207,13 @@ void _communicationReadAnalogForTransfer(
             BOOLEAN_UNION_t bool_read_value;
 
             if (output) {
-                #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-                    communicationReadAnalogOutput(address, bool_read_value.number);
+                #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+                    communicationReadOutputRegister(address, bool_read_value.number);
                 #endif
 
             } else {
-                #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-                    communicationReadAnalogInput(address, bool_read_value.number);
+                #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+                    communicationReadInputRegister(address, bool_read_value.number);
                 #endif
             }
 
@@ -301,11 +231,11 @@ void _communicationReadAnalogForTransfer(
 
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_AO_REGISTER_SIZE
+#if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
 /**
  * Transform received 4 bytes value into register value
  */
-void _communicationWriteAnalogFromTransfer(
+void _communicationWriteValueFromTransfer(
     const uint8_t dataType,
     const uint8_t address,
     char * value
@@ -321,15 +251,15 @@ void _communicationWriteAnalogFromTransfer(
             uint8_write_value.bytes[2] = 0;
             uint8_write_value.bytes[3] = 0;
 
-            communicationReadAnalogOutput(address, uint8_stored_value);
+            communicationReadOutputRegister(address, uint8_stored_value);
 
             if (uint8_stored_value != uint8_write_value.number) {
-                communicationWriteAnalogOutput(address, uint8_write_value.number);
+                communicationWriteOutputRegister(address, uint8_write_value.number);
             #if DEBUG_COMMUNICATION_SUPPORT
-                DPRINTLN(F("[COMMUNICATION] Value was written into AO register"));
+                DPRINTLN(F("[COMMUNICATION] Value was written into output register"));
 
             } else {
-                DPRINTLN(F("[COMMUNICATION] Value to write into AO register is same as stored. Write skipped"));
+                DPRINTLN(F("[COMMUNICATION] Value to write into output register is same as stored. Write skipped"));
             #endif
             }
             break;
@@ -343,15 +273,15 @@ void _communicationWriteAnalogFromTransfer(
             uint16_write_value.bytes[2] = 0;
             uint16_write_value.bytes[3] = 0;
 
-            communicationReadAnalogOutput(address, uint16_stored_value);
+            communicationReadOutputRegister(address, uint16_stored_value);
 
             if (uint16_stored_value != uint16_write_value.number) {
-                communicationWriteAnalogOutput(address, uint16_write_value.number);
+                communicationWriteOutputRegister(address, uint16_write_value.number);
             #if DEBUG_COMMUNICATION_SUPPORT
-                DPRINTLN(F("[COMMUNICATION] Value was written into AO register"));
+                DPRINTLN(F("[COMMUNICATION] Value was written into output register"));
 
             } else {
-                DPRINTLN(F("[COMMUNICATION] Value to write into AO register is same as stored. Write skipped"));
+                DPRINTLN(F("[COMMUNICATION] Value to write into output register is same as stored. Write skipped"));
             #endif
             }
             break;
@@ -365,10 +295,10 @@ void _communicationWriteAnalogFromTransfer(
             uint32_write_value.bytes[2] = value[2];
             uint32_write_value.bytes[3] = value[3];
 
-            communicationReadAnalogOutput(address, uint32_stored_value);
+            communicationReadOutputRegister(address, uint32_stored_value);
 
             if (uint32_stored_value != uint32_write_value.number) {
-                communicationWriteAnalogOutput(address, uint32_write_value.number);
+                communicationWriteOutputRegister(address, uint32_write_value.number);
             #if DEBUG_COMMUNICATION_SUPPORT
                 DPRINTLN(F("[COMMUNICATION] Value was written into AO register"));
 
@@ -387,15 +317,15 @@ void _communicationWriteAnalogFromTransfer(
             int8_write_value.bytes[2] = 0;
             int8_write_value.bytes[3] = 0;
 
-            communicationReadAnalogOutput(address, int8_stored_value);
+            communicationReadOutputRegister(address, int8_stored_value);
 
             if (int8_stored_value != int8_write_value.number) {
-                communicationWriteAnalogOutput(address, int8_write_value.number);
+                communicationWriteOutputRegister(address, int8_write_value.number);
             #if DEBUG_COMMUNICATION_SUPPORT
-                DPRINTLN(F("[COMMUNICATION] Value was written into AO register"));
+                DPRINTLN(F("[COMMUNICATION] Value was written into output register"));
 
             } else {
-                DPRINTLN(F("[COMMUNICATION] Value to write into AO register is same as stored. Write skipped"));
+                DPRINTLN(F("[COMMUNICATION] Value to write into output register is same as stored. Write skipped"));
             #endif
             }
             break;
@@ -409,15 +339,15 @@ void _communicationWriteAnalogFromTransfer(
             int16_write_value.bytes[2] = 0;
             int16_write_value.bytes[3] = 0;
 
-            communicationReadAnalogOutput(address, int16_stored_value);
+            communicationReadOutputRegister(address, int16_stored_value);
 
             if (int16_stored_value != int16_write_value.number) {
-                communicationWriteAnalogOutput(address, int16_write_value.number);
+                communicationWriteOutputRegister(address, int16_write_value.number);
             #if DEBUG_COMMUNICATION_SUPPORT
-                DPRINTLN(F("[COMMUNICATION] Value was written into AO register"));
+                DPRINTLN(F("[COMMUNICATION] Value was written into output register"));
 
             } else {
-                DPRINTLN(F("[COMMUNICATION] Value to write into AO register is same as stored. Write skipped"));
+                DPRINTLN(F("[COMMUNICATION] Value to write into output register is same as stored. Write skipped"));
             #endif
             }
             break;
@@ -431,15 +361,15 @@ void _communicationWriteAnalogFromTransfer(
             int32_write_value.bytes[2] = value[2];
             int32_write_value.bytes[3] = value[3];
 
-            communicationReadAnalogOutput(address, int32_stored_value);
+            communicationReadOutputRegister(address, int32_stored_value);
 
             if (int32_stored_value != int32_write_value.number) {
-                communicationWriteAnalogOutput(address, int32_write_value.number);
+                communicationWriteOutputRegister(address, int32_write_value.number);
             #if DEBUG_COMMUNICATION_SUPPORT
-                DPRINTLN(F("[COMMUNICATION] Value was written into AO register"));
+                DPRINTLN(F("[COMMUNICATION] Value was written into output register"));
 
             } else {
-                DPRINTLN(F("[COMMUNICATION] Value to write into AO register is same as stored. Write skipped"));
+                DPRINTLN(F("[COMMUNICATION] Value to write into output register is same as stored. Write skipped"));
             #endif
             }
             break;
@@ -453,15 +383,15 @@ void _communicationWriteAnalogFromTransfer(
             float_write_value.bytes[2] = value[2];
             float_write_value.bytes[3] = value[3];
 
-            communicationReadAnalogOutput(address, float_stored_value);
+            communicationReadOutputRegister(address, float_stored_value);
 
             if (float_stored_value != float_write_value.number) {
-                communicationWriteAnalogOutput(address, float_write_value.number);
+                communicationWriteOutputRegister(address, float_write_value.number);
             #if DEBUG_COMMUNICATION_SUPPORT
-                DPRINTLN(F("[COMMUNICATION] Value was written into AO register"));
+                DPRINTLN(F("[COMMUNICATION] Value was written into output register"));
 
             } else {
-                DPRINTLN(F("[COMMUNICATION] Value to write into AO register is same as stored. Write skipped"));
+                DPRINTLN(F("[COMMUNICATION] Value to write into output register is same as stored. Write skipped"));
             #endif
             }
             break;
@@ -475,22 +405,22 @@ void _communicationWriteAnalogFromTransfer(
             bool_write_value.bytes[2] = 0;
             bool_write_value.bytes[3] = 0;
 
-            communicationReadAnalogOutput(address, bool_stored_value);
+            communicationReadOutputRegister(address, bool_stored_value);
 
             if (bool_stored_value != bool_write_value.number) {
-                communicationWriteAnalogOutput(address, bool_write_value.number);
+                communicationWriteOutputRegister(address, bool_write_value.number);
             #if DEBUG_COMMUNICATION_SUPPORT
-                DPRINTLN(F("[COMMUNICATION] Value was written into AO register"));
+                DPRINTLN(F("[COMMUNICATION] Value was written into output register"));
 
             } else {
-                DPRINTLN(F("[COMMUNICATION] Value to write into AO register is same as stored. Write skipped"));
+                DPRINTLN(F("[COMMUNICATION] Value to write into output register is same as stored. Write skipped"));
             #endif
             }
             break;
 
         default:
             #if DEBUG_COMMUNICATION_SUPPORT
-                DPRINTLN(F("[COMMUNICATION][ERR] Provided unknown data type for writing into analog register"));
+                DPRINTLN(F("[COMMUNICATION][ERR] Provided unknown data type for writing into output register"));
             #endif
             break;
     }
@@ -498,118 +428,16 @@ void _communicationWriteAnalogFromTransfer(
 #endif
 
 // -----------------------------------------------------------------------------
-// DIGITAL REGISTERS
+// WRITING MULTIPLE REGISTERS
 // -----------------------------------------------------------------------------
 
-/*
-void _communicationWriteMultipleDigitalOutputs(
-    const uint8_t packetId,
+#if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+void _communicationWriteMultipleRegisters(
+    const word registerStartAddress,
+    const word writeLength,
     uint8_t * payload
 ) {
-    memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
-
-    word register_address = (word) payload[1] << 8 | (word) payload[2];
-    word write_length = (word) payload[3] << 8 | (word) payload[4];
-
-    uint8_t bytes_count = (uint8_t) payload[5];
-
-    #if DEBUG_COMMUNICATION_SUPPORT
-        DPRINT(F("[COMMUNICATION] Requested write to DO register at address: "));
-        DPRINT(register_address);
-        DPRINT(F(" and length: "));
-        DPRINTLN(write_length);
-    #endif
-
-    if (
-        // Write start address mus be between <0, buffer.size()>
-        register_address < _communicationGetDigitalBufferSize(true)
-        // Write end address have to be same or smaller as register size
-        && (register_address + write_length) <= _communicationGetDigitalBufferSize(true)
-    ) {
-        uint8_t write_byte = 1;
-        uint8_t data_byte;
-
-        uint8_t write_address = register_address;
-
-        bool write_value = false;
-
-        while (
-            write_address < (register_address + write_length)
-            && write_address < _communicationGetDigitalBufferSize(true)
-            && write_byte <= bytes_count
-        ) {
-            data_byte = (uint8_t) payload[5 + write_byte];
-
-            for (uint8_t i = 0; i < 8; i++) {
-                write_value = (data_byte >> i) & 0x01 ? true : false;
-
-                if (communicationReadDigitalOutput(write_address) != write_value) {
-                    communicationWriteDigitalOutput(write_address, write_value);
-                #if DEBUG_COMMUNICATION_SUPPORT
-                    DPRINT(F("[COMMUNICATION] Value was written into DO register at address: "));
-                    DPRINTLN(write_address);
-
-                } else {
-                    DPRINT(F("[COMMUNICATION] Value to write into DO register at address: "));
-                    DPRINT(write_address);
-                    DPRINTLN(F(" is same as stored. Write skipped"));
-                #endif
-                }
-
-                write_address++;
-
-                if (write_address >= _communicationGetDigitalBufferSize(true)) {
-                    break;
-                }
-            }
-
-            write_byte++;
-        }
-
-        // 0 => Packet identifier
-        // 1 => High byte of register address
-        // 2 => Low byte of register address
-        // 3 => High byte of write byte length
-        // 4 => Low byte of write byte length
-        _communication_output_buffer[0] = packetId;
-        _communication_output_buffer[1] = (char) (register_address >> 8);
-        _communication_output_buffer[2] = (char) (register_address & 0xFF);
-        _communication_output_buffer[3] = (char) (write_byte >> 8);
-        _communication_output_buffer[4] = (char) (write_byte & 0xFF);
-
-        #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to master
-            if (_communicationReplyToPacket(_communication_output_buffer, 5) == false) {
-                // Device was not able to notify master about its address
-                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive multiple DO register write result"));
-
-            } else {
-                DPRINTLN(F("[COMMUNICATION] Replied to master with multiple DO register write result"));
-            }
-        #else
-            // Reply to master
-            _communicationReplyToPacket(_communication_output_buffer, 5);
-        #endif
-
-    } else {
-        #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to write to undefined DO registers range"));
-        #endif
-
-        // TODO: Send exception
-    }
-}
-*/
-
-// -----------------------------------------------------------------------------
-// ANALOG REGISTERS
-// -----------------------------------------------------------------------------
-
 /*
-void _communicationWriteMultipleAnalogOutputs(
-    const uint8_t packetId,
-    uint8_t * payload
-) {
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
     word register_address = (word) payload[1] << 8 | (word) payload[2];
@@ -625,9 +453,9 @@ void _communicationWriteMultipleAnalogOutputs(
 
     if (
         // Write start address mus be between <0, buffer.size()>
-        register_address < _communicationGetDigitalBufferSize(true)
+        register_address < COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
         // Write end address have to be same or smaller as register size
-        && (register_address + write_length) <= _communicationGetDigitalBufferSize(true)
+        && (register_address + write_length) <= COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
     ) {
         uint8_t write_byte = 1;
         uint8_t data_byte;
@@ -636,7 +464,7 @@ void _communicationWriteMultipleAnalogOutputs(
 
         while (
             write_address < (register_address + write_length)
-            && write_address < _communicationGetDigitalBufferSize(true)
+            && write_address < COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
             && write_byte <= bytes_count
         ) {
             // TODO: Finish implementation
@@ -674,38 +502,13 @@ void _communicationWriteMultipleAnalogOutputs(
 
         // TODO: Send exception
     }
-}
 */
-
-// -----------------------------------------------------------------------------
-// WRITING MULTIPLE REGISTERS
-// -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_DO_REGISTER_SIZE
-void _communicationWriteMultipleDigitalRegisters(
-    const word registerStartAddress,
-    const word writeLength,
-    uint8_t * payload
-) {
-
 }
 #endif
 
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_AO_REGISTER_SIZE
-void _communicationWriteMultipleAnalogRegisters(
-    const word registerStartAddress,
-    const word writeLength,
-    uint8_t * payload
-) {
-
-}
-#endif
-
-// -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE
+#if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
 /**
  * Parse received payload - Requesting writing multiple registers
  *
@@ -731,15 +534,9 @@ void _communicationWriteMultipleOutputRegistersHandler(
     switch (register_type)
     {
 
-        #if COMMUNICATION_MAX_DO_REGISTER_SIZE
-            case COMMUNICATION_REGISTER_TYPE_DO:
-                _communicationWriteMultipleDigitalRegisters(register_start_address, write_length, payload);
-                break;
-        #endif
-
-        #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-            case COMMUNICATION_REGISTER_TYPE_AI:
-                _communicationWriteMultipleAnalogRegisters(register_start_address, write_length, payload);
+        #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+            case COMMUNICATION_REGISTER_TYPE_INPUT:
+                _communicationWriteMultipleRegisters(register_start_address, write_length, payload);
                 break;
         #endif
 
@@ -758,104 +555,26 @@ void _communicationWriteMultipleOutputRegistersHandler(
 // WRITING SINGLE REGISTER
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_DO_REGISTER_SIZE
-void _communicationWriteSingleDigitalRegister(
-    uint8_t * payload,
-    const word registerAddress,
-    const word writeValue
-) {  
-    #if DEBUG_COMMUNICATION_SUPPORT
-        DPRINT(F("[COMMUNICATION] Requested writing single value to DO register at address: "));
-        DPRINTLN(registerAddress);
-    #endif
-
-    // Check if value is TRUE|FALSE or 1|0
-    if (writeValue != 0xFF00 && writeValue != 0x0000) {
-        #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][ERR] DO register accept only bool value"));
-        #endif
-
-        _communicationReplyWithException(payload);
-
-        return;
-    }
-
-    bool transformed_write_value = writeValue == 0xFF00;
-
-    if (
-        // Write address must be between <0, buffer.size()>
-        registerAddress < _communicationGetDigitalBufferSize(true)
-    ) {
-        if (communicationReadDigitalOutput(registerAddress) != transformed_write_value) {
-            communicationWriteDigitalOutput(registerAddress, transformed_write_value);
-        #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION] Value was written into DO register"));
-
-        } else {
-            DPRINTLN(F("[COMMUNICATION] Value to write into DO register is same as stored. Write skipped"));
-        #endif
-        }
-    
-        memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
-
-        // 0 => Packet identifier
-        // 1 => Register type
-        // 2 => High byte of register address
-        // 3 => Low byte of register address
-        // 4 => High byte of written value
-        // 5 => Low byte of written value
-        _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_WRITE_SINGLE_REGISTER;
-        _communication_output_buffer[1] = (char) COMMUNICATION_REGISTER_TYPE_DO;
-        _communication_output_buffer[2] = (char) (registerAddress >> 8);
-        _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
-        _communication_output_buffer[4] = (char) (writeValue >> 8);
-        _communication_output_buffer[5] = (char) (writeValue & 0xFF);
-
-        #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to master
-            if (_communicationReplyToPacket(_communication_output_buffer, 6) == false) {
-                // Device was not able to notify master about its address
-                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive DO register write result"));
-
-            } else {
-                DPRINTLN(F("[COMMUNICATION] Replied to master with DO register write result"));
-            }
-        #else
-            _communicationReplyToPacket(_communication_output_buffer, 6);
-        #endif
-
-    } else {
-        #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to write to undefined DO register address"));
-        #endif
-
-        _communicationReplyWithException(payload);
-    }
-}
-#endif
-
-// -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_AO_REGISTER_SIZE
-void _communicationWriteSingleAnalogRegister(
+#if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+void _communicationWriteSingleRegister(
     uint8_t * payload,
     const word registerAddress,
     char * writeValue
 ) {
     #if DEBUG_COMMUNICATION_SUPPORT
-        DPRINT(F("[COMMUNICATION] Requested writing single value to AO register at address: "));
+        DPRINT(F("[COMMUNICATION] Requested writing single value to output register at address: "));
         DPRINTLN(registerAddress);
     #endif
 
     if (
-        // Write address must be between <0, buffer.size()>
-        registerAddress < _communicationGetAnalogBufferSize(true)
+        // Write address must be between <0, registers_size>
+        registerAddress < COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
     ) {
-        _communicationWriteAnalogFromTransfer(communication_module_ao_registers[registerAddress].data_type, registerAddress, writeValue);
+        _communicationWriteValueFromTransfer(communication_module_output_registers[registerAddress].data_type, registerAddress, writeValue);
 
         char stored_value[4] = { 0, 0, 0, 0 };
 
-        _communicationReadAnalogForTransfer(true, communication_module_ao_registers[registerAddress].data_type, registerAddress, stored_value);
+        _communicationReadValueForTransfer(true, communication_module_output_registers[registerAddress].data_type, registerAddress, stored_value);
 
         memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
@@ -865,7 +584,7 @@ void _communicationWriteSingleAnalogRegister(
         // 3    => Low byte of register address
         // 4-7  => Written value
         _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_WRITE_SINGLE_REGISTER;
-        _communication_output_buffer[1] = (char) COMMUNICATION_REGISTER_TYPE_AO;
+        _communication_output_buffer[1] = (char) COMMUNICATION_REGISTER_TYPE_OUTPUT;
         _communication_output_buffer[2] = (char) (registerAddress >> 8);
         _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
         _communication_output_buffer[4] = (char) stored_value[0];
@@ -877,10 +596,10 @@ void _communicationWriteSingleAnalogRegister(
             // Reply to master
             if (_communicationReplyToPacket(_communication_output_buffer, 8) == false) {
                 // Device was not able to notify master about its address
-                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive AO register write result"));
+                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive output register write result"));
 
             } else {
-                DPRINTLN(F("[COMMUNICATION] Replied to master with AO register write result"));
+                DPRINTLN(F("[COMMUNICATION] Replied to master with output register write result"));
             }
         #else
             _communicationReplyToPacket(_communication_output_buffer, 8);
@@ -888,7 +607,7 @@ void _communicationWriteSingleAnalogRegister(
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to write to undefined AO register address"));
+            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to write to undefined output register address"));
         #endif
 
         _communicationReplyWithException(payload);
@@ -898,7 +617,7 @@ void _communicationWriteSingleAnalogRegister(
 
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE
+#if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
 /**
  * Parse received payload - Requesting writing single register
     *
@@ -919,31 +638,17 @@ void _communicationWriteSingleOutputRegisterHandler(
     switch (register_type)
     {
 
-        #if COMMUNICATION_MAX_DO_REGISTER_SIZE
-            case COMMUNICATION_REGISTER_TYPE_DO:
+        #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+            case COMMUNICATION_REGISTER_TYPE_OUTPUT:
             {
-                word write_digital_value = (word) payload[4] << 8 | (word) payload[5];
+                char write_value[4] = { 0, 0, 0, 0 };
 
-                _communicationWriteSingleDigitalRegister(payload, register_address, write_digital_value);
-                break;
-            }
-        #endif
+                write_value[0] = payload[4];
+                write_value[1] = payload[5];
+                write_value[2] = payload[6];
+                write_value[3] = payload[7];
 
-        #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-            case COMMUNICATION_REGISTER_TYPE_AO:
-            {
-                char write_analog_value[4] = { 0, 0, 0, 0 };
-
-                write_analog_value[0] = payload[4];
-                write_analog_value[1] = payload[5];
-                write_analog_value[2] = payload[6];
-                write_analog_value[3] = payload[7];
-
-                _communicationWriteSingleAnalogRegister(payload, register_address, write_analog_value);
-
-                bool register_value;
-
-                communicationReadAnalogOutput(register_address, register_value);
+                _communicationWriteSingleRegister(payload, register_address, write_value);
                 break;
             }
         #endif
@@ -963,168 +668,40 @@ void _communicationWriteSingleOutputRegisterHandler(
 // READING MULTIPLE REGISTERS
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_DI_REGISTER_SIZE
-void _communicationReplyMultipleDigitalRegister(
-    uint8_t * payload,
-    const word registerAddress,
-    const uint8_t readLength,
-    const bool output
-) {    
-    #if DEBUG_COMMUNICATION_SUPPORT
-        DPRINT(F("[COMMUNICATION] Requested reading from multiple digital"));
-        if (output) {
-            DPRINT(F(" outputs (DO) "));
-        } else {
-            DPRINT(F(" inputs (DI) "));
-        }
-        DPRINT(F("buffer at address: "));
-        DPRINT(registerAddress);
-        DPRINT(F(" and length: "));
-        DPRINTLN(readLength);
-    #endif
-
-    if (
-        // Read start address mus be between <0, buffer.size()>
-        registerAddress < _communicationGetDigitalBufferSize(output)
-        // Read length have to be same or smaller as registers size
-        && (registerAddress + readLength) <= _communicationGetDigitalBufferSize(output)
-    ) {
-        memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
-
-        // 0    => Packet identifier
-        // 1    => Register type
-        // 2    => High byte of register address
-        // 3    => Low byte of register address
-        // 4    => Count of registers
-        // 5-n  => Packet data
-        _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_READ_MULTIPLE_REGISTERS;
-        _communication_output_buffer[1] = (char) output ? COMMUNICATION_REGISTER_TYPE_DO : COMMUNICATION_REGISTER_TYPE_DI;
-        _communication_output_buffer[2] = (char) (registerAddress >> 8);
-        _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
-        _communication_output_buffer[4] = (char) 0; // Temporary value, will be updated after collecting all
-
-        uint8_t byte_pointer = 5;
-        uint8_t bit_counter = 0;
-        uint8_t byte_counter = 5;
-        uint8_t write_byte = 0;
-        uint8_t registers_counter = 0;
-
-        bool byte_buffer[8];
-
-        // Reset bit buffer
-        for (uint8_t j = 0; j < 8; j++) {
-            byte_buffer[j] = 0;
-        }
-
-        for (uint8_t i = registerAddress; i < (registerAddress + readLength) && i < _communicationGetDigitalBufferSize(output); i++) {
-            #if COMMUNICATION_MAX_DO_REGISTER_SIZE
-                if (output) {
-                    byte_buffer[bit_counter] = communicationReadDigitalOutput(i) ? 1 : 0;
-                }
-            #endif
-
-            #if COMMUNICATION_MAX_DI_REGISTER_SIZE
-                if (!output) {
-                    byte_buffer[bit_counter] = communicationReadDigitalInput(i) ? 1 : 0;
-                }
-            #endif
-
-            bit_counter++;
-
-            // bit counter reached size of one byte
-            if (bit_counter >= 8) {
-                bit_counter = 0;
-
-                // Converting BIT array to BYTE => decimal number
-                write_byte = 0;
-
-                for (uint8_t wr = 0; wr < 8; wr++) {
-                    write_byte |= byte_buffer[wr] << wr;
-                }
-
-                // Write converted decimal number to output buffer
-                _communication_output_buffer[byte_pointer] = write_byte;
-
-                byte_counter++;
-                byte_pointer++;
-
-                // Reset bit buffer
-                for (uint8_t j = 0; j < 8; j++) {
-                    byte_buffer[j] = 0;
-                }
-            }
-
-            registers_counter++;
-        }
-
-        if (readLength % 8 != 0) {
-            // Converting BIT array to BYTE => decimal number
-            write_byte = 0;
-
-            for (uint8_t wr = 0; wr < 8; wr++) {
-                write_byte |= byte_buffer[wr] << wr;
-            }
-
-            // Write converted decimal number to output buffer
-            _communication_output_buffer[byte_pointer] = write_byte;
-
-            byte_counter++;
-            byte_pointer++;
-        }
-
-        // Update data registers length
-        _communication_output_buffer[4] = (char) registers_counter;
-
-        #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to master
-            if (_communicationReplyToPacket(_communication_output_buffer, byte_counter) == false) {
-                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive multiple digital registers reading"));
-
-            } else {
-                DPRINTLN(F("[COMMUNICATION] Replied to master with multiple digital registers content"));
-            }
-        #else
-            // Reply to master
-            _communicationReplyToPacket(_communication_output_buffer, byte_counter);
-        #endif
-
-    } else {
-        #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read from undefined digital registers range"));
-        #endif
-
-        _communicationReplyWithException(payload);
-    }
-}
-#endif
-
-// -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_AO_REGISTER_SIZE || COMMUNICATION_MAX_AI_REGISTER_SIZE
-void _communicationReplyMultipleAnalogRegister(
+#if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE || COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+void _communicationReplyMultipleRegister(
     uint8_t * payload,
     const word registerAddress,
     const uint8_t readLength,
     const bool output
 ) {
     #if DEBUG_COMMUNICATION_SUPPORT
-        DPRINT(F("[COMMUNICATION] Requested reading from multiple analog"));
+        DPRINT(F("[COMMUNICATION] Requested reading from multiple"));
         if (output) {
-            DPRINT(F(" outputs (AO) "));
+            DPRINT(F(" outputs "));
         } else {
-            DPRINT(F(" inputs (AI) "));
+            DPRINT(F(" inputs "));
         }
-        DPRINT(F("buffer at address: "));
+        DPRINT(F("registers at address: "));
         DPRINT(registerAddress);
         DPRINT(F(" and length: "));
         DPRINTLN(readLength);
     #endif
 
+    uint8_t registers_size = 0;
+
+    if (output) {
+        registers_size = COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE;
+
+    } else {
+        registers_size = COMMUNICATION_MAX_INPUT_REGISTERS_SIZE;
+    }
+
     if (
         // Read start address mus be between <0, buffer.size()>
-        registerAddress < _communicationGetAnalogBufferSize(output)
+        registerAddress < registers_size
         // Read length have to be same or smaller as registers size
-        && (registerAddress + readLength) <= _communicationGetAnalogBufferSize(output)
+        && (registerAddress + readLength) <= registers_size
     ) {
         memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
@@ -1134,7 +711,7 @@ void _communicationReplyMultipleAnalogRegister(
         // 3    => Count of registers
         // 4-n  => Packet data
         _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_READ_MULTIPLE_REGISTERS;
-        _communication_output_buffer[1] = (char) output ? COMMUNICATION_REGISTER_TYPE_AO : COMMUNICATION_REGISTER_TYPE_AI;
+        _communication_output_buffer[1] = (char) output ? COMMUNICATION_REGISTER_TYPE_OUTPUT : COMMUNICATION_REGISTER_TYPE_INPUT;
         _communication_output_buffer[2] = (char) (registerAddress >> 8);
         _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
         _communication_output_buffer[4] = (char) 0; // Temporary value, will be updated after collecting all
@@ -1145,16 +722,16 @@ void _communicationReplyMultipleAnalogRegister(
 
         char read_value[4] = { 0, 0, 0, 0 };
 
-        for (uint8_t i = registerAddress; i < (registerAddress + readLength) && i < _communicationGetAnalogBufferSize(output); i++) {
-            #if COMMUNICATION_MAX_AO_REGISTER_SIZE
+        for (uint8_t i = registerAddress; i < (registerAddress + readLength) && i < registers_size; i++) {
+            #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
                 if (output) {
-                    _communicationReadAnalogForTransfer(output, communication_module_ao_registers[i].data_type, i, read_value);
+                    _communicationReadValueForTransfer(output, communication_module_output_registers[i].data_type, i, read_value);
                 }
             #endif
 
-            #if COMMUNICATION_MAX_AI_REGISTER_SIZE
+            #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
                 if (!output) {
-                    _communicationReadAnalogForTransfer(output, communication_module_ai_registers[i].data_type, i, read_value);
+                    _communicationReadValueForTransfer(output, communication_module_input_registers[i].data_type, i, read_value);
                 }
             #endif
 
@@ -1178,10 +755,10 @@ void _communicationReplyMultipleAnalogRegister(
         #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to master
             if (_communicationReplyToPacket(_communication_output_buffer, byte_counter) == false) {
-                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive multiple analog registers reading"));
+                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive multiple registers reading"));
 
             } else {
-                DPRINTLN(F("[COMMUNICATION] Replied to master with multiple analog registers content"));
+                DPRINTLN(F("[COMMUNICATION] Replied to master with multiple registers content"));
             }
         #else
             // Reply to master
@@ -1190,7 +767,7 @@ void _communicationReplyMultipleAnalogRegister(
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read from undefined analog registers range"));
+            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read from undefined registers range"));
         #endif
 
         _communicationReplyWithException(payload);
@@ -1224,27 +801,15 @@ void _communicationReadMultipleRegistersHandler(
     switch (register_type)
     {
 
-        #if COMMUNICATION_MAX_DI_REGISTER_SIZE
-            case COMMUNICATION_REGISTER_TYPE_DI:
-                _communicationReplyMultipleDigitalRegister(payload, register_address, read_length, false);
+        #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+            case COMMUNICATION_REGISTER_TYPE_INPUT:
+                _communicationReplyMultipleRegister(payload, register_address, read_length, false);
                 break;
         #endif
 
-        #if COMMUNICATION_MAX_DO_REGISTER_SIZE
-            case COMMUNICATION_REGISTER_TYPE_DO:
-                _communicationReplyMultipleDigitalRegister(payload, register_address, read_length, true);
-                break;
-        #endif
-
-        #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-            case COMMUNICATION_REGISTER_TYPE_AI:
-                _communicationReplyMultipleAnalogRegister(payload, register_address, read_length, false);
-                break;
-        #endif
-
-        #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-            case COMMUNICATION_REGISTER_TYPE_AO:
-                _communicationReplyMultipleAnalogRegister(payload, register_address, read_length, true);
+        #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+            case COMMUNICATION_REGISTER_TYPE_OUTPUT:
+                _communicationReplyMultipleRegister(payload, register_address, read_length, true);
                 break;
         #endif
 
@@ -1262,100 +827,28 @@ void _communicationReadMultipleRegistersHandler(
 // READING SINGLE REGISTER
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_DI_REGISTER_SIZE
-void _communicationReplySingleDigitalRegister(
-    uint8_t * payload,
-    const word registerAddress,
-    const bool output
-) {
-    #if DEBUG_COMMUNICATION_SUPPORT
-        DPRINT(F("[COMMUNICATION] Requested reading from single digital"));
-        if (output) {
-            DPRINT(F(" output (DO) "));
-        } else {
-            DPRINT(F(" input (DI) "));
-        }
-        DPRINT(F("buffer at address: "));
-        DPRINTLN(registerAddress);
-    #endif
-
-    if (
-        // Read start address mus be between <0, buffer.size()>
-        registerAddress < _communicationGetDigitalBufferSize(output)
-    ) {
-        word read_value = 0x0000;
-
-        #if COMMUNICATION_MAX_DO_REGISTER_SIZE
-            if (output) {
-                read_value = communicationReadDigitalOutput(registerAddress) ? 0xFF00 : 0x0000;
-            }
-        #endif
-
-        #if COMMUNICATION_MAX_DI_REGISTER_SIZE
-            if (!output) {
-                read_value = communicationReadDigitalInput(registerAddress) ? 0xFF00 : 0x0000;
-            }
-        #endif
-
-        memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
-
-        // 0    => Packet identifier
-        // 1    => Register type
-        // 2    => High byte of register address
-        // 3    => Low byte of register address
-        // 4-5  => Register value
-        _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_READ_SINGLE_REGISTER;
-        _communication_output_buffer[1] = (char) output ? COMMUNICATION_REGISTER_TYPE_DO : COMMUNICATION_REGISTER_TYPE_DI;
-        _communication_output_buffer[2] = (char) (registerAddress >> 8);
-        _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
-        _communication_output_buffer[4] = (char) (read_value >> 8);
-        _communication_output_buffer[5] = (char) (read_value & 0xFF);
-
-        #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to master
-            if (_communicationReplyToPacket(_communication_output_buffer, 6) == false) {
-                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive digital register reading"));
-
-            } else {
-                DPRINTLN(F("[COMMUNICATION] Replied to master with one digital register content"));
-            }
-        #else
-            // Reply to master
-            _communicationReplyToPacket(_communication_output_buffer, 6);
-        #endif
-
-    } else {
-        #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read from undefined digital registers range"));
-        #endif
-
-        _communicationReplyWithException(payload);
-    }
-}
-#endif
-
-// -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_AO_REGISTER_SIZE || COMMUNICATION_MAX_AI_REGISTER_SIZE
-void _communicationReplySingleAnalogRegister(
+#if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE || COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+void _communicationReplySingleRegister(
     uint8_t * payload,
     const word registerAddress,
     const bool output
 ) {    
     #if DEBUG_COMMUNICATION_SUPPORT
-        DPRINT(F("[COMMUNICATION] Requested reading from single analog"));
+        DPRINT(F("[COMMUNICATION] Requested reading from single"));
         if (output) {
-            DPRINT(F(" output (AO) "));
+            DPRINT(F(" output "));
         } else {
-            DPRINT(F(" input (AI) "));
+            DPRINT(F(" input "));
         }
-        DPRINT(F("buffer at address: "));
+        DPRINT(F("register at address: "));
         DPRINTLN(registerAddress);
     #endif
 
+    uint8_t registers_size = output ? COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE : COMMUNICATION_MAX_INPUT_REGISTERS_SIZE;
+
     if (
-        // Read start address mus be between <0, buffer.size()>
-        registerAddress < _communicationGetAnalogBufferSize(output)
+        // Read start address mus be between <0, registers_size>
+        registerAddress < registers_size
     ) {
         memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
@@ -1365,21 +858,21 @@ void _communicationReplySingleAnalogRegister(
         // 3    => Low byte of register address
         // 4-7  => Register value
         _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_READ_SINGLE_REGISTER;
-        _communication_output_buffer[1] = (char) output ? COMMUNICATION_REGISTER_TYPE_AO : COMMUNICATION_REGISTER_TYPE_AI;
+        _communication_output_buffer[1] = (char) output ? COMMUNICATION_REGISTER_TYPE_OUTPUT : COMMUNICATION_REGISTER_TYPE_INPUT;
         _communication_output_buffer[2] = (char) (registerAddress >> 8);
         _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
 
         char read_value[4] = { 0, 0, 0, 0 };
 
-        #if COMMUNICATION_MAX_AO_REGISTER_SIZE
+        #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
             if (output) {
-                _communicationReadAnalogForTransfer(output, communication_module_ao_registers[registerAddress].data_type, registerAddress, read_value);
+                _communicationReadValueForTransfer(output, communication_module_output_registers[registerAddress].data_type, registerAddress, read_value);
             }
         #endif
 
-        #if COMMUNICATION_MAX_AI_REGISTER_SIZE
+        #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
             if (!output) {
-                _communicationReadAnalogForTransfer(output, communication_module_ai_registers[registerAddress].data_type, registerAddress, read_value);
+                _communicationReadValueForTransfer(output, communication_module_input_registers[registerAddress].data_type, registerAddress, read_value);
             }
         #endif
 
@@ -1391,10 +884,10 @@ void _communicationReplySingleAnalogRegister(
         #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to master
             if (_communicationReplyToPacket(_communication_output_buffer, 8) == false) {
-                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive analog register reading"));
+                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive register reading"));
 
             } else {
-                DPRINTLN(F("[COMMUNICATION] Replied to master with one analog register content"));
+                DPRINTLN(F("[COMMUNICATION] Replied to master with one register content"));
             }
         #else
             // Reply to master
@@ -1403,7 +896,7 @@ void _communicationReplySingleAnalogRegister(
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read from undefined analog registers range"));
+            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read from undefined registers range"));
         #endif
 
         _communicationReplyWithException(payload);
@@ -1432,33 +925,21 @@ void _communicationReadSingleRegisterHandler(
     switch (register_type)
     {
 
-        #if COMMUNICATION_MAX_DI_REGISTER_SIZE
-            case COMMUNICATION_REGISTER_TYPE_DI:
-                _communicationReplySingleDigitalRegister(payload, register_address, false);
+        #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+            case COMMUNICATION_REGISTER_TYPE_INPUT:
+                _communicationReplySingleRegister(payload, register_address, false);
                 break;
         #endif
 
-        #if COMMUNICATION_MAX_DO_REGISTER_SIZE
-            case COMMUNICATION_REGISTER_TYPE_DO:
-                _communicationReplySingleDigitalRegister(payload, register_address, true);
-                break;
-        #endif
-
-        #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-            case COMMUNICATION_REGISTER_TYPE_AI:
-                _communicationReplySingleAnalogRegister(payload, register_address, false);
-                break;
-        #endif
-
-        #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-            case COMMUNICATION_REGISTER_TYPE_AO:
-                _communicationReplySingleAnalogRegister(payload, register_address, true);
+        #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+            case COMMUNICATION_REGISTER_TYPE_OUTPUT:
+                _communicationReplySingleRegister(payload, register_address, true);
                 break;
         #endif
 
         default:
             #if DEBUG_COMMUNICATION_SUPPORT
-                DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read from undefined registers type"));
+                DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read from undefined register type"));
             #endif
 
             _communicationReplyWithException(payload);
@@ -1589,10 +1070,10 @@ void _communicationPairDeviceProvideDeviceInfo(
     _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_PROVIDE_DEVICE_INFO;
     _communication_output_buffer[2] = (char) PJON_PACKET_MAX_LENGTH;
     _communication_output_buffer[3] = (char) COMMUNICATION_REGISTER_KEY_LENGTH;
-    _communication_output_buffer[4] = (char) ((COMMUNICATION_PUB_SUB_PUB_SUPPORT ? 0xFF00 : 0x0000) >> 8);
-    _communication_output_buffer[5] = (char) ((COMMUNICATION_PUB_SUB_PUB_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
-    _communication_output_buffer[6] = (char) ((COMMUNICATION_PUB_SUB_SUB_SUPPORT ? 0xFF00 : 0x0000) >> 8);
-    _communication_output_buffer[7] = (char) ((COMMUNICATION_PUB_SUB_SUB_SUPPORT ? 0xFF00 : 0x0000) & 0xFF);
+    _communication_output_buffer[4] = (char) ((COMMUNICATION_PUB_SUB_PUB_SUPPORT ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE) >> 8);
+    _communication_output_buffer[5] = (char) ((COMMUNICATION_PUB_SUB_PUB_SUPPORT ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE) & 0xFF);
+    _communication_output_buffer[6] = (char) ((COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE) >> 8);
+    _communication_output_buffer[7] = (char) ((COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE) & 0xFF);
     _communication_output_buffer[8] = (char) COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS : 0;
     _communication_output_buffer[9] = (char) COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_PUB_SUB_MAX_CONDITIONS : 0;
     _communication_output_buffer[10] = (char) COMMUNICATION_PUB_SUB_SUB_SUPPORT ? COMMUNICATION_PUB_SUB_MAX_ACTIONS : 0;
@@ -1704,20 +1185,16 @@ void _communicationPairDeviceProvideRegistersSize(
 
     // 0 => Packet identifier
     // 1 => Command response content type
-    // 2 => DI buffer size
-    // 3 => DO buffer size
-    // 4 => AI buffer size
-    // 5 => AO buffer size
+    // 2 => Input registers size
+    // 3 => Output registers size
     _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
     _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_PROVIDE_REGISTERS_SIZE;
-    _communication_output_buffer[2] = (char) COMMUNICATION_MAX_DI_REGISTER_SIZE;
-    _communication_output_buffer[3] = (char) COMMUNICATION_MAX_DO_REGISTER_SIZE;
-    _communication_output_buffer[4] = (char) COMMUNICATION_MAX_AI_REGISTER_SIZE;
-    _communication_output_buffer[5] = (char) COMMUNICATION_MAX_AO_REGISTER_SIZE;
+    _communication_output_buffer[2] = (char) COMMUNICATION_MAX_INPUT_REGISTERS_SIZE;
+    _communication_output_buffer[3] = (char) COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE;
 
     #if DEBUG_COMMUNICATION_SUPPORT
         // Reply to master
-        if (_communicationReplyToPacket(_communication_output_buffer, 6) == false) {
+        if (_communicationReplyToPacket(_communication_output_buffer, 4) == false) {
             DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive device registers sizes"));
 
         } else {
@@ -1725,19 +1202,19 @@ void _communicationPairDeviceProvideRegistersSize(
         }
     #else
         // Reply to master
-        _communicationReplyToPacket(_communication_output_buffer, 6);
+        _communicationReplyToPacket(_communication_output_buffer, 4);
     #endif
 }
 
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_DI_REGISTER_SIZE || COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AI_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE
+#if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE || COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
 /**
  * Parse received payload - Registers structure
  * 
  * 0 => Received packet identifier       => COMMUNICATION_PACKET_PAIR_DEVICE
  * 1 => Pairing command                  => COMMUNICATION_PAIRING_CMD_PROVIDE_REGISTERS_STRUCTURE
- * 2 => Registers type                   => COMMUNICATION_REGISTER_TYPE_DI | COMMUNICATION_REGISTER_TYPE_DO | COMMUNICATION_REGISTER_TYPE_AI | COMMUNICATION_REGISTER_TYPE_AO
+ * 2 => Registers type                   => COMMUNICATION_REGISTER_TYPE_INPUT | COMMUNICATION_REGISTER_TYPE_OUTPUT
  * 3 => High byte of register address
  * 4 => Low byte of register address
  */
@@ -1748,8 +1225,8 @@ void _communicationPairDeviceProvideRegistersStructure(
     uint8_t register_type = (uint8_t) payload[2];
 
     if (
-        register_type != COMMUNICATION_REGISTER_TYPE_AI
-        && register_type != COMMUNICATION_REGISTER_TYPE_AO
+        register_type != COMMUNICATION_REGISTER_TYPE_INPUT
+        && register_type != COMMUNICATION_REGISTER_TYPE_OUTPUT
     ) {
         #if DEBUG_COMMUNICATION_SUPPORT
             DPRINTLN(F("[COMMUNICATION][ERR] Requested register type structure is not supported"));
@@ -1765,36 +1242,22 @@ void _communicationPairDeviceProvideRegistersStructure(
 
     uint8_t registers_size = 0;
 
-    #if COMMUNICATION_MAX_DI_REGISTER_SIZE
+    #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
         // Get total registers count
-        if (register_type == COMMUNICATION_REGISTER_TYPE_DI) {
-            registers_size = _communicationGetDigitalBufferSize(false);
+        if (register_type == COMMUNICATION_REGISTER_TYPE_INPUT) {
+            registers_size = COMMUNICATION_MAX_INPUT_REGISTERS_SIZE;
         }
     #endif
 
-    #if COMMUNICATION_MAX_DO_REGISTER_SIZE
+    #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
         // Get total registers count
-        if (register_type == COMMUNICATION_REGISTER_TYPE_DO) {
-            registers_size = _communicationGetDigitalBufferSize(true);
-        }
-    #endif
-
-    #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-        // Get total registers count
-        if (register_type == COMMUNICATION_REGISTER_TYPE_AI) {
-            registers_size = _communicationGetAnalogBufferSize(false);
-        }
-    #endif
-
-    #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-        // Get total registers count
-        if (register_type == COMMUNICATION_REGISTER_TYPE_AO) {
-            registers_size = _communicationGetAnalogBufferSize(true);
+        if (register_type == COMMUNICATION_REGISTER_TYPE_OUTPUT) {
+            registers_size = COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE;
         }
     #endif
 
     if (
-        // Read start address mus be between <0, buffer.size()>
+        // Read start address mus be between <0, registers_size>
         register_address < registers_size
     ) {
         memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
@@ -1811,17 +1274,11 @@ void _communicationPairDeviceProvideRegistersStructure(
         _communication_output_buffer[3] = (char) (register_address >> 8);
         _communication_output_buffer[4] = (char) (register_address & 0xFF);
 
-        if (register_type == COMMUNICATION_REGISTER_TYPE_DI) {
-            _communication_output_buffer[5] = COMMUNICATION_DATA_TYPE_BOOLEAN;
+        if (register_type == COMMUNICATION_REGISTER_TYPE_INPUT) {
+            _communication_output_buffer[5] = communication_module_input_registers[register_address].data_type;
 
-        } else if (register_type == COMMUNICATION_REGISTER_TYPE_DO) {
-            _communication_output_buffer[5] = COMMUNICATION_DATA_TYPE_BOOLEAN;
-
-        } else if (register_type == COMMUNICATION_REGISTER_TYPE_AI) {
-            _communication_output_buffer[5] = communication_module_ai_registers[register_address].data_type;
-
-        } else if (register_type == COMMUNICATION_REGISTER_TYPE_AO) {
-            _communication_output_buffer[5] = communication_module_ao_registers[register_address].data_type;
+        } else if (register_type == COMMUNICATION_REGISTER_TYPE_OUTPUT) {
+            _communication_output_buffer[5] = communication_module_output_registers[register_address].data_type;
         }
 
         #if DEBUG_COMMUNICATION_SUPPORT
@@ -1863,9 +1320,9 @@ void _communicationPairDeviceProvideAttributesSize(
 
     // 0 => Packet identifier
     // 1 => Command response content type
-    // 2 => Device settings buffer size
-    // 3 => Device attributes buffer size
-    // 4 => Registers settings buffer size
+    // 2 => Device settings size
+    // 3 => Device attributes size
+    // 4 => Registers settings size
     _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_PAIR_DEVICE;
     _communication_output_buffer[1] = (char) COMMUNICATION_PAIRING_RESPONSE_PROVIDE_ATTRIBUTES_SIZE;
     _communication_output_buffer[2] = (char) COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE;
@@ -1926,26 +1383,26 @@ void _communicationPairDeviceProvideAttributesStructure(
     #if COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE
         // Get total device settings count
         if (attribute_type == COMMUNICATION_DEVICE_SETTING_TYPE) {
-            attributes_size = _communicationGetDeviceSettingsBufferSize();
+            attributes_size = COMMUNICATION_MAX_DEVICE_SETTINGS_SIZE;
         }
     #endif
     
     #if COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE
         // Get total device attributes count
         if (attribute_type == COMMUNICATION_DEVICE_ATTRIBUTE_TYPE) {    
-            attributes_size = _communicationGetDeviceAttributesBufferSize();
+            attributes_size = COMMUNICATION_MAX_DEVICE_ATTRIBUTES_SIZE;
         }
     #endif
 
     #if COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE
         // Get total registers settings count
         if (attribute_type == COMMUNICATION_REGISTER_SETTING_TYPE) {
-            attributes_size = _communicationGetRegistersSettingsBufferSize();
+            attributes_size = COMMUNICATION_MAX_REGISTERS_SETTINGS_SIZE;
         }
     #endif
 
     if (
-        // Read start address mus be between <0, buffer.size()>
+        // Read start address mus be between <0, attributes_size>
         attribute_address < attributes_size
     ) {
         memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
@@ -1967,8 +1424,8 @@ void _communicationPairDeviceProvideAttributesStructure(
 
         if (attribute_type == COMMUNICATION_DEVICE_SETTING_TYPE) {
             _communication_output_buffer[5] = (char) communication_module_settings_device[attribute_address].data_type;
-            _communication_output_buffer[6] = (char) (0xFF00 >> 8);
-            _communication_output_buffer[7] = (char) (0xFF00 & 0xFF);
+            _communication_output_buffer[6] = (char) (COMMUNICATION_BOOLEAN_VALUE_TRUE >> 8);
+            _communication_output_buffer[7] = (char) (COMMUNICATION_BOOLEAN_VALUE_TRUE & 0xFF);
             _communication_output_buffer[8] = strlen(communication_module_settings_device[attribute_address].name);
 
             byte_pointer = 9;
@@ -1983,8 +1440,8 @@ void _communicationPairDeviceProvideAttributesStructure(
 
         } else if (attribute_type == COMMUNICATION_DEVICE_ATTRIBUTE_TYPE) {
             _communication_output_buffer[5] = (char) communication_module_attributes_device[attribute_address].data_type;
-            _communication_output_buffer[6] = (char) (0xFF00 >> 8);
-            _communication_output_buffer[7] = (char) (0xFF00 & 0xFF);
+            _communication_output_buffer[6] = (char) (COMMUNICATION_BOOLEAN_VALUE_TRUE >> 8);
+            _communication_output_buffer[7] = (char) (COMMUNICATION_BOOLEAN_VALUE_TRUE & 0xFF);
             _communication_output_buffer[8] = strlen(communication_module_attributes_device[attribute_address].name);
 
             byte_pointer = 9;
@@ -1999,8 +1456,8 @@ void _communicationPairDeviceProvideAttributesStructure(
 
         } else if (attribute_type == COMMUNICATION_REGISTER_SETTING_TYPE) {
             _communication_output_buffer[5] = (char) communication_module_settings_registers[attribute_address].data_type;
-            _communication_output_buffer[6] = (char) (0xFF00 >> 8);
-            _communication_output_buffer[7] = (char) (0xFF00 & 0xFF);
+            _communication_output_buffer[6] = (char) (COMMUNICATION_BOOLEAN_VALUE_TRUE >> 8);
+            _communication_output_buffer[7] = (char) (COMMUNICATION_BOOLEAN_VALUE_TRUE & 0xFF);
 
             _communication_output_buffer[8] = (char) communication_module_settings_registers[attribute_address].register_type;
             _communication_output_buffer[9] = (char) (communication_module_settings_registers[attribute_address].register_address >> 8);
@@ -2024,10 +1481,10 @@ void _communicationPairDeviceProvideAttributesStructure(
         #if DEBUG_COMMUNICATION_SUPPORT
             // Reply to master
             if (_communicationReplyToPacket(_communication_output_buffer, byte_counter) == false) {
-                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive settings structure"));
+                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive attribute structure"));
 
             } else {
-                DPRINTLN(F("[COMMUNICATION] Replied to master with settings structure"));
+                DPRINTLN(F("[COMMUNICATION] Replied to master with attribute structure"));
             }
         #else
             // Reply to master
@@ -2036,7 +1493,7 @@ void _communicationPairDeviceProvideAttributesStructure(
 
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read structure for undefined settings range"));
+            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read structure for undefined attribute range"));
         #endif
 
         _communicationReplyWithException(payload);
@@ -2046,13 +1503,13 @@ void _communicationPairDeviceProvideAttributesStructure(
 
 // -----------------------------------------------------------------------------
 
-#if (COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && (COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE)) || COMMUNICATION_PUB_SUB_PUB_SUPPORT
+#if (COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE) || COMMUNICATION_PUB_SUB_PUB_SUPPORT
 /**
  * Parse received payload - Write generated register key for PUB_SUB
  * 
  * 0    => Received packet identifier        => COMMUNICATION_PACKET_PAIR_DEVICE
  * 1    => Pairing command                   => COMMUNICATION_PAIRING_CMD_WRITE_REGISTER_KEY
- * 2    => Registers type                    => COMMUNICATION_REGISTER_TYPE_DI | COMMUNICATION_REGISTER_TYPE_DO | COMMUNICATION_REGISTER_TYPE_AI | COMMUNICATION_REGISTER_TYPE_AO
+ * 2    => Registers type                    => COMMUNICATION_REGISTER_TYPE_INPUT | COMMUNICATION_REGISTER_TYPE_OUTPUT
  * 3    => High byte of register address
  * 4    => Low byte of register address
  * 5    => Key lenght                        => 1-255
@@ -2066,10 +1523,8 @@ void _communicationPairDeviceWriteRegisterKey(
     uint8_t register_type = (uint8_t) payload[2];
 
     if (
-        register_type != COMMUNICATION_REGISTER_TYPE_DI
-        && register_type != COMMUNICATION_REGISTER_TYPE_DO
-        && register_type != COMMUNICATION_REGISTER_TYPE_AI
-        && register_type != COMMUNICATION_REGISTER_TYPE_AO
+        register_type != COMMUNICATION_REGISTER_TYPE_INPUT
+        && register_type != COMMUNICATION_REGISTER_TYPE_OUTPUT
     ) {
         #if DEBUG_COMMUNICATION_SUPPORT
             DPRINTLN(F("[COMMUNICATION][ERR] Requested register type is not supported"));
@@ -2085,36 +1540,22 @@ void _communicationPairDeviceWriteRegisterKey(
 
     uint8_t registers_size = 0;
 
-    #if COMMUNICATION_MAX_DO_REGISTER_SIZE
+    #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
         // Get total registers count
-        if (register_type == COMMUNICATION_REGISTER_TYPE_DO) {
-            registers_size = _communicationGetDigitalBufferSize(true);
+        if (register_type == COMMUNICATION_REGISTER_TYPE_OUTPUT) {
+            registers_size = COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE;
         }
     #endif
 
-    #if COMMUNICATION_MAX_DI_REGISTER_SIZE
+    #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
         // Get total registers count
-        if (register_type == COMMUNICATION_REGISTER_TYPE_DI) {
-            registers_size = _communicationGetDigitalBufferSize(false);
-        }
-    #endif
-
-    #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-        // Get total registers count
-        if (register_type == COMMUNICATION_REGISTER_TYPE_AO) {
-            registers_size = _communicationGetAnalogBufferSize(true);
-        }
-    #endif
-
-    #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-        // Get total registers count
-        if (register_type == COMMUNICATION_REGISTER_TYPE_AI) {
-            registers_size = _communicationGetAnalogBufferSize(false);
+        if (register_type == COMMUNICATION_REGISTER_TYPE_INPUT) {
+            registers_size = COMMUNICATION_MAX_INPUT_REGISTERS_SIZE;
         }
     #endif
 
     if (
-        // Write address mus be between <0, buffer.size()>
+        // Write address mus be between <0, registers_size>
         register_address < registers_size
     ) {
         uint8_t register_key_length = (uint8_t) payload[5];
@@ -2129,39 +1570,21 @@ void _communicationPairDeviceWriteRegisterKey(
                 register_key[i] = (char) payload[i + 6];
                 register_key[i + 1] = 0x00; // Add a NULL after each character
             }
-            
-            #if COMMUNICATION_MAX_DO_REGISTER_SIZE
-                if (register_type == COMMUNICATION_REGISTER_TYPE_DO) {
-                    if (register_address <= _communicationGetDigitalBufferSize(true)) {
-                        memcpy(communication_module_do_registers[register_address].key, register_key, register_key_length + 1);
-                        communication_module_do_registers[register_address].publish_as_event = true;
+
+            #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+                if (register_type == COMMUNICATION_REGISTER_TYPE_OUTPUT) {
+                    if (register_address <= COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE) {
+                        memcpy(communication_module_output_registers[register_address].key, register_key, register_key_length + 1);
+                        communication_module_output_registers[register_address].publish_as_event = true;
                     }
                 }
             #endif
 
-            #if COMMUNICATION_MAX_DI_REGISTER_SIZE
-                if (register_type == COMMUNICATION_REGISTER_TYPE_DI) {
-                    if (register_address <= _communicationGetDigitalBufferSize(false)) {
-                        memcpy(communication_module_di_registers[register_address].key, register_key, register_key_length + 1);
-                        communication_module_di_registers[register_address].publish_as_event = true;
-                    }
-                }
-            #endif
-
-            #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-                if (register_type == COMMUNICATION_REGISTER_TYPE_AO) {
-                    if (register_address <= _communicationGetAnalogBufferSize(true)) {
-                        memcpy(communication_module_ao_registers[register_address].key, register_key, register_key_length + 1);
-                        communication_module_ao_registers[register_address].publish_as_event = true;
-                    }
-                }
-            #endif
-
-            #if COMMUNICATION_MAX_AI_REGISTER_SIZE
-                if (register_type == COMMUNICATION_REGISTER_TYPE_AI) {
-                    if (register_address <= _communicationGetAnalogBufferSize(false)) {
-                        memcpy(communication_module_ai_registers[register_address].key, register_key, register_key_length + 1);
-                        communication_module_ai_registers[register_address].publish_as_event = true;
+            #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+                if (register_type == COMMUNICATION_REGISTER_TYPE_INPUT) {
+                    if (register_address <= COMMUNICATION_MAX_INPUT_REGISTERS_SIZE) {
+                        memcpy(communication_module_input_registers[register_address].key, register_key, register_key_length + 1);
+                        communication_module_input_registers[register_address].publish_as_event = true;
                     }
                 }
             #endif
@@ -2295,7 +1718,7 @@ void _communicationPairDeviceHandler(
             _communicationPairDeviceProvideRegistersSize(payload, length);
             break;
 
-        #if COMMUNICATION_MAX_DI_REGISTER_SIZE || COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AI_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE
+        #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE || COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
             case COMMUNICATION_PAIRING_CMD_PROVIDE_REGISTERS_STRUCTURE:
                 _communicationPairDeviceProvideRegistersStructure(payload, length);
                 break;
@@ -2311,7 +1734,7 @@ void _communicationPairDeviceHandler(
                 break;
         #endif
 
-        #if (COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && (COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE)) || COMMUNICATION_PUB_SUB_PUB_SUPPORT
+        #if (COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE) || COMMUNICATION_PUB_SUB_PUB_SUPPORT
             case COMMUNICATION_PAIRING_CMD_WRITE_REGISTER_KEY:
                 _communicationPairDeviceWriteRegisterKey(payload, length);
                 break;
@@ -2558,7 +1981,7 @@ void _communicationPingHandler(
     #endif
 }
 
-#if COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && (COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE)
+#if COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
 
 // -----------------------------------------------------------------------------
 // DEVICE PUB SUB
@@ -2673,33 +2096,15 @@ void _communicationCheckPublishedMessageHandler(
 
                 switch (_communication_pub_sub_actions[action_index].register_type)
                 {
-                    #if COMMUNICATION_MAX_DO_REGISTER_SIZE
-                        case COMMUNICATION_REGISTER_TYPE_DO:
+                    #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+                        case COMMUNICATION_REGISTER_TYPE_OUTPUT:
                         {
                             if (
-                                // Action register address must be between <0, buffer.size()>
-                                _communication_pub_sub_actions[action_index].register_address < _communicationGetDigitalBufferSize(true)
+                                // Action register address must be between <0, registers_size>
+                                _communication_pub_sub_actions[action_index].register_address < COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
                             ) {
-                                word action_value = (word) _communication_pub_sub_actions[action_index].value[0] << 8 | (word) _communication_pub_sub_actions[action_index].value[1];
-
-                                communicationWriteDigitalOutput(
-                                    _communication_pub_sub_actions[action_index].register_address,
-                                    (action_value == 0xFF00)
-                                );
-                            }
-                            break;
-                        }
-                    #endif
-
-                    #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-                        case COMMUNICATION_REGISTER_TYPE_AO:
-                        {
-                            if (
-                                // Action register address must be between <0, buffer.size()>
-                                _communication_pub_sub_actions[action_index].register_address < _communicationGetAnalogBufferSize(true)
-                            ) {
-                                _communicationWriteAnalogFromTransfer(
-                                    communication_module_ao_registers[_communication_pub_sub_actions[action_index].register_address].data_type,
+                                _communicationWriteValueFromTransfer(
+                                    communication_module_output_registers[_communication_pub_sub_actions[action_index].register_address].data_type,
                                     _communication_pub_sub_actions[action_index].register_address,
                                     _communication_pub_sub_actions[action_index].value
                                 );
@@ -2851,48 +2256,23 @@ void _communicationSubscribePubSubHandler(
 
         switch (action_register_type)
         {
-            #if COMMUNICATION_MAX_DO_REGISTER_SIZE
-                case COMMUNICATION_REGISTER_TYPE_DO:
+            #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+                case COMMUNICATION_REGISTER_TYPE_OUTPUT:
                 {
                     if (
-                        // Action register address must be between <0, buffer.size()>
-                        action_register_address < _communicationGetDigitalBufferSize(true)
-                    ) {
-                        action_value[0] = payload[byte_position];
-                        byte_position++;
-                        action_value[1] = payload[byte_position];
-                        byte_position++;
-
-                    } else {
-                        #if DEBUG_COMMUNICATION_SUPPORT
-                            DPRINTLN(F("[COMMUNICATION][WARN] Invalid register address for action"));
-                        #endif
-
-                        _communicationReplyWithException(payload);
-
-                        return;
-                    }
-                    break;
-                }
-            #endif
-
-            #if COMMUNICATION_MAX_AO_REGISTER_SIZE
-                case COMMUNICATION_REGISTER_TYPE_AO:
-                {
-                    if (
-                        // Action register address must be between <0, buffer.size()>
-                        action_register_address < _communicationGetDigitalBufferSize(true)
+                        // Action register address must be between <0, registers_size>
+                        action_register_address < COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
                     ) {
                         if (
-                            communication_module_ao_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_UINT8
-                            || communication_module_ao_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_INT8
+                            communication_module_output_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_UINT8
+                            || communication_module_output_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_INT8
                         ) {
                             action_value[0] = payload[byte_position];
                             byte_position++;
 
                         } else if (
-                            communication_module_ao_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_UINT16
-                            || communication_module_ao_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_INT16
+                            communication_module_output_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_UINT16
+                            || communication_module_output_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_INT16
                         ) {
                             action_value[0] = payload[byte_position];
                             byte_position++;
@@ -2900,9 +2280,9 @@ void _communicationSubscribePubSubHandler(
                             byte_position++;
 
                         } else if (
-                            communication_module_ao_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_UINT32
-                            || communication_module_ao_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_INT32
-                            || communication_module_ao_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_FLOAT32
+                            communication_module_output_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_UINT32
+                            || communication_module_output_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_INT32
+                            || communication_module_output_registers[action_register_address].data_type == COMMUNICATION_DATA_TYPE_FLOAT32
                         ) {
                             action_value[0] = payload[byte_position];
                             byte_position++;
@@ -3189,7 +2569,7 @@ void _communicationReceiverHandler(
             _communicationReadMultipleRegistersHandler(data_payload);
             break;
 
-        #if COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE
+        #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
             case COMMUNICATION_PACKET_WRITE_SINGLE_REGISTER:
                 _communicationWriteSingleOutputRegisterHandler(data_payload);
                 break;
@@ -3215,7 +2595,7 @@ void _communicationReceiverHandler(
      * PUB/SUB
      */
 
-        #if COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && (COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_AO_REGISTER_SIZE)
+        #if COMMUNICATION_PUB_SUB_SUB_SUPPORT && COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS && COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
             case COMMUNICATION_PACKET_PUB_SUB_BROADCAST:
                 _communicationCheckPublishedMessageHandler(data_payload);
                 break;
@@ -3519,232 +2899,14 @@ bool communicationReportDeviceState()
 }
 
 // -----------------------------------------------------------------------------
-// DIGITAL REGISTERS
+// REGISTERS
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_DO_REGISTER_SIZE || COMMUNICATION_MAX_DI_REGISTER_SIZE
+#if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE || COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
 /**
- * Report value of digital register to master
-    */
-bool _communicationReportDigitalRegister(
-    const bool output,
-    const uint8_t registerAddress
-) {
-    if (!firmwareIsRunning()) {
-        return false;
-    }
-
-    word read_value = 0x0000;
-
-    #if COMMUNICATION_MAX_DO_REGISTER_SIZE
-        if (output) {
-            read_value = communicationReadDigitalOutput(registerAddress) ? 0xFF00 : 0x0000;
-        }
-    #endif
-
-    #if COMMUNICATION_MAX_DI_REGISTER_SIZE
-        if (!output) {
-            read_value = communicationReadDigitalInput(registerAddress) ? 0xFF00 : 0x0000;
-        }
-    #endif
-
-    memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
-
-    // 0    => Packet identifier
-    // 1    => Register type
-    // 2    => High byte of register address
-    // 3    => Low byte of register address
-    // 4-5  => Register value
-    _communication_output_buffer[0] = COMMUNICATION_PACKET_REPORT_SINGLE_REGISTER;
-
-    if (output) {
-        _communication_output_buffer[1] = COMMUNICATION_REGISTER_TYPE_DO;
-
-    } else {
-        _communication_output_buffer[1] = COMMUNICATION_REGISTER_TYPE_DI;
-    }
-
-    _communication_output_buffer[2] = (char) (registerAddress >> 8);
-    _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
-    _communication_output_buffer[4] = (char) (read_value >> 8);
-    _communication_output_buffer[5] = (char) (read_value & 0xFF);
-
-    if (_communicationSendPacket(COMMUNICATION_BUS_MASTER_ADDR, _communication_output_buffer, 6) == true) {
-        #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION] Register value was successfully sent"));
-        #endif
-
-        return true;
-    }
-
-    return true;
-}
-
-// -----------------------------------------------------------------------------
-
-/**
- * Broadcast value of digital register to all devices
-    */
-bool _communicationBroadcastDigitalRegister(
-    const bool output,
-    const uint8_t registerAddress
-) {
-    if (!firmwareIsRunning()) {
-        return false;
-    }
-
-    word read_value = 0x0000;
-
-    char register_key[COMMUNICATION_REGISTER_KEY_LENGTH];
-
-    #if COMMUNICATION_MAX_DO_REGISTER_SIZE
-        if (output) {
-            read_value = communicationReadDigitalOutput(registerAddress) ? 0xFF00 : 0x0000;
-            memcpy(register_key, communication_module_do_registers[registerAddress].key, COMMUNICATION_REGISTER_KEY_LENGTH);
-        }
-    #endif
-
-    #if COMMUNICATION_MAX_DI_REGISTER_SIZE
-        if (!output) {
-            read_value = communicationReadDigitalInput(registerAddress) ? 0xFF00 : 0x0000;
-            memcpy(register_key, communication_module_di_registers[registerAddress].key, COMMUNICATION_REGISTER_KEY_LENGTH);
-        }
-    #endif
-
-    memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
-
-    // 0        => Packet identifier
-    // 1-n      => Register key
-    // n+1      => Register data type
-    // n+2-m    => Register value
-    _communication_output_buffer[0] = COMMUNICATION_PACKET_PUB_SUB_BROADCAST;
-    _communication_output_buffer[1] = COMMUNICATION_REGISTER_KEY_LENGTH;
-
-    uint8_t byte_pointer = 2;
-    uint8_t byte_counter = 2;
-
-    for (uint8_t i = 0; i < COMMUNICATION_REGISTER_KEY_LENGTH; i++) {
-        _communication_output_buffer[byte_pointer] = register_key[i];
-
-        byte_pointer++;
-        byte_counter++;
-    }
-
-    _communication_output_buffer[byte_pointer] = COMMUNICATION_DATA_TYPE_BOOLEAN;
-    byte_pointer++;
-    byte_counter++;
-    _communication_output_buffer[byte_pointer] = (char) (read_value >> 8);
-    byte_pointer++;
-    byte_counter++;
-    _communication_output_buffer[byte_pointer] = (char) (read_value & 0xFF);
-    byte_pointer++;
-    byte_counter++;
-
-    if (_communicationBroadcastPacket(_communication_output_buffer, byte_counter) == true) {
-        #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION] Register value was successfully broadcasted"));
-        #endif
-
-        return true;
-    }
-
-    return true;
-}
-#endif
-
-// -----------------------------------------------------------------------------
-// DIGITAL INPUTS
-// -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_DI_REGISTER_SIZE
-bool communicationWriteDigitalInput(
-    const uint8_t registerAddress,
-    const bool value
-) {
-    if (registerAddress > _communicationGetDigitalBufferSize(false)) {
-        return false;
-    }
-
-    if (communication_module_di_registers[registerAddress].value != value) {
-        communication_module_di_registers[registerAddress].value = value;
-
-        if (communication_module_di_registers[registerAddress].publish_as_event) {
-            if (strlen(communication_module_di_registers[registerAddress].key) > 0) {
-                _communicationBroadcastDigitalRegister(false, registerAddress);
-
-            } else {
-                _communicationReportDigitalRegister(false, registerAddress);
-            }
-        }
-    }
-
-    return true;
-}
-
-// -----------------------------------------------------------------------------
-
-bool communicationReadDigitalInput(
-    const uint8_t registerAddress
-) {
-    if (registerAddress > _communicationGetDigitalBufferSize(false)) {
-        return false;
-    }
-
-    return communication_module_di_registers[registerAddress].value;
-}
-#endif
-
-// -----------------------------------------------------------------------------
-// DIGITAL OUTPUTS
-// -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_DO_REGISTER_SIZE
-bool communicationWriteDigitalOutput(
-    const uint8_t registerAddress,
-    const bool value
-) {
-    if (registerAddress > _communicationGetDigitalBufferSize(true)) {
-        return false;
-    }
-
-    if (communication_module_do_registers[registerAddress].value != value) {
-        communication_module_do_registers[registerAddress].value = value;
-
-        if (communication_module_do_registers[registerAddress].publish_as_event) {
-            if (strlen(communication_module_do_registers[registerAddress].key) > 0) {
-                _communicationBroadcastDigitalRegister(true, registerAddress);
-
-            } else {
-                _communicationReportDigitalRegister(true, registerAddress);
-            }
-        }
-    }
-
-    return true;
-}
-
-// -----------------------------------------------------------------------------
-
-bool communicationReadDigitalOutput(
-    const uint8_t registerAddress
-) {
-    if (registerAddress > _communicationGetDigitalBufferSize(true)) {
-        return false;
-    }
-
-    return communication_module_do_registers[registerAddress].value;
-}
-#endif
-
-// -----------------------------------------------------------------------------
-// ANALOG REGISTERS
-// -----------------------------------------------------------------------------
-
-#if COMMUNICATION_MAX_AO_REGISTER_SIZE || COMMUNICATION_MAX_AI_REGISTER_SIZE
-/**
- * Report value of analog register to master
-    */
-bool _communicationReportAnalogRegister(
+ * Report value of register to master
+ */
+bool _communicationReportRegister(
     const bool output,
     const uint8_t registerAddress
 ) {
@@ -3754,7 +2916,7 @@ bool _communicationReportAnalogRegister(
 
     char read_value[4] = { 0, 0, 0, 0 };
 
-    _communicationReadAnalogForTransfer(output, communication_module_ai_registers[registerAddress].data_type, registerAddress, read_value);    
+    _communicationReadValueForTransfer(output, communication_module_input_registers[registerAddress].data_type, registerAddress, read_value);    
 
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
@@ -3766,10 +2928,10 @@ bool _communicationReportAnalogRegister(
     _communication_output_buffer[0] = COMMUNICATION_PACKET_REPORT_SINGLE_REGISTER;
 
     if (output) {
-        _communication_output_buffer[1] = COMMUNICATION_REGISTER_TYPE_AO;
+        _communication_output_buffer[1] = COMMUNICATION_REGISTER_TYPE_OUTPUT;
 
     } else {
-        _communication_output_buffer[1] = COMMUNICATION_REGISTER_TYPE_AI;
+        _communication_output_buffer[1] = COMMUNICATION_REGISTER_TYPE_INPUT;
     }
 
     _communication_output_buffer[2] = (char) (registerAddress >> 8);
@@ -3793,9 +2955,9 @@ bool _communicationReportAnalogRegister(
 // -----------------------------------------------------------------------------
 
 /**
- * Broadcast value of analog register to all devices
-    */
-bool _communicationBroadcastAnalogRegister(
+ * Broadcast value of register to all devices
+ */
+bool _communicationBroadcastRegister(
     const bool output,
     const uint8_t registerAddress
 ) {
@@ -3807,19 +2969,19 @@ bool _communicationBroadcastAnalogRegister(
 
     char register_key[COMMUNICATION_REGISTER_KEY_LENGTH];
 
-    #if COMMUNICATION_MAX_AO_REGISTER_SIZE
+    #if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
         if (output) {
-            _communicationReadAnalogForTransfer(output, communication_module_ao_registers[registerAddress].data_type, registerAddress, read_value);
+            _communicationReadValueForTransfer(output, communication_module_output_registers[registerAddress].data_type, registerAddress, read_value);
 
-            memcpy(register_key, communication_module_ao_registers[registerAddress].key, COMMUNICATION_REGISTER_KEY_LENGTH);
+            memcpy(register_key, communication_module_output_registers[registerAddress].key, COMMUNICATION_REGISTER_KEY_LENGTH);
         }
     #endif
 
-    #if COMMUNICATION_MAX_AI_REGISTER_SIZE
+    #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
         if (!output) {
-            _communicationReadAnalogForTransfer(output, communication_module_ai_registers[registerAddress].data_type, registerAddress, read_value);
+            _communicationReadValueForTransfer(output, communication_module_input_registers[registerAddress].data_type, registerAddress, read_value);
 
-            memcpy(register_key, communication_module_ai_registers[registerAddress].key, COMMUNICATION_REGISTER_KEY_LENGTH);
+            memcpy(register_key, communication_module_input_registers[registerAddress].key, COMMUNICATION_REGISTER_KEY_LENGTH);
         }
     #endif
 
@@ -3844,9 +3006,9 @@ bool _communicationBroadcastAnalogRegister(
     }
 
     if (output) {
-        _communication_output_buffer[byte_pointer] = communication_module_ao_registers[registerAddress].data_type;
+        _communication_output_buffer[byte_pointer] = communication_module_output_registers[registerAddress].data_type;
     } else {
-        _communication_output_buffer[byte_pointer] = communication_module_ai_registers[registerAddress].data_type;
+        _communication_output_buffer[byte_pointer] = communication_module_input_registers[registerAddress].data_type;
     }
     byte_pointer++;
     byte_counter++;
@@ -3876,7 +3038,7 @@ bool _communicationBroadcastAnalogRegister(
 
 // -----------------------------------------------------------------------------
 
-void communicationReadAnalogRegister(
+void communicationReadRegister(
     const bool output,
     const uint8_t registerAddress,
     void * value,
@@ -3884,20 +3046,20 @@ void communicationReadAnalogRegister(
 ) {
     if (output) {
         if (
-            registerAddress < _communicationGetAnalogBufferSize(true)
-            && communication_module_ao_registers[registerAddress].size == size
+            registerAddress < COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
+            && communication_module_output_registers[registerAddress].size == size
         ) {
-            memcpy(value, communication_module_ao_registers[registerAddress].value, size);
+            memcpy(value, communication_module_output_registers[registerAddress].value, size);
 
             return;
         }
 
     } else {
         if (
-            registerAddress < _communicationGetAnalogBufferSize(false)
-            && communication_module_ai_registers[registerAddress].size == size
+            registerAddress < COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
+            && communication_module_input_registers[registerAddress].size == size
         ) {
-            memcpy(value, communication_module_ai_registers[registerAddress].value, size);
+            memcpy(value, communication_module_input_registers[registerAddress].value, size);
 
             return;
         }
@@ -3910,52 +3072,52 @@ void communicationReadAnalogRegister(
 
 // -----------------------------------------------------------------------------
 
-bool communicationWriteAnalogRegister(
+bool communicationWriteRegister(
     const bool output,
     const uint8_t registerAddress,
     const void * value,
     const uint8_t size
 ) {
     if (output) {
-        if (registerAddress > _communicationGetAnalogBufferSize(true)) {
+        if (registerAddress > COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE) {
             return false;
         }
 
-        if (communication_module_ao_registers[registerAddress].size == size) {
+        if (communication_module_output_registers[registerAddress].size == size) {
             char stored_value[4] = { 0, 0, 0, 0 };
 
-            _communicationReadAnalogForTransfer(false, communication_module_ao_registers[registerAddress].data_type, registerAddress, stored_value);
+            _communicationReadValueForTransfer(false, communication_module_output_registers[registerAddress].data_type, registerAddress, stored_value);
 
-            memcpy(communication_module_ao_registers[registerAddress].value, value, size);
+            memcpy(communication_module_output_registers[registerAddress].value, value, size);
 
-            if (memcmp((const void *) stored_value, (const void *) value, sizeof(stored_value)) != 0 && communication_module_ao_registers[registerAddress].publish_as_event) {
-                if (strlen(communication_module_ao_registers[registerAddress].key) > 0) {
-                    _communicationBroadcastAnalogRegister(output, registerAddress);
+            if (memcmp((const void *) stored_value, (const void *) value, sizeof(stored_value)) != 0 && communication_module_output_registers[registerAddress].publish_as_event) {
+                if (strlen(communication_module_output_registers[registerAddress].key) > 0) {
+                    _communicationBroadcastRegister(output, registerAddress);
 
                 } else {
-                    _communicationReportAnalogRegister(output, registerAddress);
+                    _communicationReportRegister(output, registerAddress);
                 }
             }
         }
 
     } else {
-        if (registerAddress > _communicationGetAnalogBufferSize(false)) {
+        if (registerAddress > COMMUNICATION_MAX_INPUT_REGISTERS_SIZE) {
             return false;
         }
 
-        if (communication_module_ai_registers[registerAddress].size == size) {
+        if (communication_module_input_registers[registerAddress].size == size) {
             char stored_value[4] = { 0, 0, 0, 0 };
 
-            _communicationReadAnalogForTransfer(output, communication_module_ai_registers[registerAddress].data_type, registerAddress, stored_value);
+            _communicationReadValueForTransfer(output, communication_module_input_registers[registerAddress].data_type, registerAddress, stored_value);
 
-            memcpy(communication_module_ai_registers[registerAddress].value, value, size);
+            memcpy(communication_module_input_registers[registerAddress].value, value, size);
 
-            if (memcmp((const void *) stored_value, (const void *) value, sizeof(stored_value)) != 0 && communication_module_ai_registers[registerAddress].publish_as_event) {
-                if (strlen(communication_module_ai_registers[registerAddress].key) > 0) {
-                    _communicationBroadcastAnalogRegister(output, registerAddress);
+            if (memcmp((const void *) stored_value, (const void *) value, sizeof(stored_value)) != 0 && communication_module_input_registers[registerAddress].publish_as_event) {
+                if (strlen(communication_module_input_registers[registerAddress].key) > 0) {
+                    _communicationBroadcastRegister(output, registerAddress);
 
                 } else {
-                    _communicationReportAnalogRegister(output, registerAddress);
+                    _communicationReportRegister(output, registerAddress);
                 }
             }
         }
@@ -3966,59 +3128,59 @@ bool communicationWriteAnalogRegister(
 #endif
 
 // -----------------------------------------------------------------------------
-// ANALOG INPUTS
+// INPUTS REGISTERS
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_AI_REGISTER_SIZE
+#if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
 // Specialized convenience setters (these do not cost memory because of inlining)
-bool communicationWriteAnalogInput(const uint8_t registerAddress, const uint8_t value) { return communicationWriteAnalogRegister(false, registerAddress, &value, 1); }
-bool communicationWriteAnalogInput(const uint8_t registerAddress, const uint16_t value) { return communicationWriteAnalogRegister(false, registerAddress, &value, 2); }
-bool communicationWriteAnalogInput(const uint8_t registerAddress, const uint32_t value) { return communicationWriteAnalogRegister(false, registerAddress, &value, 4); }
-bool communicationWriteAnalogInput(const uint8_t registerAddress, const int8_t value) { return communicationWriteAnalogRegister(false, registerAddress, &value, 1); }
-bool communicationWriteAnalogInput(const uint8_t registerAddress, const int16_t value) { return communicationWriteAnalogRegister(false, registerAddress, &value, 2); }
-bool communicationWriteAnalogInput(const uint8_t registerAddress, const int32_t value) { return communicationWriteAnalogRegister(false, registerAddress, &value, 4); }
-bool communicationWriteAnalogInput(const uint8_t registerAddress, const float value) { return communicationWriteAnalogRegister(false, registerAddress, &value, 4); }
-bool communicationWriteAnalogInput(const uint8_t registerAddress, const bool value) { return communicationWriteAnalogRegister(false, registerAddress, &value, 2); }
+bool communicationWriteInputRegister(const uint8_t registerAddress, const uint8_t value) { return communicationWriteRegister(false, registerAddress, &value, 1); }
+bool communicationWriteInputRegister(const uint8_t registerAddress, const uint16_t value) { return communicationWriteRegister(false, registerAddress, &value, 2); }
+bool communicationWriteInputRegister(const uint8_t registerAddress, const uint32_t value) { return communicationWriteRegister(false, registerAddress, &value, 4); }
+bool communicationWriteInputRegister(const uint8_t registerAddress, const int8_t value) { return communicationWriteRegister(false, registerAddress, &value, 1); }
+bool communicationWriteInputRegister(const uint8_t registerAddress, const int16_t value) { return communicationWriteRegister(false, registerAddress, &value, 2); }
+bool communicationWriteInputRegister(const uint8_t registerAddress, const int32_t value) { return communicationWriteRegister(false, registerAddress, &value, 4); }
+bool communicationWriteInputRegister(const uint8_t registerAddress, const float value) { return communicationWriteRegister(false, registerAddress, &value, 4); }
+bool communicationWriteInputRegister(const uint8_t registerAddress, const bool value) { return communicationWriteRegister(false, registerAddress, &value, 2); }
 
 // -----------------------------------------------------------------------------
 
 // Specialized convenience setters (these do not cost memory because of inlining)
-void communicationReadAnalogInput(const uint8_t registerAddress, uint8_t &value) { communicationReadAnalogRegister(false, registerAddress, &value, 1); }
-void communicationReadAnalogInput(const uint8_t registerAddress, uint16_t &value) { communicationReadAnalogRegister(false, registerAddress, &value, 2); }
-void communicationReadAnalogInput(const uint8_t registerAddress, uint32_t &value) { communicationReadAnalogRegister(false, registerAddress, &value, 4); }
-void communicationReadAnalogInput(const uint8_t registerAddress, int8_t &value) { communicationReadAnalogRegister(false, registerAddress, &value, 1); }
-void communicationReadAnalogInput(const uint8_t registerAddress, int16_t &value) { communicationReadAnalogRegister(false, registerAddress, &value, 2); }
-void communicationReadAnalogInput(const uint8_t registerAddress, int32_t &value) { communicationReadAnalogRegister(false, registerAddress, &value, 4); }
-void communicationReadAnalogInput(const uint8_t registerAddress, float &value) { communicationReadAnalogRegister(false, registerAddress, &value, 4); }
-void communicationReadAnalogInput(const uint8_t registerAddress, bool &value) { communicationReadAnalogRegister(false, registerAddress, &value, 2); }
+void communicationReadInputRegister(const uint8_t registerAddress, uint8_t &value) { communicationReadRegister(false, registerAddress, &value, 1); }
+void communicationReadInputRegister(const uint8_t registerAddress, uint16_t &value) { communicationReadRegister(false, registerAddress, &value, 2); }
+void communicationReadInputRegister(const uint8_t registerAddress, uint32_t &value) { communicationReadRegister(false, registerAddress, &value, 4); }
+void communicationReadInputRegister(const uint8_t registerAddress, int8_t &value) { communicationReadRegister(false, registerAddress, &value, 1); }
+void communicationReadInputRegister(const uint8_t registerAddress, int16_t &value) { communicationReadRegister(false, registerAddress, &value, 2); }
+void communicationReadInputRegister(const uint8_t registerAddress, int32_t &value) { communicationReadRegister(false, registerAddress, &value, 4); }
+void communicationReadInputRegister(const uint8_t registerAddress, float &value) { communicationReadRegister(false, registerAddress, &value, 4); }
+void communicationReadInputRegister(const uint8_t registerAddress, bool &value) { communicationReadRegister(false, registerAddress, &value, 2); }
 #endif
 
 // -----------------------------------------------------------------------------
-// ANALOG OUTPUTS
+// OUTPUTS REGISTERS
 // -----------------------------------------------------------------------------
 
-#if COMMUNICATION_MAX_AO_REGISTER_SIZE
+#if COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
 // Specialized convenience setters (these do not cost memory because of inlining)
-bool communicationWriteAnalogOutput(const uint8_t registerAddress, const uint8_t value) { return communicationWriteAnalogRegister(true, registerAddress, &value, 1); }
-bool communicationWriteAnalogOutput(const uint8_t registerAddress, const uint16_t value) { return communicationWriteAnalogRegister(true, registerAddress, &value, 2); }
-bool communicationWriteAnalogOutput(const uint8_t registerAddress, const uint32_t value) { return communicationWriteAnalogRegister(true, registerAddress, &value, 4); }
-bool communicationWriteAnalogOutput(const uint8_t registerAddress, const int8_t value) { return communicationWriteAnalogRegister(true, registerAddress, &value, 1); }
-bool communicationWriteAnalogOutput(const uint8_t registerAddress, const int16_t value) { return communicationWriteAnalogRegister(true, registerAddress, &value, 2); }
-bool communicationWriteAnalogOutput(const uint8_t registerAddress, const int32_t value) { return communicationWriteAnalogRegister(true, registerAddress, &value, 4); }
-bool communicationWriteAnalogOutput(const uint8_t registerAddress, const float value) { return communicationWriteAnalogRegister(true, registerAddress, &value, 4); }
-bool communicationWriteAnalogOutput(const uint8_t registerAddress, const bool value) { return communicationWriteAnalogRegister(true, registerAddress, &value, 2); }
+bool communicationWriteOutputRegister(const uint8_t registerAddress, const uint8_t value) { return communicationWriteRegister(true, registerAddress, &value, 1); }
+bool communicationWriteOutputRegister(const uint8_t registerAddress, const uint16_t value) { return communicationWriteRegister(true, registerAddress, &value, 2); }
+bool communicationWriteOutputRegister(const uint8_t registerAddress, const uint32_t value) { return communicationWriteRegister(true, registerAddress, &value, 4); }
+bool communicationWriteOutputRegister(const uint8_t registerAddress, const int8_t value) { return communicationWriteRegister(true, registerAddress, &value, 1); }
+bool communicationWriteOutputRegister(const uint8_t registerAddress, const int16_t value) { return communicationWriteRegister(true, registerAddress, &value, 2); }
+bool communicationWriteOutputRegister(const uint8_t registerAddress, const int32_t value) { return communicationWriteRegister(true, registerAddress, &value, 4); }
+bool communicationWriteOutputRegister(const uint8_t registerAddress, const float value) { return communicationWriteRegister(true, registerAddress, &value, 4); }
+bool communicationWriteOutputRegister(const uint8_t registerAddress, const bool value) { return communicationWriteRegister(true, registerAddress, &value, 2); }
 
 // -----------------------------------------------------------------------------
 
 // Specialized convenience setters (these do not cost memory because of inlining)
-void communicationReadAnalogOutput(const uint8_t registerAddress, uint8_t &value) { communicationReadAnalogRegister(true, registerAddress, &value, 1); }
-void communicationReadAnalogOutput(const uint8_t registerAddress, uint16_t &value) { communicationReadAnalogRegister(true, registerAddress, &value, 2); }
-void communicationReadAnalogOutput(const uint8_t registerAddress, uint32_t &value) { communicationReadAnalogRegister(true, registerAddress, &value, 4); }
-void communicationReadAnalogOutput(const uint8_t registerAddress, int8_t &value) { communicationReadAnalogRegister(true, registerAddress, &value, 1); }
-void communicationReadAnalogOutput(const uint8_t registerAddress, int16_t &value) { communicationReadAnalogRegister(true, registerAddress, &value, 2); }
-void communicationReadAnalogOutput(const uint8_t registerAddress, int32_t &value) { communicationReadAnalogRegister(true, registerAddress, &value, 4); }
-void communicationReadAnalogOutput(const uint8_t registerAddress, float &value) { communicationReadAnalogRegister(true, registerAddress, &value, 4); }
-void communicationReadAnalogOutput(const uint8_t registerAddress, bool &value) { communicationReadAnalogRegister(true, registerAddress, &value, 2); }
+void communicationReadOutputRegister(const uint8_t registerAddress, uint8_t &value) { communicationReadRegister(true, registerAddress, &value, 1); }
+void communicationReadOutputRegister(const uint8_t registerAddress, uint16_t &value) { communicationReadRegister(true, registerAddress, &value, 2); }
+void communicationReadOutputRegister(const uint8_t registerAddress, uint32_t &value) { communicationReadRegister(true, registerAddress, &value, 4); }
+void communicationReadOutputRegister(const uint8_t registerAddress, int8_t &value) { communicationReadRegister(true, registerAddress, &value, 1); }
+void communicationReadOutputRegister(const uint8_t registerAddress, int16_t &value) { communicationReadRegister(true, registerAddress, &value, 2); }
+void communicationReadOutputRegister(const uint8_t registerAddress, int32_t &value) { communicationReadRegister(true, registerAddress, &value, 4); }
+void communicationReadOutputRegister(const uint8_t registerAddress, float &value) { communicationReadRegister(true, registerAddress, &value, 4); }
+void communicationReadOutputRegister(const uint8_t registerAddress, bool &value) { communicationReadRegister(true, registerAddress, &value, 2); }
 #endif
 
 // -----------------------------------------------------------------------------
