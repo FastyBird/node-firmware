@@ -56,34 +56,26 @@ typedef union {
 
 typedef struct {
     uint8_t data_type;
-    bool publish_as_event;
     uint8_t size;
     char value[4];
     char key[10];
 } communication_register_t;
 
 typedef struct {
-    char name[10];
+    char name[16];
     uint8_t data_type;
     uint8_t size;
+    bool settable;
+    bool queryable;
     char value[4];
-} communication_device_setting_t;
+} communication_attribute_t;
 
 typedef struct {
-    char name[10];
+    char name[16];
     uint8_t data_type;
     uint8_t size;
     char value[4];
-} communication_device_attribute_t;
-
-typedef struct {
-    char name[10];
-    uint8_t register_address;
-    uint8_t register_type;
-    uint8_t data_type;
-    uint8_t size;
-    char value[4];
-} communication_register_setting_t;
+} communication_setting_t;
 
 typedef struct {
     char key[10];

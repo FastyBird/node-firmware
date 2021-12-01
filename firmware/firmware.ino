@@ -93,6 +93,10 @@ void firmwareSetDeviceState(
 // -----------------------------------------------------------------------------
 
 uint8_t firmwareGetDeviceState() {
+    if (communicationIsInPairingMode()) {
+        return DEVICE_STATE_PAIRING;
+    }
+
     return _firmware_device_state;
 }
 
