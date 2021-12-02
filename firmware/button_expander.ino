@@ -141,7 +141,7 @@ void _expanderButtonEvent(
     uint8_t communication_mapped_event = event;
 
     // Store state into communication register
-    communicationWriteInputRegister(_expander_communication_register_address[id], communication_mapped_event);
+    communicationWriteRegister(COMMUNICATION_REGISTER_TYPE_INPUT, _expander_communication_register_address[id], communication_mapped_event);
 }
 
 // -----------------------------------------------------------------------------

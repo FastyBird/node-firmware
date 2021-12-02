@@ -71,7 +71,7 @@ void _relayBoot()
         relay_module_items[i].change_time = millis();
 
         // Store state into communication register
-        communicationWriteOutputRegister(relay_module_items[i].register_address, (status ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE));
+        communicationWriteRegister(COMMUNICATION_REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, (status ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE));
     }
 
     _relayRecursive = false;
@@ -168,7 +168,7 @@ void _relayProcess(
         _relayProviderStatus(id, relay_module_items[id].target_status);
 
         // Store state into communication register
-        communicationWriteOutputRegister(relay_module_items[id].register_address, (relay_module_items[id].target_status ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE));
+        communicationWriteRegister(COMMUNICATION_REGISTER_TYPE_OUTPUT, relay_module_items[id].register_address, (relay_module_items[id].target_status ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE));
     }
 }
 
@@ -347,7 +347,7 @@ void relayLoop()
         for (uint8_t i = 0; i < RELAY_MAX_ITEMS; i++) {
             uint16_t register_value;
 
-            communicationReadOutputRegister(relay_module_items[i].register_address, register_value);
+            communicationReadRegister(COMMUNICATION_REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, register_value);
 
             bool expected_value = register_value == COMMUNICATION_BOOLEAN_VALUE_TRUE;
 

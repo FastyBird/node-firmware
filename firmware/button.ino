@@ -76,7 +76,7 @@ void _buttonEvent(
     #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
         // Store state into communication register only if device is in running mode and address is defined
         if (button_module_items[id].register_address != INDEX_NONE /*&& firmwareIsRunning()*/) {
-            communicationWriteInputRegister(button_module_items[id].register_address, event);
+            communicationWriteRegister(COMMUNICATION_REGISTER_TYPE_INPUT, button_module_items[id].register_address, event);
         }
     #endif
 

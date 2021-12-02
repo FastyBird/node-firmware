@@ -66,8 +66,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE      4
     #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE     4
     
-    #define COMMUNICATION_MAX_ATTRIBUTES_SIZE           1
-    #define COMMUNICATION_MAX_SETTINGS_SIZE             4
+    #define COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE           1
+    #define COMMUNICATION_MAX_SETTING_REGISTERS_SIZE             4
 
     communication_register_t communication_module_input_registers[COMMUNICATION_MAX_INPUT_REGISTERS_SIZE] = {
         {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
@@ -82,14 +82,14 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
     };
 
-    communication_attribute_t communication_module_device_attributes[COMMUNICATION_MAX_ATTRIBUTES_SIZE] = {
-        {"vcc", COMMUNICATION_DATA_TYPE_UINT16, 2, false, true, {0, 0, 1, 94}},
+    communication_attribute_t communication_module_attribute_registers[COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE] = {
+        {"vcc", COMMUNICATION_DATA_TYPE_UINT16, 2, false, true, {0, 0, 1, 94}, ""},
     };
-    communication_setting_t communication_module_device_settings[COMMUNICATION_MAX_SETTINGS_SIZE] =  {
-        {"DblDelay-1", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
-        {"DblDelay-2", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
-        {"DblDelay-3", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
-        {"DblDelay-4", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
+    communication_setting_t communication_module_setting_registers[COMMUNICATION_MAX_SETTING_REGISTERS_SIZE] =  {
+        {"DblDelay-1", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
+        {"DblDelay-2", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
+        {"DblDelay-3", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
+        {"DblDelay-4", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
     };
 
     // GENERAL
@@ -157,8 +157,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE      4
     #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE     4
     
-    #define COMMUNICATION_MAX_ATTRIBUTES_SIZE           0
-    #define COMMUNICATION_MAX_SETTINGS_SIZE             4
+    #define COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE           0
+    #define COMMUNICATION_MAX_SETTING_REGISTERS_SIZE             4
 
     #define COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS     4
 
@@ -175,12 +175,12 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
     };
 
-    communication_attribute_t communication_module_device_attributes[COMMUNICATION_MAX_ATTRIBUTES_SIZE];
-    communication_setting_t communication_module_device_settings[COMMUNICATION_MAX_SETTINGS_SIZE] = {
-        {"DblDelay-1", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
-        {"DblDelay-2", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
-        {"DblDelay-3", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
-        {"DblDelay-4", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}},
+    communication_attribute_t communication_module_attribute_registers[COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE];
+    communication_setting_t communication_module_setting_registers[COMMUNICATION_MAX_SETTING_REGISTERS_SIZE] = {
+        {"DblDelay-1", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
+        {"DblDelay-2", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
+        {"DblDelay-3", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
+        {"DblDelay-4", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
     };
 
     // GENERAL
@@ -274,11 +274,11 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #endif
     #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE         0
 
-    #define COMMUNICATION_MAX_ATTRIBUTES_SIZE               0
+    #define COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE               0
     #if defined(FASTYBIRD_8CH_BUTTONS)
-        #define COMMUNICATION_MAX_SETTINGS_SIZE             8
+        #define COMMUNICATION_MAX_SETTING_REGISTERS_SIZE             8
     #else
-        #define COMMUNICATION_MAX_SETTINGS_SIZE             16
+        #define COMMUNICATION_MAX_SETTING_REGISTERS_SIZE             16
     #endif
 
     communication_register_t communication_module_input_registers[COMMUNICATION_MAX_INPUT_REGISTERS_SIZE] = {
@@ -304,26 +304,26 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     };
     communication_register_t communication_module_output_registers[COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE];
 
-    communication_attribute_t communication_module_device_attributes[COMMUNICATION_MAX_ATTRIBUTES_SIZE];
-    communication_setting_t communication_module_device_settings[COMMUNICATION_MAX_SETTINGS_SIZE] = {
-        {"DblDelay-1", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-2", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-3", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-4", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-5", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-6", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-7", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-8", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+    communication_attribute_t communication_module_attribute_registers[COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE];
+    communication_setting_t communication_module_setting_registers[COMMUNICATION_MAX_SETTING_REGISTERS_SIZE] = {
+        {"DblDelay-1", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-2", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-3", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-4", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-5", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-6", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-7", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-8", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
 
         #if defined(FASTYBIRD_16CH_BUTTONS)
-        {"DblDelay-9", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-10", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-11", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-12", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-13", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-14", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-15", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
-        {"DblDelay-16", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}},
+        {"DblDelay-9", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-10", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-11", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-12", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-13", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-14", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-15", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
+        {"DblDelay-16", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
         #endif
     };
 
@@ -428,8 +428,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE     16
     #endif
 
-    #define COMMUNICATION_MAX_ATTRIBUTES_SIZE               0
-    #define COMMUNICATION_MAX_SETTINGS_SIZE                 0
+    #define COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE               0
+    #define COMMUNICATION_MAX_SETTING_REGISTERS_SIZE                 0
 
     #if defined(FASTYBIRD_8CH_DO)
         #define COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS     8
@@ -460,8 +460,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         #endif
     };
 
-    communication_attribute_t communication_module_device_attributes[COMMUNICATION_MAX_ATTRIBUTES_SIZE];
-    communication_setting_t communication_module_device_settings[COMMUNICATION_MAX_SETTINGS_SIZE];
+    communication_attribute_t communication_module_attribute_registers[COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE];
+    communication_setting_t communication_module_setting_registers[COMMUNICATION_MAX_SETTING_REGISTERS_SIZE];
 
     // GENERAL
     #define SYSTEM_CONFIGURE_DEVICE_BUTTON              0

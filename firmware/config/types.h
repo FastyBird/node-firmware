@@ -58,8 +58,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define COMMUNICATION_PACKET_PING                                   0x01
 #define COMMUNICATION_PACKET_PONG                                   0x02
 #define COMMUNICATION_PACKET_EXCEPTION                              0x03
-#define COMMUNICATION_PACKET_SEARCH                                 0x04
-#define COMMUNICATION_PACKET_DISCOVER                               0x05
+#define COMMUNICATION_PACKET_DISCOVER                               0x04
 
 #define COMMUNICATION_PACKET_READ_SINGLE_REGISTER                   0x21
 #define COMMUNICATION_PACKET_READ_MULTIPLE_REGISTERS                0x22
@@ -67,23 +66,15 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define COMMUNICATION_PACKET_WRITE_MULTIPLE_REGISTERS               0x24
 #define COMMUNICATION_PACKET_REPORT_SINGLE_REGISTER                 0x25
 
-#define COMMUNICATION_PACKET_READ_SINGLE_ATTRIBUTE                  0x31
-#define COMMUNICATION_PACKET_WRITE_SINGLE_ATTRIBUTE                 0x32
-#define COMMUNICATION_PACKET_REPORT_SINGLE_ATTRIBUTE                0x33
+#define COMMUNICATION_PACKET_READ_STATE                             0x31
+#define COMMUNICATION_PACKET_WRITE_STATE                            0x32
+#define COMMUNICATION_PACKET_REPORT_STATE                           0x33
 
-#define COMMUNICATION_PACKET_READ_SINGLE_SETTING                    0x41
-#define COMMUNICATION_PACKET_WRITE_SINGLE_SETTING                   0x42
-#define COMMUNICATION_PACKET_REPORT_SINGLE_SETTING                  0x43
-
-#define COMMUNICATION_PACKET_READ_STATE                             0x51
-#define COMMUNICATION_PACKET_WRITE_STATE                            0x52
-#define COMMUNICATION_PACKET_REPORT_STATE                           0x53
-
-#define COMMUNICATION_PACKET_PUB_SUB_READ_REGISTER_KEY              0x61
-#define COMMUNICATION_PACKET_PUB_SUB_WRITE_REGISTER_KEY             0x62
-#define COMMUNICATION_PACKET_PUB_SUB_BROADCAST_REGISTER_VALUE       0x63
-#define COMMUNICATION_PACKET_PUB_SUB_SUBSCRIBE                      0x64
-#define COMMUNICATION_PACKET_PUB_SUB_UNSUBSCRIBE                    0x65
+#define COMMUNICATION_PACKET_PUB_SUB_READ_REGISTER_KEY              0x41
+#define COMMUNICATION_PACKET_PUB_SUB_WRITE_REGISTER_KEY             0x42
+#define COMMUNICATION_PACKET_PUB_SUB_BROADCAST_REGISTER_VALUE       0x43
+#define COMMUNICATION_PACKET_PUB_SUB_SUBSCRIBE                      0x44
+#define COMMUNICATION_PACKET_PUB_SUB_UNSUBSCRIBE                    0x45
 
 // =============================================================================
 // COMMUNICATION DATATYPES
@@ -109,31 +100,19 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 // COMMUNICATION PAIRING COMMANDS
 // =============================================================================
 
-#define COMMUNICATION_DISCOVER_CMD_WRITE_ADDRESS                    0x01
-#define COMMUNICATION_DISCOVER_CMD_PROVIDE_DESCRIPTION              0x03
-#define COMMUNICATION_DISCOVER_CMD_PROVIDE_REGISTERS_SIZE           0x05
-#define COMMUNICATION_DISCOVER_CMD_PROVIDE_REGISTER_STRUCTURE       0x07
-#define COMMUNICATION_DISCOVER_CMD_PROVIDE_ATTRIBUTES_SIZE          0x09
-#define COMMUNICATION_DISCOVER_CMD_PROVIDE_ATTRIBUTE_STRUCTURE      0x0B
-#define COMMUNICATION_DISCOVER_CMD_PROVIDE_SETTINGS_SIZE            0x0D
-#define COMMUNICATION_DISCOVER_CMD_PROVIDE_SETTING_STRUCTURE        0x0F
-#define COMMUNICATION_DISCOVER_CMD_PROVIDE_PUB_SUB_SUPPORT          0x11
-#define COMMUNICATION_DISCOVER_CMD_PAIRING_FINISHED                 0x13
+#define COMMUNICATION_DISCOVER_CMD_SEARCH                           0x01
+#define COMMUNICATION_DISCOVER_CMD_WRITE_ADDRESS                    0x03
+#define COMMUNICATION_DISCOVER_CMD_PROVIDE_REGISTER_STRUCTURE       0x05
+#define COMMUNICATION_DISCOVER_CMD_PAIRING_FINISHED                 0x07
 
 // =============================================================================
 // COMMUNICATION PAIRING RESPONSE
 // =============================================================================
 
-#define COMMUNICATION_DISCOVER_RESPONSE_WRITE_ADDRESS               0x51
-#define COMMUNICATION_DISCOVER_RESPONSE_PROVIDE_DESCRIPTION         0x53
-#define COMMUNICATION_DISCOVER_RESPONSE_PROVIDE_REGISTERS_SIZE      0x55
-#define COMMUNICATION_DISCOVER_RESPONSE_PROVIDE_REGISTER_STRUCTURE  0x57
-#define COMMUNICATION_DISCOVER_RESPONSE_PROVIDE_ATTRIBUTES_SIZE     0x59
-#define COMMUNICATION_DISCOVER_RESPONSE_PROVIDE_ATTRIBUTE_STRUCTURE 0x5B
-#define COMMUNICATION_DISCOVER_RESPONSE_PROVIDE_SETTINGS_SIZE       0x5D
-#define COMMUNICATION_DISCOVER_RESPONSE_PROVIDE_SETTING_STRUCTURE   0x5F
-#define COMMUNICATION_DISCOVER_RESPONSE_PROVIDE_PUB_SUB_SUPPORT     0x61
-#define COMMUNICATION_DISCOVER_RESPONSE_PAIRING_FINISHED            0x63
+#define COMMUNICATION_DISCOVER_RESPONSE_SEARCH                      0x51
+#define COMMUNICATION_DISCOVER_RESPONSE_WRITE_ADDRESS               0x53
+#define COMMUNICATION_DISCOVER_RESPONSE_PROVIDE_REGISTER_STRUCTURE  0x55
+#define COMMUNICATION_DISCOVER_RESPONSE_PAIRING_FINISHED            0x57
 
 // =============================================================================
 // COMMUNICATION REGISTERS TYPES
@@ -141,16 +120,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 #define COMMUNICATION_REGISTER_TYPE_INPUT                           0x01
 #define COMMUNICATION_REGISTER_TYPE_OUTPUT                          0x02
-
-// =============================================================================
-// COMMUNICATION DEVICE DESCRIPTION TYPES
-// =============================================================================
-
-#define COMMUNICATION_DESCRIPTION_DEVICE_MODEL                      0x01
-#define COMMUNICATION_DESCRIPTION_DEVICE_HW_MANUFACTURER            0x02
-#define COMMUNICATION_DESCRIPTION_DEVICE_HW_REVISION                0x03
-#define COMMUNICATION_DESCRIPTION_DEVICE_FW_MANUFACTURER            0x04
-#define COMMUNICATION_DESCRIPTION_DEVICE_FW_VERSION                 0x05
+#define COMMUNICATION_REGISTER_TYPE_ATTRIBUTE                       0x03
+#define COMMUNICATION_REGISTER_TYPE_SETTING                         0x04
 
 // =============================================================================
 // COMMUNICATION VALUES CONSTANTS

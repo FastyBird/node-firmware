@@ -68,6 +68,7 @@ typedef struct {
     bool settable;
     bool queryable;
     char value[4];
+    char key[10];
 } communication_attribute_t;
 
 typedef struct {
@@ -75,6 +76,7 @@ typedef struct {
     uint8_t data_type;
     uint8_t size;
     char value[4];
+    char key[10];
 } communication_setting_t;
 
 typedef struct {
@@ -99,7 +101,7 @@ typedef struct {
 #define PJON_INCLUDE_TSA
 
 #ifndef PJON_PACKET_MAX_LENGTH
-    #define PJON_PACKET_MAX_LENGTH 80
+    #define PJON_PACKET_MAX_LENGTH 90
 #endif
 
 #include <PJON.h>
