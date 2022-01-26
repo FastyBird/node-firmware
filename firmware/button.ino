@@ -73,32 +73,26 @@ void _buttonEvent(
         DPRINTLN(event);
     #endif
 
-    #if COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
-        // Store state into communication register only if device is in running mode and address is defined
-        if (button_module_items[id].register_address != INDEX_NONE /*&& firmwareIsRunning()*/) {
-            communicationWriteRegister(COMMUNICATION_REGISTER_TYPE_INPUT, button_module_items[id].register_address, event);
+    #if REGISTER_MAX_INPUT_REGISTERS_SIZE
+        if (button_module_items[id].register_address != INDEX_NONE) {
+            registerWriteRegister(REGISTER_TYPE_INPUT, button_module_items[id].register_address, event);
         }
     #endif
 
-    #if SYSTEM_CONFIGURE_DEVICE_BUTTON != INDEX_NONE
-        if (id == SYSTEM_CONFIGURE_DEVICE_BUTTON) {
+    #if SYSTEM_CONFIGURE_DEVICE_BUTTON_INDEX != INDEX_NONE
+        if (id == SYSTEM_CONFIGURE_DEVICE_BUTTON_INDEX) {
             switch (event)
             {
 
                 case BUTTON_EVENT_CLICK:
-                    if (communicationIsInPairingMode()) {
-                        communicationDisablePairingMode();
+                    if (firmwareGetDeviceState() == DEVICE_STATE_PAIRING) {
+                        firmwareSetDeviceState(DEVICE_STATE_RUNNING);
+
+                    } else if (firmwareGetDeviceState() == DEVICE_STATE_RUNNING) {
+                        firmwareSetDeviceState(DEVICE_STATE_STOPPED_BY_OPERATOR);
 
                     } else {
-                        if (firmwareGetDeviceState() == DEVICE_STATE_RUNNING) {
-                            firmwareSetDeviceState(DEVICE_STATE_STOPPED_BY_OPERATOR);
-
-                        } else if (
-                            firmwareGetDeviceState() == DEVICE_STATE_STOPPED_BY_OPERATOR
-                            || firmwareGetDeviceState() == DEVICE_STATE_STOPPED
-                        ) {
-                            firmwareSetDeviceState(DEVICE_STATE_RUNNING);
-                        }
+                        firmwareSetDeviceState(DEVICE_STATE_RUNNING);
                     }
                     break;
 
@@ -107,18 +101,7 @@ void _buttonEvent(
                         DPRINTLN(F("[BUTTON] Activating pairing mode"));
                     #endif
 
-                    if (
-                        firmwareGetDeviceState() == DEVICE_STATE_STOPPED_BY_OPERATOR
-                        || firmwareGetDeviceState() == DEVICE_STATE_STOPPED
-                    ) {
-                        firmwareSetDeviceState(DEVICE_STATE_RUNNING);
-                    }
-
-                    communicationEnablePairingMode();
-
-                    if (firmwareGetDeviceState() != DEVICE_STATE_RUNNING) {
-                        firmwareSetDeviceState(DEVICE_STATE_RUNNING);
-                    }
+                    firmwareSetDeviceState(DEVICE_STATE_PAIRING);
                     break;
 
                 case BUTTON_EVENT_LNGLNGCLICK:

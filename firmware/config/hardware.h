@@ -8,11 +8,14 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 #if defined(FASTYBIRD_IO_TEST)
 
-    // Info
-    #define DEVICE_MANUFACTURER                         "FASTYBIRD"
-    #define DEVICE_NAME                                 "8CH_BUTTONS"
+    // GENERAL
+    #define SYSTEM_DEVICE_MANUFACTURER                  "FASTYBIRD"
+    #define SYSTEM_DEVICE_NAME                          "8CH_BUTTONS"
+    #define SYSTEM_CONFIGURE_DEVICE_BUTTON_INDEX        0
+    #define SYSTEM_DEVICE_COMMUNICATION_LED_INDEX       0
+    #define SYSTEM_DEVICE_STATE_LED_INDEX               1
 
-    // LEDs
+    // LEDS
     #define LED_MAX_ITEMS                               2
 
     #define LED1_PIN                                    13
@@ -22,11 +25,11 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
     led_t led_module_items[LED_MAX_ITEMS] = {
         // Pin     Is pin inverted   LED mode      Initial timestamp
-        {LED1_PIN, LED1_PIN_INVERSE, LED_MODE_BUS, 0},
+        {LED1_PIN, LED1_PIN_INVERSE, LED_MODE_OFF, 0},
         {LED2_PIN, LED2_PIN_INVERSE, LED_MODE_OFF, 0},
     };
 
-    // Buttons
+    // BUTTONS
     #define BUTTON_MAX_ITEMS                            4
 
     #define BUTTON1_PIN                                 6
@@ -43,7 +46,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {new DebounceEvent(BUTTON4_PIN, BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), 3, BUTTON_EVENT_NONE},
     };
 
-    // Relay outputs
+    // RELAYS
     #define RELAY_PROVIDER                              RELAY_PROVIDER_RELAY
     #define RELAY_MAX_ITEMS                             4
 
@@ -59,52 +62,44 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {RELAY4_PIN, RELAY_TYPE_NORMAL, GPIO_NONE, 3, FLASH_ADDRESS_RELAY_04, RELAY_DELAY_ON, RELAY_DELAY_OFF, false, false, 0, 0, 0},
     };
 
-    // BUS
+    // REGISTERS
+    #define REGISTER_MAX_INPUT_REGISTERS_SIZE           4
+    #define REGISTER_MAX_OUTPUT_REGISTERS_SIZE          4
+    #define REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE       3
+
+    register_io_register_t register_module_input_registers[REGISTER_MAX_INPUT_REGISTERS_SIZE] = {
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+    };
+    register_io_register_t register_module_output_registers[REGISTER_MAX_OUTPUT_REGISTERS_SIZE] = {
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_01},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_02},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_03},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_04},
+    };
+    register_attr_register_t register_module_attribute_registers[REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE] = {
+        {"addr", REGISTER_DATA_TYPE_UINT8, true, true, {0, 0, 0, 0}, FLASH_ADDRESS_DEVICE_ADDRESS},
+        {"mpl", REGISTER_DATA_TYPE_UINT8, false, true, {0, 0, 0, 80}, INDEX_NONE},
+        {"state", REGISTER_DATA_TYPE_UINT8, true, true, {0, 0, 0, 11}, FLASH_ADDRESS_DEVICE_STATE},
+    };
+
+    // COMMUNICATION
     #define COMMUNICATION_BUS_TX_PIN                    3
     #define COMMUNICATION_BUS_RX_PIN                    2
-
-    #define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE      4
-    #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE     4
-    
-    #define COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE           1
-    #define COMMUNICATION_MAX_SETTING_REGISTERS_SIZE             4
-
-    communication_register_t communication_module_input_registers[COMMUNICATION_MAX_INPUT_REGISTERS_SIZE] = {
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-    };
-    communication_register_t communication_module_output_registers[COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE] = {
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-    };
-
-    communication_attribute_t communication_module_attribute_registers[COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE] = {
-        {"vcc", COMMUNICATION_DATA_TYPE_UINT16, 2, false, true, {0, 0, 1, 94}, ""},
-    };
-    communication_setting_t communication_module_setting_registers[COMMUNICATION_MAX_SETTING_REGISTERS_SIZE] =  {
-        {"DblDelay-1", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
-        {"DblDelay-2", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
-        {"DblDelay-3", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
-        {"DblDelay-4", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
-    };
-
-    // GENERAL
-    #define SYSTEM_CONFIGURE_DEVICE_BUTTON              0
-    #define SYSTEM_DEVICE_COMMUNICATION_LED             0
-    #define SYSTEM_DEVICE_STATE_LED                     1
 #endif
 
 #if defined(FASTYBIRD_IO_TEST_ARM)
 
-    // Info
-    #define DEVICE_MANUFACTURER                         "FASTYBIRD"
-    #define DEVICE_NAME                                 "8CH_BUTTONS"
+    // GENERAL
+    #define SYSTEM_DEVICE_MANUFACTURER                  "FASTYBIRD"
+    #define SYSTEM_DEVICE_NAME                          "8CH_BUTTONS"
+    #define SYSTEM_CONFIGURE_DEVICE_BUTTON_INDEX        0
+    #define SYSTEM_DEVICE_COMMUNICATION_LED_INDEX       0
+    #define SYSTEM_DEVICE_STATE_LED_INDEX               1
 
-    // LEDs
+    // LEDS
     #define LED_MAX_ITEMS                               2
 
     #define LED1_PIN                                    13
@@ -114,11 +109,11 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
     led_t led_module_items[LED_MAX_ITEMS] = {
         // Pin     Is pin inverted   LED mode      Initial timestamp
-        {LED1_PIN, LED1_PIN_INVERSE, LED_MODE_BUS, 0},
+        {LED1_PIN, LED1_PIN_INVERSE, LED_MODE_OFF, 0},
         {LED2_PIN, LED2_PIN_INVERSE, LED_MODE_OFF, 0},
     };
 
-    // Buttons
+    // BUTTONS
     #define BUTTON_MAX_ITEMS                            4
 
     #define BUTTON1_PIN                                 4
@@ -135,7 +130,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {new DebounceEvent(BUTTON4_PIN, BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), 3, BUTTON_EVENT_NONE},
     };
 
-    // Relay outputs
+    // RELAYS
     #define RELAY_PROVIDER                              RELAY_PROVIDER_RELAY
     #define RELAY_MAX_ITEMS                             4
 
@@ -151,55 +146,47 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {RELAY4_PIN, RELAY_TYPE_NORMAL, GPIO_NONE, 3, FLASH_ADDRESS_RELAY_04, RELAY_DELAY_ON, RELAY_DELAY_OFF, false, false, 0, 0, 0},
     };
 
-    // BUS
+    // REGISTERS
+    #define REGISTER_MAX_INPUT_REGISTERS_SIZE           4
+    #define REGISTER_MAX_OUTPUT_REGISTERS_SIZE          4
+    #define REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE       3
+
+    register_io_register_t register_module_input_registers[REGISTER_MAX_INPUT_REGISTERS_SIZE] = {
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+    };
+    register_io_register_t register_module_output_registers[REGISTER_MAX_OUTPUT_REGISTERS_SIZE] = {
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_01},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_02},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_03},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_04},
+    };
+    register_attr_register_t register_module_attribute_registers[REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE] = {
+        {"addr", REGISTER_DATA_TYPE_UINT8, true, true, {0, 0, 0, 0}, FLASH_ADDRESS_DEVICE_ADDRESS},
+        {"mpl", REGISTER_DATA_TYPE_UINT8, false, true, {0, 0, 0, 80}, INDEX_NONE},
+        {"state", REGISTER_DATA_TYPE_UINT8, true, true, {0, 0, 0, 11}, FLASH_ADDRESS_DEVICE_STATE},
+    };
+
+    // COMMUNICATION
     #define COMMUNICATION_BUS_HARDWARE_SERIAL           1
-
-    #define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE      4
-    #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE     4
-    
-    #define COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE           0
-    #define COMMUNICATION_MAX_SETTING_REGISTERS_SIZE             4
-
-    #define COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS     4
-
-    communication_register_t communication_module_input_registers[COMMUNICATION_MAX_INPUT_REGISTERS_SIZE] = {
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-    };
-    communication_register_t communication_module_output_registers[COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE] = {
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-    };
-
-    communication_attribute_t communication_module_attribute_registers[COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE];
-    communication_setting_t communication_module_setting_registers[COMMUNICATION_MAX_SETTING_REGISTERS_SIZE] = {
-        {"DblDelay-1", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
-        {"DblDelay-2", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
-        {"DblDelay-3", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
-        {"DblDelay-4", COMMUNICATION_DATA_TYPE_UINT16, 2, {0, 0, 1, 94}, ""},
-    };
-
-    // GENERAL
-    #define SYSTEM_CONFIGURE_DEVICE_BUTTON              0
-    #define SYSTEM_DEVICE_COMMUNICATION_LED             0
-    #define SYSTEM_DEVICE_STATE_LED                     1
 #endif
 
 #if defined(FASTYBIRD_8CH_BUTTONS) || defined(FASTYBIRD_16CH_BUTTONS)
 
-    // Info
-    #define DEVICE_MANUFACTURER                         "FASTYBIRD"
+    // GENERAL
+    #define SYSTEM_DEVICE_MANUFACTURER                  "FASTYBIRD"
     #if defined(FASTYBIRD_8CH_BUTTONS)
-        #define DEVICE_NAME                             "8CH_BUTTONS"
+        #define SYSTEM_DEVICE_NAME                      "8CH_BUTTONS"
     #else
-        #define DEVICE_NAME                             "16CH_BUTTONS"
+        #define SYSTEM_DEVICE_NAME                      "16CH_BUTTONS"
     #endif
+    #define SYSTEM_CONFIGURE_DEVICE_BUTTON_INDEX        0
+    #define SYSTEM_DEVICE_COMMUNICATION_LED_INDEX       0
+    #define SYSTEM_DEVICE_STATE_LED_INDEX               1
 
-    // LEDs
+    // LEDS
     #define LED_MAX_ITEMS                               2
 
     #define LED1_PIN                                    13
@@ -209,11 +196,11 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
     led_t led_module_items[LED_MAX_ITEMS] = {
         // Pin     Is pin inverted   LED mode      Initial timestamp
-        {LED1_PIN, LED1_PIN_INVERSE, LED_MODE_BUS, 0},
+        {LED1_PIN, LED1_PIN_INVERSE, LED_MODE_OFF, 0},
         {LED2_PIN, LED2_PIN_INVERSE, LED_MODE_OFF, 0},
     };
 
-    // Buttons
+    // BUTTONS
     #if defined(FASTYBIRD_8CH_BUTTONS)
         #define BUTTON_MAX_ITEMS                        8
     #else
@@ -263,87 +250,58 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         #endif
     };
 
-    // BUS
-    #define COMMUNICATION_BUS_TX_PIN                        3
-    #define COMMUNICATION_BUS_RX_PIN                        2
-
+    // REGISTERS
     #if defined(FASTYBIRD_8CH_BUTTONS)
-        #define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE      8
+        #define REGISTER_MAX_INPUT_REGISTERS_SIZE      8
     #else
-        #define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE      16
+        #define REGISTER_MAX_INPUT_REGISTERS_SIZE      16
     #endif
-    #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE         0
+    #define REGISTER_MAX_OUTPUT_REGISTERS_SIZE         0
+    #define REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE      0
 
-    #define COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE               0
-    #if defined(FASTYBIRD_8CH_BUTTONS)
-        #define COMMUNICATION_MAX_SETTING_REGISTERS_SIZE             8
-    #else
-        #define COMMUNICATION_MAX_SETTING_REGISTERS_SIZE             16
-    #endif
-
-    communication_register_t communication_module_input_registers[COMMUNICATION_MAX_INPUT_REGISTERS_SIZE] = {
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
+    register_io_register_t register_module_input_registers[REGISTER_MAX_INPUT_REGISTERS_SIZE] = {
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
 
         #if defined(FASTYBIRD_16CH_BUTTONS)
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_UINT8, 1, {0, 0, 0, 0}, ""},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
+        {REGISTER_DATA_TYPE_UINT8, {0, 0, 0, 0}, INDEX_NONE},
         #endif
     };
-    communication_register_t communication_module_output_registers[COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE];
+    register_io_register_t register_module_output_registers[REGISTER_MAX_OUTPUT_REGISTERS_SIZE];
+    register_attr_register_t register_module_attribute_registers[REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE];
 
-    communication_attribute_t communication_module_attribute_registers[COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE];
-    communication_setting_t communication_module_setting_registers[COMMUNICATION_MAX_SETTING_REGISTERS_SIZE] = {
-        {"DblDelay-1", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-2", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-3", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-4", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-5", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-6", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-7", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-8", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-
-        #if defined(FASTYBIRD_16CH_BUTTONS)
-        {"DblDelay-9", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-10", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-11", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-12", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-13", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-14", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-15", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        {"DblDelay-16", COMMUNICATION_DATA_TYPE_UINT16, 1, {0, 0, 1, 94}, ""},
-        #endif
-    };
-
-    // GENERAL
-    #define SYSTEM_CONFIGURE_DEVICE_BUTTON              0
-    #define SYSTEM_DEVICE_COMMUNICATION_LED             0
-    #define SYSTEM_DEVICE_STATE_LED                     1
+    // COMMUNICATION
+    #define COMMUNICATION_BUS_TX_PIN                    3
+    #define COMMUNICATION_BUS_RX_PIN                    2
 #endif
 
 #if defined(FASTYBIRD_8CH_DO) || defined(FASTYBIRD_16CH_DO)
 
-    // Info
-    #define DEVICE_MANUFACTURER                         "FASTYBIRD"
+    // GENERAL
+    #define SYSTEM_DEVICE_MANUFACTURER                  "FASTYBIRD"
     #if defined(FASTYBIRD_8CH_DO)
-        #define DEVICE_NAME                             "8CH_DO"
+        #define SYSTEM_DEVICE_NAME                      "8CH_DO"
     #else
-        #define DEVICE_NAME                             "16CH_DO"
+        #define SYSTEM_DEVICE_NAME                      "16CH_DO"
     #endif
+    #define SYSTEM_CONFIGURE_DEVICE_BUTTON_INDEX        0
+    #define SYSTEM_DEVICE_COMMUNICATION_LED_INDEX       0
+    #define SYSTEM_DEVICE_STATE_LED_INDEX               1
 
-    // LEDs
+    // LEDS
     #define LED_MAX_ITEMS                               2
 
     #define LED1_PIN                                    13
@@ -353,11 +311,11 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
     led_t led_module_items[LED_MAX_ITEMS] = {
         // Pin     Is pin inverted   LED mode      Initial timestamp
-        {LED1_PIN, LED1_PIN_INVERSE, LED_MODE_BUS, 0},
+        {LED1_PIN, LED1_PIN_INVERSE, LED_MODE_OFF, 0},
         {LED2_PIN, LED2_PIN_INVERSE, LED_MODE_OFF, 0},
     };
 
-    // Buttons
+    // BUTTONS
     #define BUTTON_MAX_ITEMS                            1
 
     #define BUTTON1_PIN                                 4
@@ -368,7 +326,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {new DebounceEvent(BUTTON1_PIN, BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP, BUTTON_DEBOUNCE_DELAY, BUTTON_DBLCLICK_DELAY), INDEX_NONE, BUTTON_EVENT_NONE},
     };
 
-    // Relay outputs
+    // RELAYS
     #define RELAY_PROVIDER                              RELAY_PROVIDER_RELAY
     #if defined(FASTYBIRD_8CH_DO)
         #define RELAY_MAX_ITEMS                         8
@@ -417,73 +375,58 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         #endif
     };
 
-    // BUS
-    #define COMMUNICATION_BUS_TX_PIN                        3
-    #define COMMUNICATION_BUS_RX_PIN                        2
-
-    #define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE          0
+    // REGISTERS
+    #define REGISTER_MAX_INPUT_REGISTERS_SIZE           0
     #if defined(FASTYBIRD_8CH_DO)
-        #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE     8
+        #define REGISTER_MAX_OUTPUT_REGISTERS_SIZE      8
     #else
-        #define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE     16
+        #define REGISTER_MAX_OUTPUT_REGISTERS_SIZE      16
     #endif
+    #define REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE       0
 
-    #define COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE               0
-    #define COMMUNICATION_MAX_SETTING_REGISTERS_SIZE                 0
-
-    #if defined(FASTYBIRD_8CH_DO)
-        #define COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS     8
-    #else
-        #define COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS     16
-    #endif
-
-    communication_register_t communication_module_input_registers[COMMUNICATION_MAX_INPUT_REGISTERS_SIZE];
-    communication_register_t communication_module_output_registers[COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE] = {
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
+    register_io_register_t register_module_input_registers[REGISTER_MAX_INPUT_REGISTERS_SIZE];
+    register_io_register_t register_module_output_registers[REGISTER_MAX_OUTPUT_REGISTERS_SIZE] = {
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_01},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_02},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_03},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_04},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_05},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_06},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_07},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_08},
 
         #if defined(FASTYBIRD_16CH_DO)
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
-        {COMMUNICATION_DATA_TYPE_BOOLEAN, 2, {0, 0, 0, 0}, ""},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_09},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_10},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_11},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_12},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_13},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_14},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_15},
+        {REGISTER_DATA_TYPE_BOOLEAN, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_16},
         #endif
     };
+    register_attr_register_t register_module_attribute_registers[REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE];
 
-    communication_attribute_t communication_module_attribute_registers[COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE];
-    communication_setting_t communication_module_setting_registers[COMMUNICATION_MAX_SETTING_REGISTERS_SIZE];
-
-    // GENERAL
-    #define SYSTEM_CONFIGURE_DEVICE_BUTTON              0
-    #define SYSTEM_DEVICE_COMMUNICATION_LED             0
-    #define SYSTEM_DEVICE_STATE_LED                     1
+    // COMMUNICATION
+    #define COMMUNICATION_BUS_TX_PIN                    3
+    #define COMMUNICATION_BUS_RX_PIN                    2
 #endif
 
 #if defined(FASTYBIRD_16CH_BUTTONS_EXPANDER)
 
     // Info
-    #define DEVICE_MANUFACTURER         "FASTYBIRD"
-    #define DEVICE_NAME                 "16CH_BUTTONS_EXPANDER"
+    #define SYSTEM_DEVICE_MANUFACTURER                  "FASTYBIRD"
+    #define SYSTEM_DEVICE_NAME                          "16CH_BUTTONS_EXPANDER"
 
     // BUS
-    #define COMMUNICATION_BUS_TX_PIN    3
-    #define COMMUNICATION_BUS_RX_PIN    2
+    #define COMMUNICATION_BUS_TX_PIN                    3
+    #define COMMUNICATION_BUS_RX_PIN                    2
 
     // LEDs
-    #define LED1_PIN                    13
-    #define LED1_PIN_INVERSE            0
+    #define LED1_PIN                                    13
+    #define LED1_PIN_INVERSE                            0
 
     // Buttons
-    #define BUTTON_EXPANDER_SUPPORT     1
-
+    #define BUTTON_EXPANDER_SUPPORT                     1
 #endif

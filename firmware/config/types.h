@@ -18,7 +18,6 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 // =============================================================================
 
 #define FLASH_ADDRESS_DEVICE_ADDRESS                                0x01
-
 #define FLASH_ADDRESS_DEVICE_STATE                                  0x02
 
 #define FLASH_ADDRESS_RELAY_01                                      0x10
@@ -60,68 +59,13 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define COMMUNICATION_PACKET_EXCEPTION                              0x03
 #define COMMUNICATION_PACKET_DISCOVER                               0x04
 
-#define COMMUNICATION_PACKET_READ_SINGLE_REGISTER                   0x21
-#define COMMUNICATION_PACKET_READ_MULTIPLE_REGISTERS                0x22
-#define COMMUNICATION_PACKET_WRITE_SINGLE_REGISTER                  0x23
-#define COMMUNICATION_PACKET_WRITE_MULTIPLE_REGISTERS               0x24
-#define COMMUNICATION_PACKET_REPORT_SINGLE_REGISTER                 0x25
-
-#define COMMUNICATION_PACKET_READ_STATE                             0x31
-#define COMMUNICATION_PACKET_WRITE_STATE                            0x32
-#define COMMUNICATION_PACKET_REPORT_STATE                           0x33
-
-#define COMMUNICATION_PACKET_PUB_SUB_READ_REGISTER_KEY              0x41
-#define COMMUNICATION_PACKET_PUB_SUB_WRITE_REGISTER_KEY             0x42
-#define COMMUNICATION_PACKET_PUB_SUB_BROADCAST_REGISTER_VALUE       0x43
-#define COMMUNICATION_PACKET_PUB_SUB_SUBSCRIBE                      0x44
-#define COMMUNICATION_PACKET_PUB_SUB_UNSUBSCRIBE                    0x45
-
-// =============================================================================
-// COMMUNICATION DATATYPES
-// =============================================================================
-
-#define COMMUNICATION_DATA_TYPE_UNKNOWN                             0xFF
-#define COMMUNICATION_DATA_TYPE_UINT8                               0x01
-#define COMMUNICATION_DATA_TYPE_UINT16                              0x02
-#define COMMUNICATION_DATA_TYPE_UINT32                              0x03
-#define COMMUNICATION_DATA_TYPE_INT8                                0x04
-#define COMMUNICATION_DATA_TYPE_INT16                               0x05
-#define COMMUNICATION_DATA_TYPE_INT32                               0x06
-#define COMMUNICATION_DATA_TYPE_FLOAT32                             0x07
-#define COMMUNICATION_DATA_TYPE_BOOLEAN                             0x08
-#define COMMUNICATION_DATA_TYPE_TIME                                0x09
-#define COMMUNICATION_DATA_TYPE_DATE                                0x0A
-#define COMMUNICATION_DATA_TYPE_DATETIME                            0x0B
-#define COMMUNICATION_DATA_TYPE_STRING                              0x0C
-#define COMMUNICATION_DATA_TYPE_BUTTON                              0x0D
-#define COMMUNICATION_DATA_TYPE_SWITCH                              0x0E
-
-// =============================================================================
-// COMMUNICATION PAIRING COMMANDS
-// =============================================================================
-
-#define COMMUNICATION_DISCOVER_CMD_SEARCH                           0x01
-#define COMMUNICATION_DISCOVER_CMD_WRITE_ADDRESS                    0x03
-#define COMMUNICATION_DISCOVER_CMD_PROVIDE_REGISTER_STRUCTURE       0x05
-#define COMMUNICATION_DISCOVER_CMD_PAIRING_FINISHED                 0x07
-
-// =============================================================================
-// COMMUNICATION PAIRING RESPONSE
-// =============================================================================
-
-#define COMMUNICATION_DISCOVER_RESPONSE_SEARCH                      0x51
-#define COMMUNICATION_DISCOVER_RESPONSE_WRITE_ADDRESS               0x53
-#define COMMUNICATION_DISCOVER_RESPONSE_PROVIDE_REGISTER_STRUCTURE  0x55
-#define COMMUNICATION_DISCOVER_RESPONSE_PAIRING_FINISHED            0x57
-
-// =============================================================================
-// COMMUNICATION REGISTERS TYPES
-// =============================================================================
-
-#define COMMUNICATION_REGISTER_TYPE_INPUT                           0x01
-#define COMMUNICATION_REGISTER_TYPE_OUTPUT                          0x02
-#define COMMUNICATION_REGISTER_TYPE_ATTRIBUTE                       0x03
-#define COMMUNICATION_REGISTER_TYPE_SETTING                         0x04
+#define COMMUNICATION_PACKET_READ_SINGLE_REGISTER_VALUES            0x21
+#define COMMUNICATION_PACKET_READ_MULTIPLE_REGISTERS_VALUES         0x22
+#define COMMUNICATION_PACKET_WRITE_SINGLE_REGISTER_VALUE            0x23
+#define COMMUNICATION_PACKET_WRITE_MULTIPLE_REGISTERS_VALUES        0x24
+#define COMMUNICATION_PACKET_READ_SINGLE_REGISTER_STRUCTURE         0x25
+#define COMMUNICATION_PACKET_READ_MULTIPLE_REGISTER_STRUCTURE       0x26
+#define COMMUNICATION_PACKET_REPORT_SINGLE_REGISTER_VALUE           0x27
 
 // =============================================================================
 // COMMUNICATION VALUES CONSTANTS
@@ -131,15 +75,40 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define COMMUNICATION_BOOLEAN_VALUE_FALSE                           0x0000
 
 // =============================================================================
+// REGISTER DATATYPES
+// =============================================================================
+
+#define REGISTER_DATA_TYPE_UNKNOWN                                  0xFF
+#define REGISTER_DATA_TYPE_UINT8                                    0x01
+#define REGISTER_DATA_TYPE_UINT16                                   0x02
+#define REGISTER_DATA_TYPE_UINT32                                   0x03
+#define REGISTER_DATA_TYPE_INT8                                     0x04
+#define REGISTER_DATA_TYPE_INT16                                    0x05
+#define REGISTER_DATA_TYPE_INT32                                    0x06
+#define REGISTER_DATA_TYPE_FLOAT32                                  0x07
+#define REGISTER_DATA_TYPE_BOOLEAN                                  0x08
+#define REGISTER_DATA_TYPE_TIME                                     0x09
+#define REGISTER_DATA_TYPE_DATE                                     0x0A
+#define REGISTER_DATA_TYPE_DATETIME                                 0x0B
+#define REGISTER_DATA_TYPE_STRING                                   0x0C
+#define REGISTER_DATA_TYPE_BUTTON                                   0x0D
+#define REGISTER_DATA_TYPE_SWITCH                                   0x0E
+
+// =============================================================================
+// REGISTER TYPES
+// =============================================================================
+
+#define REGISTER_TYPE_INPUT                                         0x01
+#define REGISTER_TYPE_OUTPUT                                        0x02
+#define REGISTER_TYPE_ATTRIBUTE                                     0x03
+
+// =============================================================================
 // LED MODES
 // =============================================================================
 
-#define LED_MODE_BUS                                                0       // LED will blink according to the BUS status
-#define LED_MODE_FINDME                                             1       // LED will be ON
-#define LED_MODE_FINDME_BUS                                         2       // A mixture between BUS and FINDME
-#define LED_MODE_PAIRING                                            3       // LED will notify user about pairing mode
-#define LED_MODE_ON                                                 4       // LED always ON
-#define LED_MODE_OFF                                                5       // LED always OFF
+#define LED_MODE_FINDME                                             1       // LED will blink
+#define LED_MODE_ON                                                 2       // LED always ON
+#define LED_MODE_OFF                                                3       // LED always OFF
 
 // =============================================================================
 // BUTTONS EVENTS

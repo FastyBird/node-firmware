@@ -16,47 +16,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
     #include <../lib/ArmEeprom/Samd21Eeprom.h>
 #endif
 
-uint8_t _firmware_device_state = DEVICE_STATE_STOPPED;
-
-
-void _firmwareUpdateLedState()
-{
-    #if SYSTEM_DEVICE_STATE_LED != INDEX_NONE
-        if (_firmware_device_state == DEVICE_STATE_RUNNING) {
-            ledSetMode(SYSTEM_DEVICE_STATE_LED, LED_MODE_ON);
-
-        } else if (
-            _firmware_device_state == DEVICE_STATE_STOPPED
-            || _firmware_device_state == DEVICE_STATE_STOPPED_BY_OPERATOR
-        ) {
-            ledSetMode(SYSTEM_DEVICE_STATE_LED, LED_MODE_OFF);
-        }
-    #endif
-}
-
-// -----------------------------------------------------------------------------
-
-void _firmwareLoadState()
-{
-    _firmware_device_state = DEVICE_STATE_RUNNING;
-    return;
-
-    uint8_t stored_state = (uint8_t) EEPROM.read(FLASH_ADDRESS_DEVICE_STATE);
-
-    if (stored_state == DEVICE_STATE_RUNNING) {
-        _firmware_device_state = DEVICE_STATE_RUNNING;
-
-    } else if (stored_state == DEVICE_STATE_STOPPED) {
-        _firmware_device_state = DEVICE_STATE_STOPPED;
-
-    } else if (stored_state == DEVICE_STATE_STOPPED_BY_OPERATOR) {
-        _firmware_device_state = DEVICE_STATE_STOPPED_BY_OPERATOR;
-    }
-
-    #if SYSTEM_DEVICE_STATE_LED != INDEX_NONE
-        _firmwareUpdateLedState();
-    #endif
-}
+void(* resetFunc) (void) = 0;
 
 // -----------------------------------------------------------------------------
 // FIRMWARE BASIC API
@@ -65,41 +25,62 @@ void _firmwareLoadState()
 void firmwareSetDeviceState(
     uint8_t setStatus
 ) {
-    if (setStatus == DEVICE_STATE_RUNNING) {
-        _firmware_device_state = DEVICE_STATE_RUNNING;
-
-    } else if (setStatus == DEVICE_STATE_STOPPED) {
-        _firmware_device_state = DEVICE_STATE_STOPPED;
-
-    } else if (setStatus == DEVICE_STATE_ERROR) {
-        _firmware_device_state = DEVICE_STATE_ERROR;
-
-    } else if (setStatus == DEVICE_STATE_STOPPED_BY_OPERATOR) {
-        _firmware_device_state = DEVICE_STATE_STOPPED_BY_OPERATOR;
-
-    } else {
+    // Check if valid value is provided to store
+    if (
+        setStatus != DEVICE_STATE_RUNNING
+        && setStatus != DEVICE_STATE_STOPPED
+        && setStatus != DEVICE_STATE_STOPPED_BY_OPERATOR
+        && setStatus != DEVICE_STATE_PAIRING
+        && setStatus != DEVICE_STATE_ERROR
+    ) {
         return;
     }
 
-    #if SYSTEM_DEVICE_STATE_LED != INDEX_NONE
-        _firmwareUpdateLedState();
-    #endif
-
-    EEPROM.update(FLASH_ADDRESS_DEVICE_STATE, _firmware_device_state);
-
-    communicationReportDeviceState();
+    registerWriteRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS, setStatus);
 }
 
 // -----------------------------------------------------------------------------
 
-uint8_t firmwareGetDeviceState() {
-    return _firmware_device_state;
+uint8_t firmwareGetDeviceState()
+{
+    uint8_t device_state;
+
+    registerReadRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS, device_state);
+
+    // Check if valid value is stored in registry
+    if (
+        device_state != DEVICE_STATE_RUNNING
+        && device_state != DEVICE_STATE_STOPPED
+        && device_state != DEVICE_STATE_STOPPED_BY_OPERATOR
+        && device_state != DEVICE_STATE_PAIRING
+        && device_state != DEVICE_STATE_ERROR
+    ) {
+        return DEVICE_STATE_ERROR;
+    }
+
+    return device_state;
 }
 
 // -----------------------------------------------------------------------------
 
-bool firmwareIsRunning() {
-    return _firmware_device_state == DEVICE_STATE_RUNNING;
+bool firmwareIsRunning()
+{
+    uint8_t register_value;
+
+    registerReadRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS, register_value);
+    
+    return register_value == DEVICE_STATE_RUNNING;
+}
+
+// -----------------------------------------------------------------------------
+
+bool firmwareIsPairing()
+{
+    uint8_t register_value;
+
+    registerReadRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS, register_value);
+    
+    return register_value == DEVICE_STATE_PAIRING;
 }
 
 // -----------------------------------------------------------------------------
@@ -109,12 +90,12 @@ bool firmwareIsRunning() {
 void setup()
 {
     #if defined(ARDUINO_ARCH_SAM) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_STM32F2)
-        Serial1.begin(SERIAL_BAUDRATE);
+        Serial1.begin(COMMUNICATION_SERIAL_BAUDRATE);
     #else
-        Serial.begin(SERIAL_BAUDRATE);
+        Serial.begin(COMMUNICATION_SERIAL_BAUDRATE);
     #endif
 
-    _firmwareLoadState();
+    registerSetup();
 
     communicationSetup();
 
@@ -129,10 +110,6 @@ void setup()
     #endif
 
     ledSetup();
-
-    #if SYSTEM_DEVICE_STATE_LED != INDEX_NONE
-        _firmwareUpdateLedState();
-    #endif
 }
 
 // -----------------------------------------------------------------------------

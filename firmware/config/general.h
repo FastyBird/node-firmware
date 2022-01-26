@@ -18,10 +18,6 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define DEBUG_COMMUNICATION_SUPPORT                 1               // Enable communication serial debug log
 #endif
 
-#ifndef SERIAL_BAUDRATE
-#define SERIAL_BAUDRATE                             38400           // Default baudrate
-#endif
-
 #ifndef DEBUG_ADD_TIMESTAMP
 #define DEBUG_ADD_TIMESTAMP                         1               // Add timestamp to debug messages
                                                                     // (in millis overflowing every 1000 seconds)
@@ -33,21 +29,25 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 #define SYSTEM_UPTIME_OVERFLOW                      4294967295      // Uptime overflow value
 
-#ifndef SYSTEM_CONFIGURE_DEVICE_BUTTON
-#define SYSTEM_CONFIGURE_DEVICE_BUTTON              INDEX_NONE
+#ifndef SYSTEM_CONFIGURE_DEVICE_BUTTON_INDEX
+#define SYSTEM_CONFIGURE_DEVICE_BUTTON_INDEX        INDEX_NONE
 #endif
 
-#ifndef SYSTEM_DEVICE_STATE_LED
-#define SYSTEM_DEVICE_STATE_LED                     INDEX_NONE
+#ifndef SYSTEM_DEVICE_STATE_LED_INDEX
+#define SYSTEM_DEVICE_STATE_LED_INDEX               INDEX_NONE
 #endif
 
-#ifndef SYSTEM_DEVICE_COMMUNICATION_LED
-#define SYSTEM_DEVICE_COMMUNICATION_LED             INDEX_NONE
+#ifndef SYSTEM_DEVICE_COMMUNICATION_LED_INDEX
+#define SYSTEM_DEVICE_COMMUNICATION_LED_INDEX       INDEX_NONE
 #endif
 
 // =============================================================================
 // COMMUNICATION MODULE
 // =============================================================================
+
+#ifndef COMMUNICATION_SERIAL_BAUDRATE
+#define COMMUNICATION_SERIAL_BAUDRATE               38400           // Default baudrate
+#endif
 
 #ifndef COMMUNICATION_BUS_HARDWARE_SERIAL
 #define COMMUNICATION_BUS_HARDWARE_SERIAL           0
@@ -81,60 +81,40 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define COMMUNICATION_DISABLE_ADDRESS_STORING       1
 #endif
 
-#ifndef COMMUNICATION_MAX_INPUT_REGISTERS_SIZE
-#define COMMUNICATION_MAX_INPUT_REGISTERS_SIZE      0               // Define maximum size of input registers
-#endif
-
-#ifndef COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE
-#define COMMUNICATION_MAX_OUTPUT_REGISTERS_SIZE     0               // Define maximum size of output registers
-#endif
-
-#ifndef COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE
-#define COMMUNICATION_MAX_ATTRIBUTE_REGISTERS_SIZE           0               // Define maximum size of attribute registers
-#endif
-
-#ifndef COMMUNICATION_MAX_SETTING_REGISTERS_SIZE
-#define COMMUNICATION_MAX_SETTING_REGISTERS_SIZE             0               // Define maximum size of setting registers
-#endif
-
 #ifndef COMMUNICATION_NOTIFY_STATE_DELAY
 #define COMMUNICATION_NOTIFY_STATE_DELAY            5000            // Delay before master is notified after boot up
 #endif
 
-#ifndef COMMUNICATION_DESCRIPTION_SUPPORT
-#define COMMUNICATION_DESCRIPTION_SUPPORT           1               // 
-#endif
-
-#ifndef COMMUNICATION_SETTINGS_SUPPORT
-#define COMMUNICATION_SETTINGS_SUPPORT              1               // 
-#endif
-
-#ifndef COMMUNICATION_PUB_SUB_PUB_SUPPORT
-#define COMMUNICATION_PUB_SUB_PUB_SUPPORT           1               // Enable or disable publish register support
-#endif
-
-#ifndef COMMUNICATION_PUB_SUB_SUB_SUPPORT
-#define COMMUNICATION_PUB_SUB_SUB_SUPPORT           1               // Enable or disable subscription to messages
-#endif
-
-#ifndef COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS
-#define COMMUNICATION_PUB_SUB_MAX_SUBSCRIPTIONS     0               // Define maximum supported subscriptions
-#endif
-
-#ifndef COMMUNICATION_PUB_SUB_MAX_CONDITIONS
-#define COMMUNICATION_PUB_SUB_MAX_CONDITIONS        1               // Define maximum supported conditions per subscription
-#endif
-
-#ifndef COMMUNICATION_PUB_SUB_MAX_ACTIONS
-#define COMMUNICATION_PUB_SUB_MAX_ACTIONS           1               // Define maximum supported actions per subscription
-#endif
-
-#ifndef COMMUNICATION_REGISTER_KEY_LENGTH
-#define COMMUNICATION_REGISTER_KEY_LENGTH           9               // 
-#endif
-
 #ifndef COMMUNICATION_USE_CRC
 #define COMMUNICATION_USE_CRC                       1               // Add CRC checksum to end of packet
+#endif
+
+#ifndef COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS
+#define COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS    0               // Attribute register address where is stored device address
+#endif
+
+#ifndef COMMUNICATION_ATTR_REGISTER_PML_ADDRESS
+#define COMMUNICATION_ATTR_REGISTER_PML_ADDRESS     1               // Attribute register address where is stored packet max length
+#endif
+
+#ifndef COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS
+#define COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS   2               // Attribute register address where is stored device state
+#endif
+
+// =============================================================================
+// REGISTER MODULE
+// =============================================================================
+
+#ifndef REGISTER_MAX_INPUT_REGISTERS_SIZE
+#define REGISTER_MAX_INPUT_REGISTERS_SIZE           0               // Define maximum size of input registers
+#endif
+
+#ifndef REGISTER_MAX_OUTPUT_REGISTERS_SIZE
+#define REGISTER_MAX_OUTPUT_REGISTERS_SIZE          0               // Define maximum size of output registers
+#endif
+
+#ifndef REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
+#define REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE       0               // Define maximum size of attribute registers
 #endif
 
 // =============================================================================

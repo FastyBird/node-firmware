@@ -70,8 +70,10 @@ void _relayBoot()
 
         relay_module_items[i].change_time = millis();
 
-        // Store state into communication register
-        communicationWriteRegister(COMMUNICATION_REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, (status ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE));
+        #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE
+            // Store state into communication register
+            registerWriteRegister(REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, (status ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE));
+        #endif
     }
 
     _relayRecursive = false;
@@ -167,8 +169,10 @@ void _relayProcess(
         // Call the provider to perform the action
         _relayProviderStatus(id, relay_module_items[id].target_status);
 
-        // Store state into communication register
-        communicationWriteRegister(COMMUNICATION_REGISTER_TYPE_OUTPUT, relay_module_items[id].register_address, (relay_module_items[id].target_status ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE));
+        #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE
+            // Store state into communication register
+            registerWriteRegister(REGISTER_TYPE_OUTPUT, relay_module_items[id].register_address, (relay_module_items[id].target_status ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE));
+        #endif
     }
 }
 
@@ -345,11 +349,15 @@ void relayLoop()
     // Process request only if device is in running mode
     if (firmwareIsRunning()) {
         for (uint8_t i = 0; i < RELAY_MAX_ITEMS; i++) {
-            uint16_t register_value;
+            bool expected_value = false;
 
-            communicationReadRegister(COMMUNICATION_REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, register_value);
+            #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE
+                uint16_t register_value;
 
-            bool expected_value = register_value == COMMUNICATION_BOOLEAN_VALUE_TRUE;
+                registerReadRegister(REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, register_value);
+
+                expected_value = register_value == COMMUNICATION_BOOLEAN_VALUE_TRUE;
+            #endif
 
             if (expected_value != relayStatus(i)) {
                 relayStatus(i, expected_value);

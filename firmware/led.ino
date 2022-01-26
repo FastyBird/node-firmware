@@ -132,21 +132,39 @@ void ledSetup()
 void ledLoop()
 {
     for (uint8_t i = 0; i < LED_MAX_ITEMS; i++) {
-        if (_ledMode(i) == LED_MODE_BUS) {
-            if (communicationHasAssignedAddress() == false) {
-                _ledBlink(i, 500, 500);
+        #if SYSTEM_DEVICE_STATE_LED_INDEX != INDEX_NONE
+            if (i == SYSTEM_DEVICE_STATE_LED_INDEX) {
+                if (firmwareIsRunning() || firmwareIsPairing()) {
+                    _ledStatus(i, true);
 
-            } else if (communicationIsMasterLost()) {
-                _ledBlink(i, 1500, 500);
+                } else {
+                    _ledStatus(i, false);
+                }
 
-            } else {
-                _ledBlink(i, 4900, 100);
+                continue;
             }
+        #endif
 
-        } else if (_ledMode(i) == LED_MODE_PAIRING) {
-            _ledBlink(i, 250, 500);
+        #if SYSTEM_DEVICE_COMMUNICATION_LED_INDEX != INDEX_NONE
+            if (i == SYSTEM_DEVICE_COMMUNICATION_LED_INDEX) {
+                if (firmwareIsPairing()) {
+                    _ledBlink(i, 250, 500);
 
-        } else if (_ledMode(i) == LED_MODE_ON) {
+                } else if (communicationHasAssignedAddress() == false) {
+                    _ledBlink(i, 500, 500);
+
+                } else if (communicationIsMasterLost()) {
+                    _ledBlink(i, 1500, 500);
+
+                } else {
+                    _ledBlink(i, 4900, 100);
+                }
+
+                continue;
+            }
+        #endif
+
+        if (_ledMode(i) == LED_MODE_ON) {
             _ledStatus(i, true);
 
         } else if (_ledMode(i) == LED_MODE_OFF) {

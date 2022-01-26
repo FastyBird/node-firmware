@@ -54,50 +54,6 @@ typedef union {
 // COMMUNICATION MODULE
 // =============================================================================
 
-typedef struct {
-    uint8_t data_type;
-    uint8_t size;
-    char value[4];
-    char key[10];
-} communication_register_t;
-
-typedef struct {
-    char name[16];
-    uint8_t data_type;
-    uint8_t size;
-    bool settable;
-    bool queryable;
-    char value[4];
-    char key[10];
-} communication_attribute_t;
-
-typedef struct {
-    char name[16];
-    uint8_t data_type;
-    uint8_t size;
-    char value[4];
-    char key[10];
-} communication_setting_t;
-
-typedef struct {
-    char key[10];
-    uint8_t conditions[10];
-    uint8_t actions[10];
-} communication_pub_sub_subscription_t;
-
-typedef struct {
-    char key[10];
-    uint8_t data_type;
-    char value[4];
-    bool fullfiled;
-} communication_pub_sub_condition_t;
-
-typedef struct {
-    uint8_t register_address;
-    uint8_t register_type;
-    char value[4];
-} communication_pub_sub_action_t;
-
 #define PJON_INCLUDE_TSA
 
 #ifndef PJON_PACKET_MAX_LENGTH
@@ -105,6 +61,25 @@ typedef struct {
 #endif
 
 #include <PJON.h>
+
+// =============================================================================
+// REGISTER MODULE
+// =============================================================================
+
+typedef struct {
+    uint8_t data_type;
+    char value[4];
+    uint8_t flash_address;
+} register_io_register_t;
+
+typedef struct {
+    char name[16];
+    uint8_t data_type;
+    bool settable;
+    bool queryable;
+    char value[4];
+    uint8_t flash_address;
+} register_attr_register_t;
 
 // =============================================================================
 // LED MODULE
@@ -125,7 +100,7 @@ typedef struct {
 
 typedef struct {
     DebounceEvent * button;
-    uint8_t register_address;      // Address in communication register to store state
+    uint8_t register_address;   // Address in communication register to store state
     uint8_t current_status;
 } button_t;
 
