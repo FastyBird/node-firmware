@@ -8,6 +8,10 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 #if RELAY_PROVIDER != RELAY_PROVIDER_NONE
 
+#include "config/all.h"
+
+#include <Arduino.h>
+
 bool _relayRecursive = false;
 
 // -----------------------------------------------------------------------------
@@ -44,24 +48,30 @@ void _relayBoot()
     bool status;
 
     for (uint8_t i = 0; i < RELAY_MAX_ITEMS; i++) {
-        uint8_t boot_mode = (bool) EEPROM.read(relay_module_items[i].memory_address);
+        bool stored_state;
+
+        registerReadRegister(REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, stored_state);
 
         #if DEBUG_SUPPORT
             DPRINT(F("[RELAY] Relay #"));
             DPRINT(i);
-            DPRINT(F(" boot mode "));
-            DPRINTLN(boot_mode);
+            DPRINT(F(" stored state "));
+            DPRINTLN(stored_state);
         #endif
 
         status = false;
 
-        switch (boot_mode) {
+        switch (RELAY_BOOT_MODE) {
             case RELAY_BOOT_ON:
                 status = true;
                 break;
 
-            case RELAY_BOOT_OFF:
-            default:
+            case RELAY_BOOT_SAME:
+                status = stored_state;
+                break;
+
+            case RELAY_BOOT_TOGGLE:
+                status = !stored_state;
                 break;
         }
 
@@ -72,7 +82,7 @@ void _relayBoot()
 
         #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE
             // Store state into communication register
-            registerWriteRegister(REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, (status ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE));
+            registerWriteRegister(REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, status);
         #endif
     }
 
@@ -171,7 +181,7 @@ void _relayProcess(
 
         #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE
             // Store state into communication register
-            registerWriteRegister(REGISTER_TYPE_OUTPUT, relay_module_items[id].register_address, (relay_module_items[id].target_status ? COMMUNICATION_BOOLEAN_VALUE_TRUE : COMMUNICATION_BOOLEAN_VALUE_FALSE));
+            registerWriteRegister(REGISTER_TYPE_OUTPUT, relay_module_items[id].register_address, relay_module_items[id].target_status);
         #endif
     }
 }
@@ -255,8 +265,6 @@ bool relayStatus(
         #endif
 
         changed = true;
-
-        EEPROM.update(relay_module_items[id].memory_address, status);
     }
 
     return changed;
@@ -352,11 +360,7 @@ void relayLoop()
             bool expected_value = false;
 
             #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE
-                uint16_t register_value;
-
-                registerReadRegister(REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, register_value);
-
-                expected_value = register_value == COMMUNICATION_BOOLEAN_VALUE_TRUE;
+                registerReadRegister(REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, expected_value);
             #endif
 
             if (expected_value != relayStatus(i)) {

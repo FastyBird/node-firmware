@@ -10,6 +10,16 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 // MODULE PRIVATE
 // -----------------------------------------------------------------------------
 
+#include "config/all.h"
+
+#include <Arduino.h>
+
+#if !defined(ARDUINO_ARCH_SAM) && !defined(ARDUINO_ARCH_SAMD) && !defined(ARDUINO_ARCH_STM32F2)
+    #include <EEPROM.h>
+#else
+    #include <../lib/ArmEeprom/Samd21Eeprom.h>
+#endif
+
 uint8_t _buttonMapEvent(
     const uint8_t event,
     const uint8_t count,
@@ -105,10 +115,14 @@ void _buttonEvent(
                     break;
 
                 case BUTTON_EVENT_LNGLNGCLICK:
+                    #if DEBUG_SUPPORT
+                        DPRINTLN(F("[BUTTON] Clearing EEPROM"));
+                    #endif
+
                     // Clear stored values to factory settings
-                    //for (uint8_t i = 0 ; i < EEPROM.length() ; i++) {
-                    //    EEPROM.write(i, 0);
-                    //}
+                    for (uint8_t i = 0 ; i < EEPROM.length() ; i++) {
+                        EEPROM.write(i, 0);
+                    }
                     break;
 
             }

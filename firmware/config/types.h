@@ -23,11 +23,11 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define FLASH_ADDRESS_RELAY_01                                      0x10
 #define FLASH_ADDRESS_RELAY_02                                      0x11
 #define FLASH_ADDRESS_RELAY_03                                      0x12
-#define FLASH_ADDRESS_RELAY_04                                      0x14
-#define FLASH_ADDRESS_RELAY_05                                      0x15
-#define FLASH_ADDRESS_RELAY_06                                      0x16
-#define FLASH_ADDRESS_RELAY_07                                      0x17
-#define FLASH_ADDRESS_RELAY_08                                      0x18
+#define FLASH_ADDRESS_RELAY_04                                      0x13
+#define FLASH_ADDRESS_RELAY_05                                      0x14
+#define FLASH_ADDRESS_RELAY_06                                      0x15
+#define FLASH_ADDRESS_RELAY_07                                      0x16
+#define FLASH_ADDRESS_RELAY_08                                      0x17
 #define FLASH_ADDRESS_RELAY_09                                      0x18
 #define FLASH_ADDRESS_RELAY_10                                      0x19
 #define FLASH_ADDRESS_RELAY_11                                      0x1A
@@ -48,7 +48,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define DEVICE_STATE_STOPPED_BY_OPERATOR                            0x0B
 
 // =============================================================================
-// COMMUNICATION PACKETS
+// COMMUNICATION
 // =============================================================================
 
 #define COMMUNICATION_PACKET_TERMINATOR                             0x00
@@ -68,11 +68,19 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define COMMUNICATION_PACKET_REPORT_SINGLE_REGISTER_VALUE           0x27
 
 // =============================================================================
-// COMMUNICATION VALUES CONSTANTS
+// REGISTER
 // =============================================================================
 
-#define COMMUNICATION_BOOLEAN_VALUE_TRUE                            0xFF00
-#define COMMUNICATION_BOOLEAN_VALUE_FALSE                           0x0000
+#define REGISTER_TYPE_INPUT                                         0x01
+#define REGISTER_TYPE_OUTPUT                                        0x02
+#define REGISTER_TYPE_ATTRIBUTE                                     0x03
+
+// =============================================================================
+// REGISTER VALUES CONSTANTS
+// =============================================================================
+
+#define REGISTER_BOOLEAN_VALUE_TRUE                                 0xFF00
+#define REGISTER_BOOLEAN_VALUE_FALSE                                0x0000
 
 // =============================================================================
 // REGISTER DATATYPES
@@ -95,15 +103,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define REGISTER_DATA_TYPE_SWITCH                                   0x0E
 
 // =============================================================================
-// REGISTER TYPES
-// =============================================================================
-
-#define REGISTER_TYPE_INPUT                                         0x01
-#define REGISTER_TYPE_OUTPUT                                        0x02
-#define REGISTER_TYPE_ATTRIBUTE                                     0x03
-
-// =============================================================================
-// LED MODES
+// LED
 // =============================================================================
 
 #define LED_MODE_FINDME                                             1       // LED will blink
@@ -111,7 +111,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define LED_MODE_OFF                                                3       // LED always OFF
 
 // =============================================================================
-// BUTTONS EVENTS
+// BUTTON
 // =============================================================================
 
 #define BUTTON_EVENT_NONE                                           0
@@ -125,8 +125,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 #define BUTTON_DEBOUNCE_DELAY                                       50      // Debounce delay (ms)
 #define BUTTON_DBLCLICK_DELAY                                       350     // Time in ms to wait for a second (or third...) click
-#define BUTTON_LNGCLICK_DELAY                                       1000    // Time in ms holding the button down to get a long click
-#define BUTTON_LNGLNGCLICK_DELAY                                    5000    // Time in ms holding the button down to get a long-long click
+#define BUTTON_LNGCLICK_DELAY                                       900     // Time in ms holding the button down to get a long click
+#define BUTTON_LNGLNGCLICK_DELAY                                    2500    // Time in ms holding the button down to get a long-long click
 
 // =============================================================================
 // RELAY

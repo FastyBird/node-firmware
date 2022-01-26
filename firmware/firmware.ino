@@ -10,12 +10,6 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 #include <Arduino.h>
 
-#if !defined(ARDUINO_ARCH_SAM) && !defined(ARDUINO_ARCH_SAMD) && !defined(ARDUINO_ARCH_STM32F2)
-    #include <EEPROM.h>
-#else
-    #include <../lib/ArmEeprom/Samd21Eeprom.h>
-#endif
-
 void(* resetFunc) (void) = 0;
 
 // -----------------------------------------------------------------------------

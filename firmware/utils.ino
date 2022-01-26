@@ -6,10 +6,14 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 */
 
-unsigned long getUptime()
+#include "config/all.h"
+
+#include <Arduino.h>
+
+uint32_t getUptime()
 {
-    static unsigned long last_uptime = 0;
-    static unsigned char uptime_overflows = 0;
+    static uint32_t last_uptime = 0;
+    static uint8_t uptime_overflows = 0;
 
     if (millis() < last_uptime) {
         ++uptime_overflows;
@@ -17,7 +21,7 @@ unsigned long getUptime()
 
     last_uptime = millis();
 
-    unsigned long uptime_seconds = uptime_overflows * (SYSTEM_UPTIME_OVERFLOW / 1000) + (last_uptime / 1000);
+    uint32_t uptime_seconds = uptime_overflows * (SYSTEM_UPTIME_OVERFLOW / 1000) + (last_uptime / 1000);
 
     return uptime_seconds;
 }
@@ -25,8 +29,8 @@ unsigned long getUptime()
 // -----------------------------------------------------------------------------
 
 void niceDelay(
-    unsigned long ms
+    uint32_t ms
 ) {
-    unsigned long start = millis();
+    uint32_t start = millis();
     while (millis() - start < ms) delay(1);
 }

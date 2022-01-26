@@ -46,7 +46,7 @@ typedef union {
 } FLOAT32_UNION_t;
 
 typedef union {
-    uint16_t    number;
+    uint32_t    number;
     uint8_t     bytes[4];
 } BOOLEAN_UNION_t;
 
@@ -68,7 +68,7 @@ typedef union {
 
 typedef struct {
     uint8_t data_type;
-    char value[4];
+    uint8_t value[4];
     uint8_t flash_address;
 } register_io_register_t;
 
@@ -77,7 +77,7 @@ typedef struct {
     uint8_t data_type;
     bool settable;
     bool queryable;
-    char value[4];
+    uint8_t value[4];
     uint8_t flash_address;
 } register_attr_register_t;
 
@@ -115,7 +115,6 @@ typedef struct {
     uint8_t reset_pin;          // GPIO to reset the relay if RELAY_TYPE_LATCHED
 
     uint8_t register_address;   // Address in communication register to store state
-    uint8_t memory_address;     // Address in flash memory to store state
 
     unsigned long delay_on;     // Delay to turn relay ON
     unsigned long delay_off;    // Delay to turn relay OFF

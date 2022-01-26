@@ -6,6 +6,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 */
 
+#include "config/all.h"
+
 #if COMMUNICATION_BUS_HARDWARE_SERIAL == 0
     #include <NeoSWSerial.h>
 #endif
@@ -110,7 +112,7 @@ void _communicationWriteMultipleRegisters(
         // 2 => Low byte of register address
         // 3 => High byte of write byte length
         // 4 => Low byte of write byte length
-        _communication_output_buffer[0] = packetId;
+        _communication_output_buffer[0] = (char) packetId;
         _communication_output_buffer[1] = (char) (register_address >> 8);
         _communication_output_buffer[2] = (char) (register_address & 0xFF);
         _communication_output_buffer[3] = (char) (write_byte >> 8);
@@ -193,9 +195,9 @@ void _communicationWriteMultipleRegistersValuesHandler(
 // WRITING SINGLE REGISTER
 // -----------------------------------------------------------------------------
 
-void _communicationWriteSingleRegister(
+void _communicationWriteSingleRegisterValue(
     uint8_t * payload,
-    char * writeValue,
+    uint8_t * writeValue,
     const word registerAddress,
     const uint8_t registerType
 ) {
@@ -210,9 +212,26 @@ void _communicationWriteSingleRegister(
         DPRINTLN(registerAddress);
     #endif
 
-    const bool write_result = registerWriteRegister(registerType, registerAddress, writeValue, false);
+    #if REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
+        // Check if attribute register is writtable
+        if (
+            registerType == REGISTER_TYPE_ATTRIBUTE
+            && (
+                registerAddress >= REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
+                || register_module_attribute_registers[registerAddress].settable == false
+            )
+        ) {
+            #if DEBUG_COMMUNICATION_SUPPORT
+                DPRINTLN(F("[COMMUNICATION][ERR] Attribute register is not writtable or out of range"));
+            #endif
 
-    if (write_result == false) {
+            _communicationReplyWithException(payload);
+
+            return;
+        }
+    #endif
+
+    if (registerWriteRegister(registerType, registerAddress, writeValue, false) == false) {
         #if DEBUG_COMMUNICATION_SUPPORT
             DPRINTLN(F("[COMMUNICATION][ERR] Value could not be written into register"));
         #endif
@@ -222,9 +241,17 @@ void _communicationWriteSingleRegister(
         return;
     }
 
-    char stored_value[4] = { 0, 0, 0, 0 };
+    uint8_t stored_value[4] = { 0, 0, 0, 0 };
 
-    registerReadRegister(registerType, registerAddress, stored_value);
+    if (registerReadRegister(registerType, registerAddress, stored_value) == false) {
+        #if DEBUG_COMMUNICATION_SUPPORT
+            DPRINTLN(F("[COMMUNICATION][ERR] Written value could not be fetched from register"));
+        #endif
+
+        _communicationReplyWithException(payload);
+
+        return;
+    }
 
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
@@ -260,13 +287,13 @@ void _communicationWriteSingleRegister(
 
 /**
  * Parse received payload - Requesting writing single register
-    *
-    * 0        => Received packet identifier       => COMMUNICATION_PACKET_WRITE_SINGLE_REGISTER_VALUE
-    * 1        => Register type
-    * 2        => High byte of register address
-    * 3        => Low byte of register address
-    * 4-5(7)   => Data to write into register
-    */
+ *
+ * 0        => Received packet identifier       => COMMUNICATION_PACKET_WRITE_SINGLE_REGISTER_VALUE
+ * 1        => Register type
+ * 2        => High byte of register address
+ * 3        => Low byte of register address
+ * 4-5(7)   => Data to write into register
+ */
 void _communicationWriteSingleRegisterValueHandler(
     uint8_t * payload
 ) {
@@ -281,14 +308,14 @@ void _communicationWriteSingleRegisterValueHandler(
         #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE
             case REGISTER_TYPE_OUTPUT:
             {
-                char write_value[4] = { 0, 0, 0, 0 };
+                uint8_t write_value[4] = { 0, 0, 0, 0 };
 
                 write_value[0] = payload[4];
                 write_value[1] = payload[5];
                 write_value[2] = payload[6];
                 write_value[3] = payload[7];
 
-                _communicationWriteSingleRegister(payload, write_value, register_address, REGISTER_TYPE_OUTPUT);
+                _communicationWriteSingleRegisterValue(payload, write_value, register_address, REGISTER_TYPE_OUTPUT);
                 break;
             }
         #endif
@@ -296,14 +323,14 @@ void _communicationWriteSingleRegisterValueHandler(
         #if REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
             case REGISTER_TYPE_ATTRIBUTE:
             {
-                char write_value[4] = { 0, 0, 0, 0 };
+                uint8_t write_value[4] = { 0, 0, 0, 0 };
 
                 write_value[0] = payload[4];
                 write_value[1] = payload[5];
                 write_value[2] = payload[6];
                 write_value[3] = payload[7];
 
-                _communicationWriteSingleRegister(payload, write_value, register_address, REGISTER_TYPE_ATTRIBUTE);
+                _communicationWriteSingleRegisterValue(payload, write_value, register_address, REGISTER_TYPE_ATTRIBUTE);
                 break;
             }
         #endif
@@ -346,95 +373,82 @@ void _communicationReadMultipleRegistersValues(
         DPRINTLN(readLength);
     #endif
 
-    uint8_t registers_size = 0;
+    memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
-    if (registerType == REGISTER_TYPE_INPUT) {
-        registers_size = REGISTER_MAX_INPUT_REGISTERS_SIZE;
+    // 0    => Packet identifier
+    // 1    => High byte of register address
+    // 2    => Low byte of register address
+    // 3    => Count of registers
+    // 4-n  => Packet data
+    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_READ_MULTIPLE_REGISTERS_VALUES;
+    _communication_output_buffer[1] = (char) registerType;
+    _communication_output_buffer[2] = (char) (registerAddress >> 8);
+    _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
+    _communication_output_buffer[4] = (char) 0; // Temporary value, will be updated after collecting all
 
-    } else if (registerType == REGISTER_TYPE_OUTPUT) {
-        registers_size = REGISTER_MAX_OUTPUT_REGISTERS_SIZE;
+    uint8_t byte_counter = 5;
+    uint8_t byte_pointer = 5;
+    uint8_t registers_counter = 0;
 
-    } else if (registerType == REGISTER_TYPE_ATTRIBUTE) {
-        registers_size = REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE;
-    }
+    uint8_t read_value[4] = { 0, 0, 0, 0 };
 
-    if (
-        // Read start address mus be between <0, buffer.size()>
-        registerAddress < registers_size
-        // Read length have to be same or smaller as registers size
-        && (registerAddress + readLength) <= registers_size
-    ) {
-        memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
+    for (uint8_t i = registerAddress; i < (registerAddress + readLength); i++) {
+        #if REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
+            // Check if attribute register is queryable
+            if (
+                registerType == REGISTER_TYPE_ATTRIBUTE
+                && (
+                    i >= REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
+                    || register_module_attribute_registers[i].queryable == false
+                )
+            ) {
+                #if DEBUG_COMMUNICATION_SUPPORT
+                    DPRINTLN(F("[COMMUNICATION][ERR] Attribute register is not readable or out of range"));
+                #endif
 
-        // 0    => Packet identifier
-        // 1    => High byte of register address
-        // 2    => Low byte of register address
-        // 3    => Count of registers
-        // 4-n  => Packet data
-        _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_READ_MULTIPLE_REGISTERS_VALUES;
-        _communication_output_buffer[1] = (char) registerType;
-        _communication_output_buffer[2] = (char) (registerAddress >> 8);
-        _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
-        _communication_output_buffer[4] = (char) 0; // Temporary value, will be updated after collecting all
+                _communicationReplyWithException(payload);
 
-        uint8_t byte_counter = 5;
-        uint8_t byte_pointer = 5;
-        uint8_t registers_counter = 0;
+                return;
+            }
+        #endif
 
-        char read_value[4] = { 0, 0, 0, 0 };
-
-        for (uint8_t i = registerAddress; i < (registerAddress + readLength) && i < registers_size; i++) {
-            #if REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
-                if (registerType == REGISTER_TYPE_ATTRIBUTE && register_module_attribute_registers[i].queryable == false) {
-                    #if DEBUG_COMMUNICATION_SUPPORT
-                        DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read from unreadable attribute register type"));
-                    #endif
-
-                    _communicationReplyWithException(payload);
-
-                    return;
-                }
+        if (registerReadRegister(registerType, i, read_value) == false) {
+            #if DEBUG_COMMUNICATION_SUPPORT
+                DPRINTLN(F("[COMMUNICATION][ERR] Value could not be fetched from register"));
             #endif
 
-            registerReadRegister(registerType, i, read_value);
-
-            _communication_output_buffer[byte_pointer] = read_value[0];
-            byte_pointer++;
-            _communication_output_buffer[byte_pointer] = read_value[1];
-            byte_pointer++;
-            _communication_output_buffer[byte_pointer] = read_value[2];
-            byte_pointer++;
-            _communication_output_buffer[byte_pointer] = read_value[3];
-            byte_pointer++;
-
-            byte_counter = byte_counter + 4;
-
-            registers_counter++;
+            return;
         }
 
-        // Update registers length
-        _communication_output_buffer[4] = (char) registers_counter;
+        _communication_output_buffer[byte_pointer] = (char) read_value[0];
+        byte_pointer++;
+        _communication_output_buffer[byte_pointer] = (char) read_value[1];
+        byte_pointer++;
+        _communication_output_buffer[byte_pointer] = (char) read_value[2];
+        byte_pointer++;
+        _communication_output_buffer[byte_pointer] = (char) read_value[3];
+        byte_pointer++;
 
-        #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to master
-            if (_communicationReplyToPacket(_communication_output_buffer, byte_counter) == false) {
-                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive multiple registers reading"));
+        byte_counter = byte_counter + 4;
 
-            } else {
-                DPRINTLN(F("[COMMUNICATION] Replied to master with multiple registers content"));
-            }
-        #else
-            // Reply to master
-            _communicationReplyToPacket(_communication_output_buffer, byte_counter);
-        #endif
-
-    } else {
-        #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read from undefined registers range"));
-        #endif
-
-        _communicationReplyWithException(payload);
+        registers_counter++;
     }
+
+    // Update registers length
+    _communication_output_buffer[4] = (char) registers_counter;
+
+    #if DEBUG_COMMUNICATION_SUPPORT
+        // Reply to master
+        if (_communicationReplyToPacket(_communication_output_buffer, byte_counter) == false) {
+            DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive multiple registers reading"));
+
+        } else {
+            DPRINTLN(F("[COMMUNICATION] Replied to master with multiple registers content"));
+        }
+    #else
+        // Reply to master
+        _communicationReplyToPacket(_communication_output_buffer, byte_counter);
+    #endif
 }
 
 // -----------------------------------------------------------------------------
@@ -495,7 +509,7 @@ void _communicationReadMultipleRegistersValuesHandler(
 // READING SINGLE REGISTER
 // -----------------------------------------------------------------------------
 
-void _communicationReplySingleRegisterValue(
+void _communicationReadSingleRegisterValue(
     uint8_t * payload,
     const word registerAddress,
     const uint8_t registerType
@@ -513,75 +527,65 @@ void _communicationReplySingleRegisterValue(
         DPRINTLN(registerAddress);
     #endif
 
-    uint8_t registers_size = 0;
+    #if REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
+        // Check if attribute register is queryable
+        if (
+            registerType == REGISTER_TYPE_ATTRIBUTE
+            && (
+                registerAddress >= REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
+                || register_module_attribute_registers[registerAddress].queryable == false
+            )
+        ) {
+            #if DEBUG_COMMUNICATION_SUPPORT
+                DPRINTLN(F("[COMMUNICATION][ERR] Attribute register is not readable or out of range"));
+            #endif
 
-    if (registerType == REGISTER_TYPE_INPUT) {
-        registers_size = REGISTER_MAX_INPUT_REGISTERS_SIZE;
+            _communicationReplyWithException(payload);
 
-    } else if (registerType == REGISTER_TYPE_OUTPUT) {
-        registers_size = REGISTER_MAX_OUTPUT_REGISTERS_SIZE;
+            return;
+        }
+    #endif
 
-    } else if (registerType == REGISTER_TYPE_ATTRIBUTE) {
-        registers_size = REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE;
-    }
+    uint8_t read_value[4] = { 0, 0, 0, 0 };
 
-    if (
-        // Read start address mus be between <0, registers_size>
-        registerAddress < registers_size
-    ) {
-        #if REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
-            if (registerType == REGISTER_TYPE_ATTRIBUTE && register_module_attribute_registers[registerAddress].queryable == false) {
-                #if DEBUG_COMMUNICATION_SUPPORT
-                    DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read from unreadable attribute register type"));
-                #endif
-
-                _communicationReplyWithException(payload);
-
-                return;
-            }
-        #endif
-
-        memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
-
-        // 0    => Packet identifier
-        // 1    => Register type
-        // 2    => High byte of register address
-        // 3    => Low byte of register address
-        // 4-7  => Register value
-        _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_READ_SINGLE_REGISTER_VALUES;
-        _communication_output_buffer[1] = (char) registerType;
-        _communication_output_buffer[2] = (char) (registerAddress >> 8);
-        _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
-
-        char read_value[4] = { 0, 0, 0, 0 };
-
-        registerReadRegister(registerType, registerAddress, read_value);
-
-        _communication_output_buffer[4] = read_value[0];
-        _communication_output_buffer[5] = read_value[1];
-        _communication_output_buffer[6] = read_value[2];
-        _communication_output_buffer[7] = read_value[3];
-
+    if (registerReadRegister(registerType, registerAddress, read_value) == false) {
         #if DEBUG_COMMUNICATION_SUPPORT
-            // Reply to master
-            if (_communicationReplyToPacket(_communication_output_buffer, 8) == false) {
-                DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive register reading"));
-
-            } else {
-                DPRINTLN(F("[COMMUNICATION] Replied to master with one register content"));
-            }
-        #else
-            // Reply to master
-            _communicationReplyToPacket(_communication_output_buffer, 8);
-        #endif
-
-    } else {
-        #if DEBUG_COMMUNICATION_SUPPORT
-            DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read from undefined registers range"));
+            DPRINTLN(F("[COMMUNICATION][ERR] Value could not be fetched from register"));
         #endif
 
         _communicationReplyWithException(payload);
+
+        return;
     }
+
+    memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
+
+    // 0    => Packet identifier
+    // 1    => Register type
+    // 2    => High byte of register address
+    // 3    => Low byte of register address
+    // 4-7  => Register value
+    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_READ_SINGLE_REGISTER_VALUES;
+    _communication_output_buffer[1] = (char) registerType;
+    _communication_output_buffer[2] = (char) (registerAddress >> 8);
+    _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
+    _communication_output_buffer[4] = (char) read_value[0];
+    _communication_output_buffer[5] = (char) read_value[1];
+    _communication_output_buffer[6] = (char) read_value[2];
+    _communication_output_buffer[7] = (char) read_value[3];
+
+    #if DEBUG_COMMUNICATION_SUPPORT
+        // Reply to master
+        if (_communicationReplyToPacket(_communication_output_buffer, 8) == false) {
+            DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive register reading"));
+
+        } else {
+            DPRINTLN(F("[COMMUNICATION] Replied to master with one register content"));
+        }
+    #else
+        // Reply to master
+        _communicationReplyToPacket(_communication_output_buffer, 8);
+    #endif
 }
 
 // -----------------------------------------------------------------------------
@@ -607,19 +611,19 @@ void _communicationReadSingleRegisterValueHandler(
 
         #if REGISTER_MAX_INPUT_REGISTERS_SIZE
             case REGISTER_TYPE_INPUT:
-                _communicationReplySingleRegisterValue(payload, register_address, REGISTER_TYPE_INPUT);
+                _communicationReadSingleRegisterValue(payload, register_address, REGISTER_TYPE_INPUT);
                 break;
         #endif
 
         #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE
             case REGISTER_TYPE_OUTPUT:
-                _communicationReplySingleRegisterValue(payload, register_address, REGISTER_TYPE_OUTPUT);
+                _communicationReadSingleRegisterValue(payload, register_address, REGISTER_TYPE_OUTPUT);
                 break;
         #endif
 
         #if REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
             case REGISTER_TYPE_ATTRIBUTE:
-                _communicationReplySingleRegisterValue(payload, register_address, REGISTER_TYPE_ATTRIBUTE);
+                _communicationReadSingleRegisterValue(payload, register_address, REGISTER_TYPE_ATTRIBUTE);
                 break;
         #endif
 
@@ -639,7 +643,7 @@ void _communicationReadSingleRegisterValueHandler(
 
 #if REGISTER_MAX_INPUT_REGISTERS_SIZE || REGISTER_MAX_OUTPUT_REGISTERS_SIZE || REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
 
-void _communicationReplySingleRegisterStructure(
+void _communicationReadSingleRegisterStructure(
     uint8_t * payload,
     const word registerAddress,
     const uint8_t registerType
@@ -695,7 +699,7 @@ void _communicationReplySingleRegisterStructure(
         _communication_output_buffer[1] = (char) registerType;
         _communication_output_buffer[2] = (char) (registerAddress >> 8);
         _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
-        _communication_output_buffer[4] = registerGetRegisterDataType(registerType, registerAddress);
+        _communication_output_buffer[4] = (char) registerGetRegisterDataType(registerType, registerAddress);
 
         uint8_t byte_pointer = 5;
         uint8_t byte_counter = 5;
@@ -707,11 +711,11 @@ void _communicationReplySingleRegisterStructure(
             // 8    => Low byte of register queryable flag
             // 9    => Register name length
             // 10-n => Register name
-            _communication_output_buffer[5] = (char) (register_module_attribute_registers[registerAddress].settable ? (COMMUNICATION_BOOLEAN_VALUE_TRUE >> 8) : (COMMUNICATION_BOOLEAN_VALUE_FALSE >> 8));
-            _communication_output_buffer[6] = (char) (register_module_attribute_registers[registerAddress].settable ? (COMMUNICATION_BOOLEAN_VALUE_TRUE & 0xFF) : (COMMUNICATION_BOOLEAN_VALUE_FALSE & 0xFF));
-            _communication_output_buffer[7] = (char) (register_module_attribute_registers[registerAddress].queryable ? (COMMUNICATION_BOOLEAN_VALUE_TRUE >> 8) : (COMMUNICATION_BOOLEAN_VALUE_FALSE >> 8));
-            _communication_output_buffer[8] = (char) (register_module_attribute_registers[registerAddress].queryable ? (COMMUNICATION_BOOLEAN_VALUE_TRUE & 0xFF) : (COMMUNICATION_BOOLEAN_VALUE_FALSE & 0xFF));
-            _communication_output_buffer[9] = strlen(register_module_attribute_registers[registerAddress].name);
+            _communication_output_buffer[5] = (char) (register_module_attribute_registers[registerAddress].settable ? (REGISTER_BOOLEAN_VALUE_TRUE >> 8) : (REGISTER_BOOLEAN_VALUE_FALSE >> 8));
+            _communication_output_buffer[6] = (char) (register_module_attribute_registers[registerAddress].settable ? (REGISTER_BOOLEAN_VALUE_TRUE & 0xFF) : (REGISTER_BOOLEAN_VALUE_FALSE & 0xFF));
+            _communication_output_buffer[7] = (char) (register_module_attribute_registers[registerAddress].queryable ? (REGISTER_BOOLEAN_VALUE_TRUE >> 8) : (REGISTER_BOOLEAN_VALUE_FALSE >> 8));
+            _communication_output_buffer[8] = (char) (register_module_attribute_registers[registerAddress].queryable ? (REGISTER_BOOLEAN_VALUE_TRUE & 0xFF) : (REGISTER_BOOLEAN_VALUE_FALSE & 0xFF));
+            _communication_output_buffer[9] = (char) strlen(register_module_attribute_registers[registerAddress].name);
 
             byte_pointer = 10;
             byte_counter = 10;
@@ -769,19 +773,19 @@ void _communicationReadSingleRegisterStructureHandler(
 
         #if REGISTER_MAX_INPUT_REGISTERS_SIZE
             case REGISTER_TYPE_INPUT:
-                _communicationReplySingleRegisterStructure(payload, register_address, REGISTER_TYPE_INPUT);
+                _communicationReadSingleRegisterStructure(payload, register_address, REGISTER_TYPE_INPUT);
                 break;
         #endif
 
         #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE
             case REGISTER_TYPE_OUTPUT:
-                _communicationReplySingleRegisterStructure(payload, register_address, REGISTER_TYPE_OUTPUT);
+                _communicationReadSingleRegisterStructure(payload, register_address, REGISTER_TYPE_OUTPUT);
                 break;
         #endif
 
         #if REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
             case REGISTER_TYPE_ATTRIBUTE:
-                _communicationReplySingleRegisterStructure(payload, register_address, REGISTER_TYPE_ATTRIBUTE);
+                _communicationReadSingleRegisterStructure(payload, register_address, REGISTER_TYPE_ATTRIBUTE);
                 break;
         #endif
 
@@ -817,10 +821,6 @@ void _communicationDiscoverHandler(
 
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
-    uint8_t device_state;
-
-    registerReadRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS, device_state);
-
     // 0      => Packet identifier
     // 1      => Device bus address
     // 2      => Device packet max length
@@ -841,12 +841,12 @@ void _communicationDiscoverHandler(
     // r+2    => Device outputs size
     // r+3    => Device attributes size
     _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_DISCOVER;
-    _communication_output_buffer[1] = _communication_bus.device_id();
+    _communication_output_buffer[1] = (char) _communication_bus.device_id();
     _communication_output_buffer[2] = (char) PJON_PACKET_MAX_LENGTH;
-    _communication_output_buffer[3] = (char) device_state;
+    _communication_output_buffer[3] = (char) firmwareGetDeviceState();
 
     // Add device SN info
-    _communication_output_buffer[4] = strlen((char *) DEVICE_SERIAL_NO);
+    _communication_output_buffer[4] = (char) strlen((char *) DEVICE_SERIAL_NO);
 
     uint8_t byte_pointer = 5;
     uint8_t byte_counter = 5;
@@ -863,7 +863,7 @@ void _communicationDiscoverHandler(
     // Add device version info
     description_content = (char *) DEVICE_VERSION;
 
-    _communication_output_buffer[byte_pointer] = strlen(description_content);
+    _communication_output_buffer[byte_pointer] = (char) strlen(description_content);
 
     byte_pointer++;
     byte_counter++;
@@ -878,7 +878,7 @@ void _communicationDiscoverHandler(
     // Add device model info
     description_content = (char *) SYSTEM_DEVICE_NAME;
 
-    _communication_output_buffer[byte_pointer] = strlen(description_content);
+    _communication_output_buffer[byte_pointer] = (char) strlen(description_content);
 
     byte_pointer++;
     byte_counter++;
@@ -893,7 +893,7 @@ void _communicationDiscoverHandler(
     // Add device manufacturer info
     description_content = (char *) SYSTEM_DEVICE_MANUFACTURER;
 
-    _communication_output_buffer[byte_pointer] = strlen(description_content);
+    _communication_output_buffer[byte_pointer] = (char) strlen(description_content);
 
     byte_pointer++;
     byte_counter++;
@@ -908,7 +908,7 @@ void _communicationDiscoverHandler(
     // Add firmware version info
     description_content = (char *) FIRMWARE_VERSION;
 
-    _communication_output_buffer[byte_pointer] = strlen(description_content);
+    _communication_output_buffer[byte_pointer] = (char) strlen(description_content);
 
     byte_pointer++;
     byte_counter++;
@@ -923,7 +923,7 @@ void _communicationDiscoverHandler(
     // Add firmware manufacturer info
     description_content = (char *) FIRMWARE_MANUFACTURER;
 
-    _communication_output_buffer[byte_pointer] = strlen(description_content);
+    _communication_output_buffer[byte_pointer] = (char) strlen(description_content);
 
     byte_pointer++;
     byte_counter++;
@@ -934,6 +934,8 @@ void _communicationDiscoverHandler(
         byte_pointer++;
         byte_counter++;
     }
+
+    // Add registers sizes info
 
     _communication_output_buffer[byte_pointer] = (char) REGISTER_MAX_INPUT_REGISTERS_SIZE;
 
@@ -1007,7 +1009,7 @@ void _communicationReceiverHandler(
     const PJON_Packet_Info &packetInfo
 ) {
     // Device is not in running or pairing mode, all received packets are ignored
-    if (!firmwareIsRunning() && !firmwareIsPairing()) {
+    if (firmwareIsRunning() == false && firmwareIsPairing() == false) {
         return;
     }
 
@@ -1423,10 +1425,15 @@ bool communicationIsMasterLost()
  */
 bool communicationReportRegister(
     const uint8_t registerType,
-    const uint8_t registerAddress,
-    const char * registerValue
+    const uint8_t registerAddress
 ) {
-    if (!firmwareIsRunning() && !firmwareIsPairing()) {
+    if (firmwareIsRunning() == false && firmwareIsPairing() == false) {
+        return false;
+    }
+
+    uint8_t register_value[4];
+    
+    if (registerReadRegister(registerType, registerAddress, register_value) == false) {
         return false;
     }
 
@@ -1437,14 +1444,14 @@ bool communicationReportRegister(
     // 2    => High byte of register address
     // 3    => Low byte of register address
     // 4-7  => Register value
-    _communication_output_buffer[0] = COMMUNICATION_PACKET_REPORT_SINGLE_REGISTER_VALUE;
-    _communication_output_buffer[1] = registerType;
+    _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_REPORT_SINGLE_REGISTER_VALUE;
+    _communication_output_buffer[1] = (char) registerType;
     _communication_output_buffer[2] = (char) (registerAddress >> 8);
     _communication_output_buffer[3] = (char) (registerAddress & 0xFF);
-    _communication_output_buffer[4] = registerValue[0];
-    _communication_output_buffer[5] = registerValue[1];
-    _communication_output_buffer[6] = registerValue[2];
-    _communication_output_buffer[7] = registerValue[3];
+    _communication_output_buffer[4] = (char) register_value[0];
+    _communication_output_buffer[5] = (char) register_value[1];
+    _communication_output_buffer[6] = (char) register_value[2];
+    _communication_output_buffer[7] = (char) register_value[3];
 
     if (_communicationSendPacket(COMMUNICATION_BUS_MASTER_ADDR, _communication_output_buffer, 8) == true) {
         #if DEBUG_COMMUNICATION_SUPPORT
@@ -1516,11 +1523,7 @@ void communicationLoop()
 
         // Little delay before gateway start
         if (time > COMMUNICATION_NOTIFY_STATE_DELAY) {
-            char device_state[4] = { 0, 0, 0, 0 };
-
-            registerReadRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS, device_state);
-
-            communicationReportRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS, device_state);
+            communicationReportRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS);
 
             _communication_initial_state_to_master = true;
         }

@@ -9,6 +9,9 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 #if BUTTON_EXPANDER_SUPPORT
 
+#include "config/all.h"
+
+#include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_MCP23017.h>
 
@@ -21,9 +24,9 @@ bool _expander_status[EXPANDER_INPUTS];
 bool _expander_ready[EXPANDER_INPUTS];
 bool _expander_reset_count[EXPANDER_INPUTS];
 
-unsigned long _expander_event_start[EXPANDER_INPUTS];
-unsigned long _expander_event_length[EXPANDER_INPUTS];
-unsigned char _expander_event_count[EXPANDER_INPUTS];
+uint32_t _expander_event_start[EXPANDER_INPUTS];
+uint32_t _expander_event_length[EXPANDER_INPUTS];
+uint8_t _expander_event_count[EXPANDER_INPUTS];
 
 uint8_t _expander_communication_register_address[EXPANDER_INPUTS];
 
@@ -31,16 +34,16 @@ uint8_t _expander_communication_register_address[EXPANDER_INPUTS];
 // MODULE PRIVATE
 // -----------------------------------------------------------------------------
 
-unsigned char _expanderButtonRead(
+uint8_t _expanderButtonRead(
     uint8_t pin
 ) {
-    unsigned char event = BUTTON_EVENT_NONE;
+    uint8_t event = BUTTON_EVENT_NONE;
 
     //digitalWrite((13 + 0), _expanderReadPin(1));
 
     if (_expanderReadPin(pin) != _expander_status[pin]) {
         // Debounce
-        unsigned long start = millis();
+        uint32_t start = millis();
 
         while (millis() - start < BUTTON_DEBOUNCE_DELAY) {
             delay(1);
