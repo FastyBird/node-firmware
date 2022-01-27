@@ -13,20 +13,20 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 void(* resetFunc) (void) = 0;
 
 bool _firmwareIsBooting = false;
+bool _firmwareIsDiscoverable = false;
 
 // -----------------------------------------------------------------------------
 // FIRMWARE BASIC API
 // -----------------------------------------------------------------------------
 
 void firmwareSetDeviceState(
-    uint8_t setStatus
+    const uint8_t setStatus
 ) {
     // Check if valid value is provided to store
     if (
         setStatus != DEVICE_STATE_RUNNING
         && setStatus != DEVICE_STATE_STOPPED
         && setStatus != DEVICE_STATE_STOPPED_BY_OPERATOR
-        && setStatus != DEVICE_STATE_PAIRING
         && setStatus != DEVICE_STATE_ERROR
     ) {
         return;
@@ -48,7 +48,6 @@ uint8_t firmwareGetDeviceState()
         device_state != DEVICE_STATE_RUNNING
         && device_state != DEVICE_STATE_STOPPED
         && device_state != DEVICE_STATE_STOPPED_BY_OPERATOR
-        && device_state != DEVICE_STATE_PAIRING
         && device_state != DEVICE_STATE_ERROR
     ) {
         return DEVICE_STATE_ERROR;
@@ -61,22 +60,29 @@ uint8_t firmwareGetDeviceState()
 
 bool firmwareIsRunning()
 {
-    uint8_t register_value;
-
-    registerReadRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS, register_value);
-    
-    return register_value == DEVICE_STATE_RUNNING;
+    return firmwareGetDeviceState() == DEVICE_STATE_RUNNING;
 }
 
 // -----------------------------------------------------------------------------
 
-bool firmwareIsPairing()
+bool firmwareIsError()
 {
-    uint8_t register_value;
+    return firmwareGetDeviceState() == DEVICE_STATE_ERROR;
+}
 
-    registerReadRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS, register_value);
-    
-    return register_value == DEVICE_STATE_PAIRING;
+// -----------------------------------------------------------------------------
+
+void firmwareSetDiscoverable(
+    const bool state
+) {
+    _firmwareIsDiscoverable = state;
+}
+
+// -----------------------------------------------------------------------------
+
+bool firmwareIsDiscoverable()
+{
+    return _firmwareIsDiscoverable;
 }
 
 // -----------------------------------------------------------------------------

@@ -354,29 +354,8 @@ bool _registerWriteRegister(
             uint8_t stored_value[4] = { 0, 0, 0, 0 };
 
             if (_registerReadRegisterAsBytes(type, address, stored_value) == true) {
-                if (
-                    type == REGISTER_TYPE_ATTRIBUTE
-                    && address == COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS
-                ) {
-                    uint8_t device_state;
-
-                    registerReadRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS, device_state);
-
-                    if (device_state == DEVICE_STATE_PAIRING) {
-                        uint8_t store_value[4] = { DEVICE_STATE_STOPPED, 0, 0, 0 };
-
-                        // Store value in memory
-                        _registerWriteToEeprom(type, address, flash_address, store_value);
-
-                    } else {
-                        // Store value in memory
-                        _registerWriteToEeprom(type, address, flash_address, stored_value);                        
-                    }
-
-                } else {
-                    // Store value in memory
-                    _registerWriteToEeprom(type, address, flash_address, stored_value);
-                }
+                // Store value in memory
+                _registerWriteToEeprom(type, address, flash_address, stored_value);                        
             }
         }
 
@@ -384,16 +363,16 @@ bool _registerWriteRegister(
             communicationReportRegister(type, address);
         }
 
-        //if (type == REGISTER_TYPE_ATTRIBUTE) {
+        if (type == REGISTER_TYPE_ATTRIBUTE) {
             // Special handling for communication address stored in registry
-            //if (address == COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS && firmwareIsBooting() == false) {
+            if (address == COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS && firmwareIsBooting() == false) {
                 // Little delay before reboot
-                //delay(500);
+                delay(500);
 
                 // ...after address is stored, reload device
-                //resetFunc();
-            //}
-        //}
+                resetFunc();
+            }
+        }
     #if DEBUG_SUPPORT
     } else {
         DPRINT(F("[REGISTER] Value to write into: "));

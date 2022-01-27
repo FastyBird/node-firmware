@@ -227,7 +227,7 @@ void _communicationWriteSingleRegisterValue(
             }
 
             // Special handling for device address
-            if (registerAddress == COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS && firmwareIsPairing() == false) {
+            if (registerAddress == COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS && firmwareIsDiscoverable() == false) {
                 #if DEBUG_SUPPORT
                     DPRINTLN(F("[COMMUNICATION][ERR] Device address could be updated only pairing mode"));
                 #endif
@@ -821,7 +821,7 @@ void _communicationDiscoverHandler(
     uint16_t length
 ) {
     // Discovery reply is available only in pairing mode
-    if (!firmwareIsPairing()) {
+    if (firmwareIsDiscoverable() == false) {
         return;
     }
 
@@ -847,7 +847,7 @@ void _communicationDiscoverHandler(
     // r+2    => Device outputs size
     // r+3    => Device attributes size
     _communication_output_buffer[0] = (char) COMMUNICATION_PACKET_DISCOVER;
-    _communication_output_buffer[1] = (char) _communication_bus.device_id();
+    _communication_output_buffer[1] = (char) communicationAssignedAddress();
     _communication_output_buffer[2] = (char) PJON_PACKET_MAX_LENGTH;
     _communication_output_buffer[3] = (char) firmwareGetDeviceState();
 
@@ -1015,7 +1015,7 @@ void _communicationReceiverHandler(
     const PJON_Packet_Info &packetInfo
 ) {
     // Device is not in running or pairing mode, all received packets are ignored
-    if (firmwareIsRunning() == false && firmwareIsPairing() == false) {
+    if (firmwareIsRunning() == false) {
         return;
     }
 
@@ -1415,6 +1415,13 @@ bool _communicationBroadcastPacket(
 // MODULE API
 // -----------------------------------------------------------------------------
 
+uint8_t communicationAssignedAddress()
+{
+    return _communication_bus.device_id();
+}
+
+// -----------------------------------------------------------------------------
+
 bool communicationHasAssignedAddress()
 {
     return _communication_bus.device_id() != PJON_NOT_ASSIGNED;
@@ -1438,7 +1445,7 @@ bool communicationReportRegister(
     const uint8_t registerType,
     const uint8_t registerAddress
 ) {
-    if (firmwareIsRunning() == false && firmwareIsPairing() == false) {
+    if (firmwareIsRunning() == false) {
         return false;
     }
 
@@ -1540,14 +1547,6 @@ void communicationSetup()
 
 void communicationLoop()
 {
-    uint8_t device_address;
-
-    registerReadRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS, device_address);
-
-    if (device_address != _communication_bus.device_id()) {
-        _communication_bus.set_id(device_address);
-    }
-
     if (!_communication_initial_state_to_master) {
         // Get actual timestamp
         uint32_t time = millis();

@@ -95,10 +95,10 @@ void _buttonEvent(
             {
 
                 case BUTTON_EVENT_CLICK:
-                    if (firmwareGetDeviceState() == DEVICE_STATE_PAIRING) {
-                        firmwareSetDeviceState(DEVICE_STATE_RUNNING);
+                    if (firmwareIsDiscoverable()) {
+                        firmwareSetDiscoverable(false);
 
-                    } else if (firmwareGetDeviceState() == DEVICE_STATE_RUNNING) {
+                    } else if (firmwareIsRunning()) {
                         firmwareSetDeviceState(DEVICE_STATE_STOPPED_BY_OPERATOR);
 
                     } else {
@@ -111,7 +111,7 @@ void _buttonEvent(
                         DPRINTLN(F("[BUTTON] Activating pairing mode"));
                     #endif
 
-                    firmwareSetDeviceState(DEVICE_STATE_PAIRING);
+                    firmwareSetDiscoverable(true);
                     break;
 
                 case BUTTON_EVENT_LNGLNGCLICK:

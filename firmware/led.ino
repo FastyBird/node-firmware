@@ -138,8 +138,11 @@ void ledLoop()
     for (uint8_t i = 0; i < LED_MAX_ITEMS; i++) {
         #if SYSTEM_DEVICE_STATE_LED_INDEX != INDEX_NONE
             if (i == SYSTEM_DEVICE_STATE_LED_INDEX) {
-                if (firmwareIsRunning() || firmwareIsPairing()) {
+                if (firmwareIsRunning()) {
                     _ledStatus(i, true);
+
+                } else if (firmwareIsError()) {
+                    _ledBlink(i, 250, 250);
 
                 } else {
                     _ledStatus(i, false);
@@ -151,7 +154,7 @@ void ledLoop()
 
         #if SYSTEM_DEVICE_COMMUNICATION_LED_INDEX != INDEX_NONE
             if (i == SYSTEM_DEVICE_COMMUNICATION_LED_INDEX) {
-                if (firmwareIsPairing()) {
+                if (firmwareIsDiscoverable()) {
                     _ledBlink(i, 250, 500);
 
                 } else if (communicationHasAssignedAddress() == false) {

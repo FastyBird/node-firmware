@@ -43,7 +43,6 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 #define DEVICE_STATE_RUNNING                                        0x01
 #define DEVICE_STATE_STOPPED                                        0x02
-#define DEVICE_STATE_PAIRING                                        0x03
 #define DEVICE_STATE_ERROR                                          0x0A
 #define DEVICE_STATE_STOPPED_BY_OPERATOR                            0x0B
 
