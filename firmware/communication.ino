@@ -213,21 +213,27 @@ void _communicationWriteSingleRegisterValue(
     #endif
 
     #if REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
-        // Check if attribute register is writtable
-        if (
-            registerType == REGISTER_TYPE_ATTRIBUTE
-            && (
+        // Special handling for extra registers
+        if (registerType == REGISTER_TYPE_ATTRIBUTE) {
+            if (
                 registerAddress >= REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
                 || register_module_attribute_registers[registerAddress].settable == false
-            )
-        ) {
-            #if DEBUG_COMMUNICATION_SUPPORT
-                DPRINTLN(F("[COMMUNICATION][ERR] Attribute register is not writtable or out of range"));
-            #endif
+            ) {
+                #if DEBUG_COMMUNICATION_SUPPORT
+                    DPRINTLN(F("[COMMUNICATION][ERR] Attribute register is not writtable or out of range"));
+                #endif
 
-            _communicationReplyWithException(payload);
+                _communicationReplyWithException(payload);
+            }
 
-            return;
+            // Special handling for device address
+            if (registerAddress == COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS && firmwareIsPairing() == false) {
+                #if DEBUG_SUPPORT
+                    DPRINTLN(F("[COMMUNICATION][ERR] Device address could be updated only pairing mode"));
+                #endif
+
+                _communicationReplyWithException(payload);
+            }
         }
     #endif
 
@@ -1118,7 +1124,12 @@ void _communicationReceiverHandler(
     if (packetInfo.header & PJON_TX_INFO_BIT) {
         sender_address = packetInfo.sender_id;
     }
-    
+
+    if (packetInfo.header & PJON_MODE_BIT) {
+        DPRINT(F("RECEIVER ID: "));
+        DPRINTLN(packetInfo.receiver_id);
+    }
+
     // Only packets from master are accepted
     if (sender_address != COMMUNICATION_BUS_MASTER_ADDR) {
         #if DEBUG_COMMUNICATION_SUPPORT
@@ -1498,6 +1509,18 @@ void communicationSetup()
 
     registerReadRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS, device_address);
 
+    if (device_address != PJON_NOT_ASSIGNED && (device_address == 0 || device_address >= 250)) {
+        #if DEBUG_COMMUNICATION_SUPPORT
+            DPRINT(F("[COMMUNICATION] Stored address: "));
+            DPRINT(device_address);
+            DPRINTLN(F(" is invalid, reseting to unassigned address"));
+        #endif
+
+        registerWriteRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS, PJON_NOT_ASSIGNED, false);
+
+        device_address = PJON_NOT_ASSIGNED;
+    }
+
     #if DEBUG_COMMUNICATION_SUPPORT
         if (device_address == PJON_NOT_ASSIGNED) {
             DPRINTLN(F("[COMMUNICATION] Unaddressed device"));
@@ -1508,7 +1531,7 @@ void communicationSetup()
         }
     #endif
 
-    if (device_address != PJON_NOT_ASSIGNED && device_address > 0 && device_address < 250) {
+    if (device_address != PJON_NOT_ASSIGNED) {
         _communication_bus.set_id(device_address);
     }
 }
@@ -1517,6 +1540,14 @@ void communicationSetup()
 
 void communicationLoop()
 {
+    uint8_t device_address;
+
+    registerReadRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS, device_address);
+
+    if (device_address != _communication_bus.device_id()) {
+        _communication_bus.set_id(device_address);
+    }
+
     if (!_communication_initial_state_to_master) {
         // Get actual timestamp
         uint32_t time = millis();

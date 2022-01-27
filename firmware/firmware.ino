@@ -12,6 +12,8 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 void(* resetFunc) (void) = 0;
 
+bool _firmwareIsBooting = false;
+
 // -----------------------------------------------------------------------------
 // FIRMWARE BASIC API
 // -----------------------------------------------------------------------------
@@ -78,11 +80,20 @@ bool firmwareIsPairing()
 }
 
 // -----------------------------------------------------------------------------
+
+bool firmwareIsBooting()
+{
+    return _firmwareIsBooting;
+}
+
+// -----------------------------------------------------------------------------
 // BOOTING
 // -----------------------------------------------------------------------------
 
 void setup()
 {
+    _firmwareIsBooting = true;
+
     #if defined(ARDUINO_ARCH_SAM) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_STM32F2)
         Serial1.begin(COMMUNICATION_SERIAL_BAUDRATE);
     #else
@@ -104,6 +115,14 @@ void setup()
     #endif
 
     ledSetup();
+
+    #if DEBUG_SUPPORT
+        DPRINT(F("[FIRMWARE] Device is in "));
+        DPRINT(firmwareGetDeviceState());
+        DPRINTLN(F(" state"));
+    #endif
+
+    _firmwareIsBooting = false;
 }
 
 // -----------------------------------------------------------------------------

@@ -139,7 +139,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 
 // Default boot mode: 0 means OFF, 1 ON and 2 whatever was before
 #ifndef RELAY_BOOT_MODE
-#define RELAY_BOOT_MODE                             RELAY_BOOT_SAME
+#define RELAY_BOOT_MODE                             RELAY_BOOT_OFF
 #endif
 
 // 0 means ANY, 1 zero or one and 2 one and only one

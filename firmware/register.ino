@@ -334,12 +334,6 @@ bool _registerWriteRegister(
         flash_address = register_module_output_registers[address].flash_address;
 
     } else if (type == REGISTER_TYPE_ATTRIBUTE) {
-        // Special handling for communication address stored in registry
-        if (address == COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS && firmwareIsPairing() == false) {
-            // Device address could be stored only in pairing mode
-            // return false;
-        }
-
         memcpy(register_module_attribute_registers[address].value, value, dataTypeSize);
 
         flash_address = register_module_attribute_registers[address].flash_address;
@@ -349,12 +343,40 @@ bool _registerWriteRegister(
     }
 
     if (memcmp((const void *) old_value, (const void *) value, dataTypeSize) != 0) {
+        #if DEBUG_SUPPORT
+            DPRINT(F("[REGISTER] Value was written into: "));
+            DPRINT(type);
+            DPRINT(F(" register at address "));
+            DPRINTLN(address);
+        #endif
+
         if (flash_address != INDEX_NONE) {
             uint8_t stored_value[4] = { 0, 0, 0, 0 };
 
             if (_registerReadRegisterAsBytes(type, address, stored_value) == true) {
-                // Store value in memory
-                _registerWriteToEeprom(type, address, flash_address, stored_value);
+                if (
+                    type == REGISTER_TYPE_ATTRIBUTE
+                    && address == COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS
+                ) {
+                    uint8_t device_state;
+
+                    registerReadRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS, device_state);
+
+                    if (device_state == DEVICE_STATE_PAIRING) {
+                        uint8_t store_value[4] = { DEVICE_STATE_STOPPED, 0, 0, 0 };
+
+                        // Store value in memory
+                        _registerWriteToEeprom(type, address, flash_address, store_value);
+
+                    } else {
+                        // Store value in memory
+                        _registerWriteToEeprom(type, address, flash_address, stored_value);                        
+                    }
+
+                } else {
+                    // Store value in memory
+                    _registerWriteToEeprom(type, address, flash_address, stored_value);
+                }
             }
         }
 
@@ -362,18 +384,17 @@ bool _registerWriteRegister(
             communicationReportRegister(type, address);
         }
 
-        if (type == REGISTER_TYPE_ATTRIBUTE) {
+        //if (type == REGISTER_TYPE_ATTRIBUTE) {
             // Special handling for communication address stored in registry
-            if (address == COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS) {
+            //if (address == COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS && firmwareIsBooting() == false) {
+                // Little delay before reboot
+                //delay(500);
+
                 // ...after address is stored, reload device
                 //resetFunc();
-            }
-        }
+            //}
+        //}
     #if DEBUG_SUPPORT
-        DPRINT(F("[REGISTER] Value was written into: "));
-        DPRINT(type);
-        DPRINT(F(" register at address "));
-        DPRINTLN(address);
     } else {
         DPRINT(F("[REGISTER] Value to write into: "));
         DPRINT(type);
