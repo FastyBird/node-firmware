@@ -14,6 +14,7 @@ void(* resetFunc) (void) = 0;
 
 bool _firmwareIsBooting = false;
 bool _firmwareIsDiscoverable = false;
+uint32_t _firmwareReboot = 0;
 
 // -----------------------------------------------------------------------------
 // FIRMWARE BASIC API
@@ -93,6 +94,13 @@ bool firmwareIsBooting()
 }
 
 // -----------------------------------------------------------------------------
+
+void firmwareSetReboot()
+{
+    _firmwareReboot = millis();
+}
+
+// -----------------------------------------------------------------------------
 // BOOTING
 // -----------------------------------------------------------------------------
 
@@ -148,4 +156,14 @@ void loop()
     ledLoop();
 
     communicationLoop();
+
+    if (_firmwareReboot > 0 && (millis() - _firmwareReboot) > SYSTEM_RESTART_DELAY) {
+        #if DEBUG_SUPPORT
+            DPRINTLN(F("[FIRMWARE] Restarting device"));
+        #endif
+
+        delay(250);
+
+        resetFunc();
+    }
 }

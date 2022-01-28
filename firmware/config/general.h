@@ -41,6 +41,10 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define SYSTEM_DEVICE_COMMUNICATION_LED_INDEX       INDEX_NONE
 #endif
 
+#ifndef SYSTEM_RESTART_DELAY
+#define SYSTEM_RESTART_DELAY                        1000
+#endif
+
 // =============================================================================
 // COMMUNICATION MODULE
 // =============================================================================

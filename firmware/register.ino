@@ -342,6 +342,14 @@ bool _registerWriteRegister(
         return false;
     }
 
+    if (type == REGISTER_TYPE_ATTRIBUTE) {
+        // Special handling for discoverable status
+        if (address == COMMUNICATION_ATTR_REGISTER_STATE_ADDRESS && firmwareIsDiscoverable() == true) {
+            // ...device is forced to be running, disable discoverable mode
+            firmwareSetDiscoverable(false);
+        }
+    }
+
     if (memcmp((const void *) old_value, (const void *) value, dataTypeSize) != 0) {
         #if DEBUG_SUPPORT
             DPRINT(F("[REGISTER] Value was written into: "));
@@ -366,11 +374,8 @@ bool _registerWriteRegister(
         if (type == REGISTER_TYPE_ATTRIBUTE) {
             // Special handling for communication address stored in registry
             if (address == COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS && firmwareIsBooting() == false) {
-                // Little delay before reboot
-                delay(500);
-
                 // ...after address is stored, reload device
-                resetFunc();
+                firmwareSetReboot();
             }
         }
     #if DEBUG_SUPPORT
