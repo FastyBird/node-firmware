@@ -279,10 +279,10 @@ void _communicationWriteSingleRegisterValue(
         // Reply to master
         if (_communicationReplyToPacket(_communication_output_buffer, 8) == false) {
             // Device was not able to notify master about its address
-            DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive output register write result"));
+            DPRINTLN(F("[COMMUNICATION][ERR] Master could not receive register write result"));
 
         } else {
-            DPRINTLN(F("[COMMUNICATION] Replied to master with output register write result"));
+            DPRINTLN(F("[COMMUNICATION] Replied to master with register write result"));
         }
     #else
         _communicationReplyToPacket(_communication_output_buffer, 8);
@@ -347,6 +347,75 @@ void _communicationWriteSingleRegisterValueHandler(
             #endif
 
             _communicationReplyWithException(payload);
+
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+/**
+ * Parse received payload - Requesting writing single register
+ *
+ * 0    => Received packet identifier       => COMMUNICATION_PACKET_WRITE_SINGLE_REGISTER_VALUE
+ * 1    => Register type
+ * 2    => High byte of register address
+ * 3    => Low byte of register address
+ * 4-7  => Data to write into register
+ * 8    => Device SN length
+ * 9-n  => Device SN                        => (a,b,c,...)
+ */
+void _communicationWriteSingleAttributeRegisterValueFromBroadcastHandler(
+    uint8_t * payload
+) {
+    uint8_t register_type = (uint8_t) payload[1];
+
+    // Register write address
+    word register_address = (word) payload[2] << 8 | (word) payload[3];
+
+    // Extract device SN length
+    uint8_t device_sn_length = (uint8_t) payload[8];
+
+    // Initialize serial number buffer
+    char device_sn[device_sn_length];
+
+    memset(device_sn, 0, device_sn_length);
+
+    // Extract serial number from payload
+    for (uint8_t i = 0; i < device_sn_length; i++) {
+        device_sn[i] = (char) payload[i + 9];
+        device_sn[i + 1] = 0x00; // Add a NULL after each character
+    }
+
+    // Check if received packet is for this device
+    if (strcmp(DEVICE_SERIAL_NO, device_sn) != 0) {
+        #if DEBUG_COMMUNICATION_SUPPORT
+            DPRINT(F("[COMMUNICATION][INFO] Packet is for other device: \""));
+            DPRINT(device_sn);
+            DPRINTLN(F("\""));
+            DPRINT(F("[COMMUNICATION][INFO] Device SN is: \""));
+            DPRINT((char *) DEVICE_SERIAL_NO);
+            DPRINTLN(F("\""));
+        #endif
+
+        return;
+    }
+
+    switch (register_type)
+    {
+        #if REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
+            case REGISTER_TYPE_ATTRIBUTE:
+            {
+                uint8_t write_value[4] = { 0, 0, 0, 0 };
+
+                write_value[0] = payload[4];
+                write_value[1] = payload[5];
+                write_value[2] = payload[6];
+                write_value[3] = payload[7];
+
+                _communicationWriteSingleRegisterValue(payload, write_value, register_address, REGISTER_TYPE_ATTRIBUTE);
+                break;
+            }
+        #endif
 
     }
 }
@@ -761,18 +830,53 @@ void _communicationReadSingleRegisterStructure(
 /**
  * Parse received payload - Requesting reading single register
  *
- * 0 => Received packet identifier      => COMMUNICATION_PACKET_READ_SINGLE_REGISTER_STRUCTURE
- * 1 => Register type
- * 2 => High byte of register address
- * 3 => Low byte of register address
+ * 0    => Received packet identifier       => COMMUNICATION_PACKET_READ_SINGLE_REGISTER_STRUCTURE
+ * 1    => Register type
+ * 2    => High byte of register address
+ * 3    => Low byte of register address
+ * 
+ * // Optional, when packet is broadcasted to all
+ * 4    => Device SN length
+ * 5-n  => Device SN                        => (a,b,c,...)
  */
 void _communicationReadSingleRegisterStructureHandler(
-    uint8_t * payload
+    uint8_t * payload,
+    const bool isBroadcasted
 ) {
     uint8_t register_type = (uint8_t) payload[1];
 
     // Register read address
     word register_address = (word) payload[2] << 8 | (word) payload[3];
+
+    if (isBroadcasted) {
+        // Extract device SN length
+        uint8_t device_sn_length = (uint8_t) payload[4];
+
+        // Initialize serial number buffer
+        char device_sn[device_sn_length];
+
+        memset(device_sn, 0, device_sn_length);
+
+        // Extract serial number from payload
+        for (uint8_t i = 0; i < device_sn_length; i++) {
+            device_sn[i] = (char) payload[i + 5];
+            device_sn[i + 1] = 0x00; // Add a NULL after each character
+        }
+
+        // Check if received packet is for this device
+        if (strcmp(DEVICE_SERIAL_NO, device_sn) != 0) {
+            #if DEBUG_COMMUNICATION_SUPPORT
+                DPRINT(F("[COMMUNICATION][INFO] Packet is for other device: \""));
+                DPRINT(device_sn);
+                DPRINTLN(F("\""));
+                DPRINT(F("[COMMUNICATION][INFO] Device SN is: \""));
+                DPRINT((char *) DEVICE_SERIAL_NO);
+                DPRINTLN(F("\""));
+            #endif
+
+            return;
+        }
+    }
 
     switch (register_type)
     {
@@ -820,11 +924,6 @@ void _communicationDiscoverHandler(
     uint8_t * payload,
     uint16_t length
 ) {
-    // Discovery reply is available only in pairing mode
-    if (firmwareIsDiscoverable() == false) {
-        return;
-    }
-
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
     // 0      => Packet identifier
@@ -1125,10 +1224,7 @@ void _communicationReceiverHandler(
         sender_address = packetInfo.sender_id;
     }
 
-    if (packetInfo.header & PJON_MODE_BIT) {
-        DPRINT(F("RECEIVER ID: "));
-        DPRINTLN(packetInfo.receiver_id);
-    }
+    uint8_t receiver_address = packetInfo.receiver_id;
 
     // Only packets from master are accepted
     if (sender_address != COMMUNICATION_BUS_MASTER_ADDR) {
@@ -1144,58 +1240,91 @@ void _communicationReceiverHandler(
     _communication_master_lost = false;
     _communication_master_last_request = millis();
 
-    switch (packet_id)
-    {
+    if (receiver_address == PJON_BROADCAST) {
+        switch (packet_id)
+        {
 
-    /**
-     * MISC
-     */
-
-        case COMMUNICATION_PACKET_PING:
-            _communicationPingHandler(data_payload, data_length);
-            break;
-
-        case COMMUNICATION_PACKET_DISCOVER:
-            _communicationDiscoverHandler(data_payload, data_length);
-            break;
-
-    /**
-     * REGISTERS
-     */
-
-        #if REGISTER_MAX_INPUT_REGISTERS_SIZE || REGISTER_MAX_OUTPUT_REGISTERS_SIZE || REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
-            case COMMUNICATION_PACKET_READ_SINGLE_REGISTER_VALUES:
-                _communicationReadSingleRegisterValueHandler(data_payload);
+            case COMMUNICATION_PACKET_DISCOVER:
+                // Handle discovery packet only if device is discoverable
+                if (firmwareIsDiscoverable() == true) {
+                    _communicationDiscoverHandler(data_payload, data_length);
+                }
                 break;
 
-            case COMMUNICATION_PACKET_READ_MULTIPLE_REGISTERS_VALUES:
-                _communicationReadMultipleRegistersValuesHandler(data_payload);
+            /**
+             * REGISTERS
+             */
+
+            #if REGISTER_MAX_INPUT_REGISTERS_SIZE || REGISTER_MAX_OUTPUT_REGISTERS_SIZE || REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
+                case COMMUNICATION_PACKET_READ_SINGLE_REGISTER_STRUCTURE:
+                    // Handle register structure packet broadcas only if address is not assigned
+                    if (communicationAssignedAddress() == PJON_NOT_ASSIGNED) {
+                        _communicationReadSingleRegisterStructureHandler(data_payload, true);
+                    }
+                    break;
+            #endif
+
+            #if REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
+                case COMMUNICATION_PACKET_WRITE_SINGLE_REGISTER_VALUE:
+                    // Handle register write packet broadcas only if address is not assigned
+                    if (communicationAssignedAddress() == PJON_NOT_ASSIGNED) {
+                        _communicationWriteSingleAttributeRegisterValueFromBroadcastHandler(data_payload);
+                    }
+                    break;
+            #endif
+
+        }
+
+    } else {
+        switch (packet_id)
+        {
+
+            /**
+             * MISC
+             */
+
+            case COMMUNICATION_PACKET_PING:
+                _communicationPingHandler(data_payload, data_length);
                 break;
-        #endif
 
-        #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE || REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
-            case COMMUNICATION_PACKET_WRITE_SINGLE_REGISTER_VALUE:
-                _communicationWriteSingleRegisterValueHandler(data_payload);
-                break;
-    
-            case COMMUNICATION_PACKET_WRITE_MULTIPLE_REGISTERS_VALUES:
-                _communicationWriteMultipleRegistersValuesHandler(data_payload);
-                break;
-        #endif
+            /**
+             * REGISTERS
+             */
 
-        #if REGISTER_MAX_INPUT_REGISTERS_SIZE || REGISTER_MAX_OUTPUT_REGISTERS_SIZE || REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
-            case COMMUNICATION_PACKET_READ_SINGLE_REGISTER_STRUCTURE:
-                _communicationReadSingleRegisterStructureHandler(data_payload);
-                break;
-        #endif
+            #if REGISTER_MAX_INPUT_REGISTERS_SIZE || REGISTER_MAX_OUTPUT_REGISTERS_SIZE || REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
+                case COMMUNICATION_PACKET_READ_SINGLE_REGISTER_VALUES:
+                    _communicationReadSingleRegisterValueHandler(data_payload);
+                    break;
 
-    /**
-     * OTHER
-     */
+                case COMMUNICATION_PACKET_READ_MULTIPLE_REGISTERS_VALUES:
+                    _communicationReadMultipleRegistersValuesHandler(data_payload);
+                    break;
+            #endif
 
-        default:
-            _communicationReplyWithException(data_payload);
+            #if REGISTER_MAX_INPUT_REGISTERS_SIZE || REGISTER_MAX_OUTPUT_REGISTERS_SIZE || REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
+                case COMMUNICATION_PACKET_READ_SINGLE_REGISTER_STRUCTURE:
+                    _communicationReadSingleRegisterStructureHandler(data_payload, false);
+                    break;
+            #endif
 
+            #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE || REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
+                case COMMUNICATION_PACKET_WRITE_SINGLE_REGISTER_VALUE:
+                    _communicationWriteSingleRegisterValueHandler(data_payload);
+                    break;
+        
+                case COMMUNICATION_PACKET_WRITE_MULTIPLE_REGISTERS_VALUES:
+                    _communicationWriteMultipleRegistersValuesHandler(data_payload);
+                    break;
+            #endif
+
+            /**
+             * OTHER
+             */
+
+            default:
+                _communicationReplyWithException(data_payload);
+
+        }
     }
 
     #if DEBUG_COMMUNICATION_SUPPORT
@@ -1429,6 +1558,14 @@ bool communicationHasAssignedAddress()
 
 // -----------------------------------------------------------------------------
 
+void communicationSetAddress(
+    const uint8_t address
+) {
+    _communication_bus.set_id(address);
+}
+
+// -----------------------------------------------------------------------------
+
 bool communicationIsMasterLost()
 {
     return ((millis() - _communication_master_last_request) > COMMUNICATION_MASTER_PING_TIMEOUT || _communication_master_lost);
@@ -1449,7 +1586,7 @@ bool communicationReportRegister(
         return false;
     }
 
-    uint8_t register_value[4];
+    uint8_t register_value[4] = { 0, 0, 0, 0 };
     
     if (registerReadRegister(registerType, registerAddress, register_value) == false) {
         return false;

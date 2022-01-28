@@ -367,16 +367,23 @@ bool _registerWriteRegister(
             }
         }
 
-        if (propagate) {
-            communicationReportRegister(type, address);
-        }
-
         if (type == REGISTER_TYPE_ATTRIBUTE) {
             // Special handling for communication address stored in registry
             if (address == COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS && firmwareIsBooting() == false) {
+                uint8_t device_address;
+
+                _registerReadRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS, device_address);
+
+                // Update communication address
+                communicationSetAddress(device_address);
+
                 // ...after address is stored, reload device
                 firmwareSetReboot();
             }
+        }
+
+        if (propagate) {
+            communicationReportRegister(type, address);
         }
     #if DEBUG_SUPPORT
     } else {

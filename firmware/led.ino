@@ -154,17 +154,22 @@ void ledLoop()
 
         #if SYSTEM_DEVICE_COMMUNICATION_LED_INDEX != INDEX_NONE
             if (i == SYSTEM_DEVICE_COMMUNICATION_LED_INDEX) {
-                if (firmwareIsDiscoverable()) {
-                    _ledBlink(i, 250, 500);
+                if (firmwareIsRunning()) {
+                    if (firmwareIsDiscoverable()) {
+                        _ledBlink(i, 250, 500);
 
-                } else if (communicationHasAssignedAddress() == false) {
-                    _ledBlink(i, 500, 500);
+                    } else if (communicationHasAssignedAddress() == false) {
+                        _ledBlink(i, 500, 500);
 
-                } else if (communicationIsMasterLost()) {
-                    _ledBlink(i, 1500, 500);
+                    } else if (communicationIsMasterLost()) {
+                        _ledBlink(i, 1500, 500);
+
+                    } else {
+                        _ledBlink(i, 4900, 100);
+                    }
 
                 } else {
-                    _ledBlink(i, 4900, 100);
+                    _ledStatus(i, false);
                 }
 
                 continue;
