@@ -89,10 +89,6 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #define COMMUNICATION_NOTIFY_STATE_DELAY            5000            // Delay before master is notified after boot up
 #endif
 
-#ifndef COMMUNICATION_USE_CRC
-#define COMMUNICATION_USE_CRC                       1               // Add CRC checksum to end of packet
-#endif
-
 #ifndef COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS
 #define COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS    0               // Attribute register address where is stored device address
 #endif

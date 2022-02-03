@@ -48,7 +48,7 @@ void _relayBoot()
     bool status;
 
     for (uint8_t i = 0; i < RELAY_MAX_ITEMS; i++) {
-        bool stored_state;
+        uint8_t stored_state = RELAY_TURN_OFF;
 
         registerReadRegister(REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, stored_state);
 
@@ -67,11 +67,11 @@ void _relayBoot()
                 break;
 
             case RELAY_BOOT_SAME:
-                status = stored_state;
+                status = stored_state == RELAY_TURN_ON ? true : false;
                 break;
 
             case RELAY_BOOT_TOGGLE:
-                status = !stored_state;
+                status = stored_state == RELAY_TURN_ON ? false : true;
                 break;
         }
 
@@ -82,7 +82,7 @@ void _relayBoot()
 
         #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE
             // Store state into communication register
-            registerWriteRegister(REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, status);
+            registerWriteRegister(REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, status ? RELAY_TURN_ON : RELAY_TURN_OFF);
         #endif
     }
 
@@ -181,7 +181,7 @@ void _relayProcess(
 
         #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE
             // Store state into communication register
-            registerWriteRegister(REGISTER_TYPE_OUTPUT, relay_module_items[id].register_address, relay_module_items[id].target_status);
+            registerWriteRegister(REGISTER_TYPE_OUTPUT, relay_module_items[id].register_address, relay_module_items[id].target_status ? RELAY_TURN_ON : RELAY_TURN_OFF);
         #endif
     }
 }
@@ -190,7 +190,7 @@ void _relayProcess(
 // MODULE API
 // -----------------------------------------------------------------------------
 
-bool relayStatus(
+uint8_t relayStatus(
     const uint8_t id
 ) {
     // Check relay ID
@@ -199,14 +199,14 @@ bool relayStatus(
     }
 
     // Get status from storage
-    return relay_module_items[id].current_status;
+    return relay_module_items[id].current_status ? RELAY_TURN_ON : RELAY_TURN_OFF;
 }
 
 // -----------------------------------------------------------------------------
 
 bool relayStatus(
     const uint8_t id,
-    const bool status
+    const uint8_t status
 ) {
     if (id >= RELAY_MAX_ITEMS) {
         return false;
@@ -214,15 +214,17 @@ bool relayStatus(
 
     bool changed = false;
 
-    if (relay_module_items[id].current_status == status) {
-        if (relay_module_items[id].target_status != status) {
+    bool set_status = status ? RELAY_TURN_ON : RELAY_TURN_OFF;
+
+    if (relay_module_items[id].current_status == set_status) {
+        if (relay_module_items[id].target_status != set_status) {
             #if DEBUG_SUPPORT
                 DPRINT(F("[RELAY] #"));
                 DPRINT(id);
                 DPRINT(F(" scheduled change cancelled\n"));
             #endif
 
-            relay_module_items[id].target_status = status;
+            relay_module_items[id].target_status = set_status;
 
             changed = true;
         }
@@ -230,7 +232,7 @@ bool relayStatus(
     } else {
         unsigned long current_time = millis();
         unsigned long fw_end = relay_module_items[id].fw_start + 1000 * RELAY_FLOOD_WINDOW;
-        unsigned long delay = status ? relay_module_items[id].delay_on : relay_module_items[id].delay_off;
+        unsigned long delay = set_status ? relay_module_items[id].delay_on : relay_module_items[id].delay_off;
 
         relay_module_items[id].fw_count++;
         relay_module_items[id].change_time = current_time + delay;
@@ -250,7 +252,7 @@ bool relayStatus(
             }
         }
 
-        relay_module_items[id].target_status = status;
+        relay_module_items[id].target_status = set_status;
 
         relaySync(id);
 
@@ -258,7 +260,7 @@ bool relayStatus(
             DPRINT(F("[RELAY] #"));
             DPRINT(id);
             DPRINT(F(" scheduled "));
-            DPRINT(status ? F("ON") : F("OFF"));
+            DPRINT(set_status ? F("ON") : F("OFF"));
             DPRINT(F(" in "));
             DPRINT(relay_module_items[id].change_time - current_time);
             DPRINT(F(" ms\n"));
@@ -357,7 +359,7 @@ void relayLoop()
     // Process request only if device is in running mode
     if (firmwareIsRunning()) {
         for (uint8_t i = 0; i < RELAY_MAX_ITEMS; i++) {
-            bool expected_value = false;
+            uint8_t expected_value = RELAY_TURN_OFF;
 
             #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE
                 registerReadRegister(REGISTER_TYPE_OUTPUT, relay_module_items[i].register_address, expected_value);

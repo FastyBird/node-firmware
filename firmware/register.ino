@@ -33,6 +33,8 @@ void _registerWriteToEeprom(
 
         case REGISTER_DATA_TYPE_UINT8:
         case REGISTER_DATA_TYPE_INT8:
+        case REGISTER_DATA_TYPE_BUTTON:
+        case REGISTER_DATA_TYPE_SWITCH:
         {
             EEPROM.update(flashAddress, value[0]);
             break;
@@ -159,6 +161,28 @@ void _registerInitializeFromEeprom(
             _registerWriteRegister(type, address, float_stored_value.number, false);
             break;
 
+        case REGISTER_DATA_TYPE_BUTTON:
+            BUTTON_UNION_t button_stored_value;
+
+            button_stored_value.bytes[0] = EEPROM.read(flashAddress);
+            button_stored_value.bytes[1] = 0;
+            button_stored_value.bytes[2] = 0;
+            button_stored_value.bytes[3] = 0;
+
+            _registerWriteRegister(type, address, button_stored_value.number, false);
+            break;
+
+        case REGISTER_DATA_TYPE_SWITCH:
+            SWITCH_UNION_t switch_stored_value;
+
+            switch_stored_value.bytes[0] = EEPROM.read(flashAddress);
+            switch_stored_value.bytes[1] = 0;
+            switch_stored_value.bytes[2] = 0;
+            switch_stored_value.bytes[3] = 0;
+
+            _registerWriteRegister(type, address, switch_stored_value.number, false);
+            break;
+
         case REGISTER_DATA_TYPE_BOOLEAN:
             bool bool_memory_value = EEPROM.read(flashAddress);
 
@@ -277,6 +301,24 @@ bool _registerReadRegisterAsBytes(
             _registerReadRegister(type, address, float_read_value.number);
 
             memcpy(value, float_read_value.bytes, 4);
+
+            return true;
+
+        case REGISTER_DATA_TYPE_BUTTON:
+            BOOLEAN_UNION_t button_read_value;
+
+            _registerReadRegister(type, address, button_read_value.number);
+
+            memcpy(value, button_read_value.bytes, 1);
+
+            return true;
+
+        case REGISTER_DATA_TYPE_SWITCH:
+            SWITCH_UNION_t switch_read_value;
+
+            _registerReadRegister(type, address, switch_read_value.number);
+
+            memcpy(value, switch_read_value.bytes, 1);
 
             return true;
 
@@ -501,6 +543,30 @@ bool _registerWriteRegisterFromBytes(
             float_write_value.bytes[3] = value[3];
 
             _registerWriteRegister(type, address, float_write_value.number, propagate);
+
+            return true;
+
+        case REGISTER_DATA_TYPE_BUTTON:
+            BOOLEAN_UNION_t button_write_value;
+
+            button_write_value.bytes[0] = value[0];
+            button_write_value.bytes[1] = 0;
+            button_write_value.bytes[2] = 0;
+            button_write_value.bytes[3] = 0;
+
+            _registerWriteRegister(type, address, button_write_value.number, propagate);
+
+            return true;
+
+        case REGISTER_DATA_TYPE_SWITCH:
+            SWITCH_UNION_t switch_write_value;
+
+            switch_write_value.bytes[0] = value[0];
+            switch_write_value.bytes[1] = 0;
+            switch_write_value.bytes[2] = 0;
+            switch_write_value.bytes[3] = 0;
+
+            _registerWriteRegister(type, address, switch_write_value.number, propagate);
 
             return true;
 

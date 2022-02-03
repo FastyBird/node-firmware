@@ -127,15 +127,6 @@ void _buttonEvent(
 
             }
         }
-
-        if (id == 3) {
-            if (event == BUTTON_EVENT_CLICK) {
-                registerWriteRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS, 1, false);
-            }
-            if (event == BUTTON_EVENT_LNGCLICK) {
-                registerWriteRegister(REGISTER_TYPE_ATTRIBUTE, COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS, 0, false);
-            }
-        }
     #endif
 }
 

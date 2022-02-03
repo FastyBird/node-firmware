@@ -15,10 +15,6 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
 #include <Arduino.h>
 #include <PJON.h>
 
-#if COMMUNICATION_USE_CRC
-    #include <uCRC16Lib.h>
-#endif
-
 PJON<ThroughSerialAsync> _communication_bus(PJON_NOT_ASSIGNED);
 
 #if COMMUNICATION_BUS_HARDWARE_SERIAL == 0
@@ -195,8 +191,7 @@ void _communicationWriteMultipleRegistersValuesHandler(
 // WRITING SINGLE REGISTER
 // -----------------------------------------------------------------------------
 
-void _communicationWriteSingleRegisterValue(
-    uint8_t * payload,
+bool _communicationWriteSingleRegisterValue(
     uint8_t * writeValue,
     const word registerAddress,
     const uint8_t registerType
@@ -223,16 +218,7 @@ void _communicationWriteSingleRegisterValue(
                     DPRINTLN(F("[COMMUNICATION][ERR] Attribute register is not writtable or out of range"));
                 #endif
 
-                _communicationReplyWithException(payload);
-            }
-
-            // Special handling for device address
-            if (registerAddress == COMMUNICATION_ATTR_REGISTER_ADDR_ADDRESS && firmwareIsDiscoverable() == false) {
-                #if DEBUG_SUPPORT
-                    DPRINTLN(F("[COMMUNICATION][ERR] Device address could be updated only pairing mode"));
-                #endif
-
-                _communicationReplyWithException(payload);
+                return false;
             }
         }
     #endif
@@ -242,9 +228,7 @@ void _communicationWriteSingleRegisterValue(
             DPRINTLN(F("[COMMUNICATION][ERR] Value could not be written into register"));
         #endif
 
-        _communicationReplyWithException(payload);
-
-        return;
+        return false;
     }
 
     uint8_t stored_value[4] = { 0, 0, 0, 0 };
@@ -254,9 +238,7 @@ void _communicationWriteSingleRegisterValue(
             DPRINTLN(F("[COMMUNICATION][ERR] Written value could not be fetched from register"));
         #endif
 
-        _communicationReplyWithException(payload);
-
-        return;
+        return false;
     }
 
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
@@ -287,6 +269,8 @@ void _communicationWriteSingleRegisterValue(
     #else
         _communicationReplyToPacket(_communication_output_buffer, 8);
     #endif
+
+    return true;
 }
 
 // -----------------------------------------------------------------------------
@@ -308,6 +292,8 @@ void _communicationWriteSingleRegisterValueHandler(
     // Register write address
     word register_address = (word) payload[2] << 8 | (word) payload[3];
 
+    bool result = false;
+
     switch (register_type)
     {
 
@@ -321,7 +307,7 @@ void _communicationWriteSingleRegisterValueHandler(
                 write_value[2] = payload[6];
                 write_value[3] = payload[7];
 
-                _communicationWriteSingleRegisterValue(payload, write_value, register_address, REGISTER_TYPE_OUTPUT);
+                result = _communicationWriteSingleRegisterValue(write_value, register_address, REGISTER_TYPE_OUTPUT);
                 break;
             }
         #endif
@@ -336,7 +322,7 @@ void _communicationWriteSingleRegisterValueHandler(
                 write_value[2] = payload[6];
                 write_value[3] = payload[7];
 
-                _communicationWriteSingleRegisterValue(payload, write_value, register_address, REGISTER_TYPE_ATTRIBUTE);
+                result = _communicationWriteSingleRegisterValue(write_value, register_address, REGISTER_TYPE_ATTRIBUTE);
                 break;
             }
         #endif
@@ -349,6 +335,10 @@ void _communicationWriteSingleRegisterValueHandler(
             _communicationReplyWithException(payload);
 
     }
+
+    if (result == false) {
+        _communicationReplyWithException(payload);
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -356,24 +346,19 @@ void _communicationWriteSingleRegisterValueHandler(
 /**
  * Parse received payload - Requesting writing single register
  *
- * 0    => Received packet identifier       => COMMUNICATION_PACKET_WRITE_SINGLE_REGISTER_VALUE
- * 1    => Register type
- * 2    => High byte of register address
- * 3    => Low byte of register address
- * 4-7  => Data to write into register
- * 8    => Device SN length
- * 9-n  => Device SN                        => (a,b,c,...)
+ * 0        => Received packet identifier       => COMMUNICATION_PACKET_WRITE_SINGLE_REGISTER_VALUE
+ * 1        => Device SN length
+ * 2-n      => Device SN                        => (a,b,c,...)
+ * n+1      => Register type
+ * n+2      => High byte of register address
+ * n+3      => Low byte of register address
+ * n+4-7    => Data to write into register
  */
 void _communicationWriteSingleAttributeRegisterValueFromBroadcastHandler(
     uint8_t * payload
 ) {
-    uint8_t register_type = (uint8_t) payload[1];
-
-    // Register write address
-    word register_address = (word) payload[2] << 8 | (word) payload[3];
-
     // Extract device SN length
-    uint8_t device_sn_length = (uint8_t) payload[8];
+    uint8_t device_sn_length = (uint8_t) payload[1];
 
     // Initialize serial number buffer
     char device_sn[device_sn_length];
@@ -382,7 +367,7 @@ void _communicationWriteSingleAttributeRegisterValueFromBroadcastHandler(
 
     // Extract serial number from payload
     for (uint8_t i = 0; i < device_sn_length; i++) {
-        device_sn[i] = (char) payload[i + 9];
+        device_sn[i] = (char) payload[i + 2];
         device_sn[i + 1] = 0x00; // Add a NULL after each character
     }
 
@@ -400,23 +385,36 @@ void _communicationWriteSingleAttributeRegisterValueFromBroadcastHandler(
         return;
     }
 
+    uint8_t data_start_position = device_sn_length + 1;
+
+    uint8_t register_type = (uint8_t) payload[data_start_position + 1];
+
+    // Register write address
+    word register_address = (word) payload[data_start_position + 2] << 8 | (word) payload[data_start_position + 3];
+
+    uint8_t write_value[4] = { 0, 0, 0, 0 };
+
+    write_value[0] = payload[data_start_position + 4];
+    write_value[1] = payload[data_start_position + 5];
+    write_value[2] = payload[data_start_position + 6];
+    write_value[3] = payload[data_start_position + 7];
+
+    bool result = false;
+
     switch (register_type)
     {
         #if REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
             case REGISTER_TYPE_ATTRIBUTE:
             {
-                uint8_t write_value[4] = { 0, 0, 0, 0 };
-
-                write_value[0] = payload[4];
-                write_value[1] = payload[5];
-                write_value[2] = payload[6];
-                write_value[3] = payload[7];
-
-                _communicationWriteSingleRegisterValue(payload, write_value, register_address, REGISTER_TYPE_ATTRIBUTE);
+                result = _communicationWriteSingleRegisterValue(write_value, register_address, REGISTER_TYPE_ATTRIBUTE);
                 break;
             }
         #endif
 
+    }
+
+    if (result == false) {
+        _communicationReplyWithException(payload);
     }
 }
 #endif
@@ -718,8 +716,7 @@ void _communicationReadSingleRegisterValueHandler(
 
 #if REGISTER_MAX_INPUT_REGISTERS_SIZE || REGISTER_MAX_OUTPUT_REGISTERS_SIZE || REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
 
-void _communicationReadSingleRegisterStructure(
-    uint8_t * payload,
+bool _communicationReadSingleRegisterStructure(
     const word registerAddress,
     const uint8_t registerType
 ) {
@@ -816,12 +813,14 @@ void _communicationReadSingleRegisterStructure(
             _communicationReplyToPacket(_communication_output_buffer, byte_counter);
         #endif
 
+        return true;
+
     } else {
         #if DEBUG_COMMUNICATION_SUPPORT
             DPRINTLN(F("[COMMUNICATION][ERR] Master is trying to read structure for undefined registers range"));
         #endif
 
-        _communicationReplyWithException(payload);
+        return false;
     }
 }
 
@@ -830,27 +829,35 @@ void _communicationReadSingleRegisterStructure(
 /**
  * Parse received payload - Requesting reading single register
  *
+ * // When broadcasted
+ * 0    => Received packet identifier       => COMMUNICATION_PACKET_READ_SINGLE_REGISTER_STRUCTURE
+ * 1    => Device SN length
+ * 2-n  => Device SN                        => (a,b,c,...)
+ * n+1  => Register type
+ * n+2  => High byte of register address
+ * n+3  => Low byte of register address
+ * 
+ * 
+ * // Classic publish
  * 0    => Received packet identifier       => COMMUNICATION_PACKET_READ_SINGLE_REGISTER_STRUCTURE
  * 1    => Register type
  * 2    => High byte of register address
  * 3    => Low byte of register address
- * 
- * // Optional, when packet is broadcasted to all
- * 4    => Device SN length
- * 5-n  => Device SN                        => (a,b,c,...)
  */
 void _communicationReadSingleRegisterStructureHandler(
     uint8_t * payload,
+    const uint16_t length,
     const bool isBroadcasted
 ) {
-    uint8_t register_type = (uint8_t) payload[1];
+    uint8_t data_payload[length];
 
-    // Register read address
-    word register_address = (word) payload[2] << 8 | (word) payload[3];
+    memset(data_payload, 0, length);
+
+    uint8_t byte_position = 0;
 
     if (isBroadcasted) {
         // Extract device SN length
-        uint8_t device_sn_length = (uint8_t) payload[4];
+        uint8_t device_sn_length = (uint8_t) payload[1];
 
         // Initialize serial number buffer
         char device_sn[device_sn_length];
@@ -859,7 +866,7 @@ void _communicationReadSingleRegisterStructureHandler(
 
         // Extract serial number from payload
         for (uint8_t i = 0; i < device_sn_length; i++) {
-            device_sn[i] = (char) payload[i + 5];
+            device_sn[i] = (char) payload[i + 2];
             device_sn[i + 1] = 0x00; // Add a NULL after each character
         }
 
@@ -876,26 +883,49 @@ void _communicationReadSingleRegisterStructureHandler(
 
             return;
         }
+
+        // Append packet identifier
+        data_payload[0] = payload[0];
+
+        for (uint8_t i = (device_sn_length + 1); i < length; i++){
+            data_payload[byte_position] = payload[i];
+
+            byte_position++;
+        }
+
+    } else {
+        for (uint8_t i = 0; i < length; i++){
+            data_payload[byte_position] = payload[i];
+
+            byte_position++;
+        }
     }
+
+    uint8_t register_type = (uint8_t) data_payload[1];
+
+    // Register read address
+    word register_address = (word) data_payload[2] << 8 | (word) data_payload[3];
+
+    bool result = false;
 
     switch (register_type)
     {
 
         #if REGISTER_MAX_INPUT_REGISTERS_SIZE
             case REGISTER_TYPE_INPUT:
-                _communicationReadSingleRegisterStructure(payload, register_address, REGISTER_TYPE_INPUT);
+                result = _communicationReadSingleRegisterStructure(register_address, REGISTER_TYPE_INPUT);
                 break;
         #endif
 
         #if REGISTER_MAX_OUTPUT_REGISTERS_SIZE
             case REGISTER_TYPE_OUTPUT:
-                _communicationReadSingleRegisterStructure(payload, register_address, REGISTER_TYPE_OUTPUT);
+                result = _communicationReadSingleRegisterStructure(register_address, REGISTER_TYPE_OUTPUT);
                 break;
         #endif
 
         #if REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
             case REGISTER_TYPE_ATTRIBUTE:
-                _communicationReadSingleRegisterStructure(payload, register_address, REGISTER_TYPE_ATTRIBUTE);
+                result = _communicationReadSingleRegisterStructure(register_address, REGISTER_TYPE_ATTRIBUTE);
                 break;
         #endif
 
@@ -906,6 +936,10 @@ void _communicationReadSingleRegisterStructureHandler(
 
             _communicationReplyWithException(payload);
 
+    }
+
+    if (result == false) {
+        _communicationReplyWithException(payload);
     }
 }
 
@@ -922,7 +956,7 @@ void _communicationReadSingleRegisterStructureHandler(
  */
 void _communicationDiscoverHandler(
     uint8_t * payload,
-    uint16_t length
+    const uint16_t length
 ) {
     memset(_communication_output_buffer, 0, PJON_PACKET_MAX_LENGTH);
 
@@ -1154,52 +1188,17 @@ void _communicationReceiverHandler(
         return;
     }
 
-    #if COMMUNICATION_USE_CRC
-        char crc_payload[length - 3];
-
-        for (uint8_t i = 0; i < length - 3; i++) {
-            crc_payload[i] = payload[i];
-        }
-
-        // CRC calculation
-        uint16_t calculated_crc = uCRC16Lib::calculate(crc_payload, length - 3);
-
-        word in_packet_crc = (word) payload[length - 2] << 8 | (word) payload[length - 3];
-
-        if (calculated_crc != (uint16_t) in_packet_crc) {
-            #if DEBUG_COMMUNICATION_SUPPORT
-                DPRINT(F("[COMMUNICATION] CRC hash check failed "));
-                DPRINT(calculated_crc);
-                DPRINT(F(" vs "));
-                DPRINT(in_packet_crc);
-                DPRINTLN();
-            #endif
-
-            return;
-        }
-
-        uint16_t data_length = length - 4;
-    #else
-        uint16_t data_length = length - 2;
-    #endif
+    uint16_t data_length = length - 2;
 
     uint8_t data_payload[data_length];
 
     uint8_t byte_position = 0;
 
-    #if COMMUNICATION_USE_CRC
-        for (uint8_t i = 1; i < length - 3; i++){
-            data_payload[byte_position] = payload[i];
+    for (uint8_t i = 1; i < length - 1; i++){
+        data_payload[byte_position] = payload[i];
 
-            byte_position++;
-        }
-    #else
-        for (uint8_t i = 1; i < length - 1; i++){
-            data_payload[byte_position] = payload[i];
-
-            byte_position++;
-        }
-    #endif
+        byte_position++;
+    }
 
     #if DEBUG_COMMUNICATION_SUPPORT
         for (uint8_t i = 0; i < data_length; i++) {
@@ -1259,7 +1258,7 @@ void _communicationReceiverHandler(
                 case COMMUNICATION_PACKET_READ_SINGLE_REGISTER_STRUCTURE:
                     // Handle register structure packet broadcas only if address is not assigned
                     if (communicationAssignedAddress() == PJON_NOT_ASSIGNED) {
-                        _communicationReadSingleRegisterStructureHandler(data_payload, true);
+                        _communicationReadSingleRegisterStructureHandler(data_payload, data_length, true);
                     }
                     break;
             #endif
@@ -1303,7 +1302,7 @@ void _communicationReceiverHandler(
 
             #if REGISTER_MAX_INPUT_REGISTERS_SIZE || REGISTER_MAX_OUTPUT_REGISTERS_SIZE || REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE
                 case COMMUNICATION_PACKET_READ_SINGLE_REGISTER_STRUCTURE:
-                    _communicationReadSingleRegisterStructureHandler(data_payload, false);
+                    _communicationReadSingleRegisterStructureHandler(data_payload, data_length, false);
                     break;
             #endif
 
@@ -1367,11 +1366,7 @@ uint16_t _communicationFinalizeAndSendPacket(
     const uint8_t address,
     const bool isReply
 ) {
-    #if COMMUNICATION_USE_CRC
-        uint16_t final_length = length + 4;
-    #else
-        uint16_t final_length = length + 2;
-    #endif
+    uint16_t final_length = length + 2;
 
     char final_payload[final_length];
 
@@ -1385,16 +1380,6 @@ uint16_t _communicationFinalizeAndSendPacket(
 
         byte_position++;
     }
-
-    #if COMMUNICATION_USE_CRC
-        uint16_t crc = uCRC16Lib::calculate(final_payload, byte_position); // CRC calculation hash
-
-        // Add CRC to packet body
-        final_payload[byte_position] = (char) (crc & 0xFF);
-        byte_position++;
-        final_payload[byte_position] = (char) (crc >> 8);
-        byte_position++;
-    #endif
 
     // Be sure to set the null terminator!!!
     final_payload[byte_position] = COMMUNICATION_PACKET_TERMINATOR;

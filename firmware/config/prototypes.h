@@ -50,6 +50,16 @@ typedef union {
     uint8_t     bytes[4];
 } BOOLEAN_UNION_t;
 
+typedef union {
+    uint8_t     number;
+    uint8_t     bytes[1];
+} SWITCH_UNION_t;
+
+typedef union {
+    uint8_t     number;
+    uint8_t     bytes[1];
+} BUTTON_UNION_t;
+
 // =============================================================================
 // COMMUNICATION MODULE
 // =============================================================================
