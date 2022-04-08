@@ -80,7 +80,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {REGISTER_DATA_TYPE_SWITCH, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_04},
     };
     register_attr_register_t register_module_attribute_registers[REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE] = {
-        {"addr", REGISTER_DATA_TYPE_UINT8, true, true, {PJON_NOT_ASSIGNED, 0, 0, 0}, FLASH_ADDRESS_DEVICE_ADDRESS},
+        {"address", REGISTER_DATA_TYPE_UINT8, true, true, {PJON_NOT_ASSIGNED, 0, 0, 0}, FLASH_ADDRESS_DEVICE_ADDRESS},
         {"mpl", REGISTER_DATA_TYPE_UINT8, false, true, {PJON_PACKET_MAX_LENGTH, 0, 0, 0}, INDEX_NONE},
         {"state", REGISTER_DATA_TYPE_UINT8, true, true, {DEVICE_STATE_STOPPED_BY_OPERATOR, 0, 0, 0}, FLASH_ADDRESS_DEVICE_STATE},
     };
@@ -164,7 +164,7 @@ Copyright (C) 2018 FastyBird s.r.o. <code@fastybird.com>
         {REGISTER_DATA_TYPE_SWITCH, {0, 0, 0, 0}, FLASH_ADDRESS_RELAY_04},
     };
     register_attr_register_t register_module_attribute_registers[REGISTER_MAX_ATTRIBUTE_REGISTERS_SIZE] = {
-        {"addr", REGISTER_DATA_TYPE_UINT8, true, true, {PJON_NOT_ASSIGNED, 0, 0, 0}, FLASH_ADDRESS_DEVICE_ADDRESS},
+        {"address", REGISTER_DATA_TYPE_UINT8, true, true, {PJON_NOT_ASSIGNED, 0, 0, 0}, FLASH_ADDRESS_DEVICE_ADDRESS},
         {"mpl", REGISTER_DATA_TYPE_UINT8, false, true, {PJON_PACKET_MAX_LENGTH, 0, 0, 80}, INDEX_NONE},
         {"state", REGISTER_DATA_TYPE_UINT8, true, true, {DEVICE_STATE_STOPPED_BY_OPERATOR, 0, 0, 0}, FLASH_ADDRESS_DEVICE_STATE},
     };
